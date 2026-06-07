@@ -1,7 +1,10 @@
 [project]
 name = "mkdocs-shadcn-mewbo"
-# Mewbo scheme; 1.1.0 absorbs the upstream mkdocs-shadcn v0.10.7 sync.
-version = "1.1.0"
+# Mewbo scheme; 1.2.x consolidates consumer brand divergences into the theme
+# (site_name-driven identity, alternate_style tabs, carousel feature, ms-shot/
+# ms-devices primitives, compact sidebar, table first-column fix). 1.2.1 tunes
+# the sidebar spacing/typography.
+version = "1.2.1"
 description = "Mewbo's brand-fork of mkdocs-shadcn — same theme entrypoint, plus Ask AI panel, three-zone header, sidebar nav-icons, prefetch speculation, full SEO, and the cream/clay Mewbo palette as default."
 authors = [
     { name = "mewbo-com" },

@@ -39,6 +39,13 @@ The wheel ships the `shadcn/` package only.
   markdown). The `TableMixin` wraps every `<table>` in
   `<div class="table-wrapper">` via `on_page_content`.
 - `shadcn/js/*.js` — theme + Mewbo enhancement scripts.
+- Brand content components live in `mewbo.css` as the `.ms-*` kit: the landing
+  hero/cards plus `.ms-shot` (captioned screenshot, tint via `--ms-shot-frame`),
+  `.ms-devices` (matched-height mockup pair, ratios via `--ms-devices-*`), and
+  `.ms-shots` (Swiper carousel). The carousel is gated by `theme.carousel`,
+  which makes `main.html` emit the Swiper CDN + `js/carousel.js`; a consumer
+  writes only `.swiper.ms-shots` markup. These were consolidated from consumer
+  repos so docs sites get them without forking.
 - `pages/` — the demo/docs site (`pages/mkdocs.yml`); `tests/` — Playwright.
 - `internal/` + `manage.py` — dev tooling (not shipped in the wheel).
 
@@ -50,7 +57,28 @@ The wheel ships the `shadcn/` package only.
   content. Do not reintroduce `nowrap` — `tests/test_browser.py::`
   `test_tables_wrap_no_horizontal_scroll` (fixture: `pages/docs/`
   `table_wrap_regression.md`) fails if cells compute to `white-space:nowrap` or
-  a table overflows horizontally. Use `class="nowrap"` to opt a cell out.
+  a table overflows horizontally. Use `class="nowrap"` to opt a cell out. The
+  first column gets `min-width: 12rem` (`table tr > :first-child`) so row labels
+  don't collapse to one word per line — a *min-width*, not `nowrap`, so the
+  regression test stays green.
+- **Brand identity comes from `config.site_name`, never a hardcoded "Mewbo".**
+  The page `<title>` (`seo.html`), the Ask-AI greeting + avatar (`search.html`),
+  and the WebMCP tool name (`webmcp.js`, which reads the `og:site_name` meta
+  `seo.html` already emits) all derive from `site_name`, so a consumer site
+  shows its own name with zero template forks. A re-sync that reintroduces a
+  literal `"Mewbo"` in those three is a regression — keep them `site_name`-driven.
+- **`mewbo.css` is unlayered; `base.css` utilities live in `@layer`.** Unlayered
+  rules beat layered ones regardless of specificity, so `mewbo.css` overrides
+  Tailwind utility classes (e.g. the compact full-width sidebar over
+  `p-2`/`h-8`/`gap-1`/`lg:w-fit`) **without `!important`**. The exception is
+  Tailwind's `!`-utilities (e.g. `group-data-[collapsible=icon]:size-8!`), which
+  emit `!important` and still win — only reach for `!important` to beat those.
+- **Tabs: style both markups.** `tailwind/tabs.css` covers the legacy adjacency
+  markup *and* `pymdownx`'s `alternate_style: true` (`.tabbed-alternate` with
+  `.tabbed-labels` / `.tabbed-block`). The alternate rules are positional
+  (`input:nth-of-type(N):checked ~ …:nth-child(N)`) and capped at 8 tabs —
+  extend the two nth-lists if a group needs more. Alternate panels render dead
+  without these.
 - **Template includes use the `templates/` prefix.** The Jinja loader root is
   `shadcn/`, so write `{% include "templates/icon.html" %}` /
   `{% from "templates/_nav_icon_map.html" import nav_icon %}`. There is no

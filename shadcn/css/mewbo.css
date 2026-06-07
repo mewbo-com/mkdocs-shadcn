@@ -863,6 +863,142 @@ article a,
   margin: 0;
 }
 
+/* ─────────────────────────────────────────────────────────────────────────
+   Content media primitives — screenshot figure, device mockups, carousel.
+   Consolidated from per-consumer stylesheets so docs sites get them without
+   forking. All tokenised. */
+
+/* Captioned screenshot figure: bezel-framed image + caption strip. The frame
+   tint is a token so it can be retinted per use; it defaults dark so light UI
+   screenshots pop. Markup: <figure class="ms-shot"><div class="ms-shot__frame">
+   <img></div><figcaption class="ms-shot__body">…</figcaption></figure>. */
+.ms-shot {
+  margin: 1.25rem 0;
+  border: 1px solid var(--border, rgba(0, 0, 0, 0.1));
+  border-radius: 0.7rem;
+  overflow: hidden;
+  background: var(--card, transparent);
+}
+.ms-shot__frame {
+  padding: 0.75rem;
+  background: var(--ms-shot-frame, #1f1d1a);
+}
+.ms-shot__frame img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 0.4rem;
+}
+.ms-shot__body {
+  padding: 0.6rem 0.85rem;
+  font-size: 0.85rem;
+  color: var(--muted-foreground, currentColor);
+}
+
+/* Side-by-side device mockups (e.g. laptop + phone) at matched height that
+   never wrap between each other. Widths are tokens so the ratio tunes per use
+   without forking. Images should carry `.no-border` to skip the content-image
+   frame. Direct children: the images, then an optional `.ms-devices__caption`
+   (forced onto its own line below via flex-basis). */
+.ms-devices {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 2%;
+  row-gap: 0.5rem;
+  margin: 1.25rem 0;
+}
+.ms-devices img { height: auto; }
+.ms-devices img:nth-of-type(1) { width: var(--ms-devices-primary, 71%); }
+.ms-devices img:nth-of-type(2) { width: var(--ms-devices-secondary, 20%); }
+.ms-devices__caption {
+  flex-basis: 100%;
+  text-align: center;
+  font-size: 0.85rem;
+  color: var(--muted-foreground, currentColor);
+}
+
+/* Image carousel (Swiper). Enabled with theme `carousel: true`, which makes the
+   theme emit the Swiper CDN + init (js/carousel.js); consumers only write the
+   `.swiper.ms-shots` markup. Swiper is themed to shadcn tokens so light/dark
+   track automatically; its bold default arrow glyph is swapped for a thin
+   masked lucide chevron. Inert (just a static first slide) if Swiper is absent. */
+.ms-shots {
+  width: 100%;
+  max-width: 100%;
+  margin: 0.75rem 0 0.25rem;
+  overflow: hidden;
+  --swiper-theme-color: var(--primary, #c15f3c);
+  --swiper-navigation-size: 20px;
+}
+.ms-shots .swiper-slide {
+  display: flex;
+  justify-content: center;
+  box-sizing: border-box;
+}
+.ms-shots figure { margin: 0; width: 100%; }
+.ms-shots img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: contain;
+  background: var(--muted, hsl(48 25% 92.2%));
+  border: 1px solid var(--border, rgba(0, 0, 0, 0.1));
+  border-radius: 0.6rem;
+}
+.ms-shots figcaption {
+  margin-top: 0.55rem;
+  text-align: center;
+  font-size: 0.875rem;
+  color: var(--muted-foreground, currentColor);
+}
+.ms-shots .swiper-pagination {
+  position: static;
+  margin-top: 0.6rem;
+}
+.ms-shots .swiper-button-prev,
+.ms-shots .swiper-button-next {
+  width: 32px;
+  height: 32px;
+  margin-top: -16px;
+  border-radius: 999px;
+  background: var(--card, hsl(0 0% 100%));
+  border: 1px solid var(--border, rgba(0, 0, 0, 0.12));
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+  color: var(--card-foreground, currentColor);
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+.ms-shots .swiper-button-prev:hover,
+.ms-shots .swiper-button-next:hover {
+  background: var(--accent, hsl(48 25% 92.2%));
+  border-color: var(--ring, var(--border, rgba(0, 0, 0, 0.18)));
+}
+.ms-shots .swiper-button-prev::after,
+.ms-shots .swiper-button-next::after {
+  content: "";
+  width: 16px;
+  height: 16px;
+  background-color: currentColor;
+  -webkit-mask: var(--ms-chev) center / 16px 16px no-repeat;
+  mask: var(--ms-chev) center / 16px 16px no-repeat;
+}
+.ms-shots .swiper-button-prev {
+  --ms-chev: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M15 18l-6-6 6-6'/%3E%3C/svg%3E");
+}
+.ms-shots .swiper-button-next {
+  --ms-chev: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9 18l6-6-6-6'/%3E%3C/svg%3E");
+}
+/* Swiper v12 injects its own bold <svg class="swiper-navigation-icon">; hide it
+   so only our thin chevron (the ::after) shows. */
+.ms-shots .swiper-button-prev .swiper-navigation-icon,
+.ms-shots .swiper-button-next .swiper-navigation-icon { display: none; }
+
+@media (max-width: 720px) {
+  .ms-shots .swiper-button-prev,
+  .ms-shots .swiper-button-next { display: none; }
+}
+
 /* ─── Navigation chrome: sidebar / TOC active states ──────────────────────────
    Targets the shadcn theme's data-[active=true] hooks. We override the theme's
    default heavy fill (`bg-accent` on a leaf) with a soft tinted pill that uses
@@ -871,15 +1007,42 @@ article a,
    tilted toward primary so the active row reads as "selected", not "button").
    ───────────────────────────────────────────────────────────────────────── */
 
-/* Sidebar group rhythm: Devin-style scannable hierarchy. Groups breathe with
-   ~2x the within-group gap; group labels are slightly bolder + tighter so the
-   eye separates "section header" from "page leaf" at a glance. */
-.mewbo-sidebar-group { margin-top: 0.85rem; }
+/* Sidebar density + row highlight (Devin / DeepWiki cadence). The shadcn template
+   ships airy defaults (h-8 group labels, p-2 groups, gap-1 menus) and makes leaf
+   rows `lg:w-fit`, so hover/active hugs the text like a highlighter instead of a
+   row/button selector. We tighten to a comfortable-but-compact rhythm (looser
+   than a bare list, tighter than the stock spacing), keep section headings as
+   bold sentence-case dividers (no uppercase), and stretch rows full-width.
+   mewbo.css is unlayered, so these win over the layered Tailwind utilities
+   without !important — except the icon-collapsed `size-8!`/`p-2!` rules, which
+   keep !important and so still win in that mode (intended). */
+.mewbo-sidebar-group {
+  margin-top: 0.55rem;
+  padding-top: 0.25rem;
+  padding-bottom: 0.25rem;
+}
 .mewbo-sidebar-group:first-of-type { margin-top: 0; }
 .mewbo-sidebar-group-label {
-  font-size: 0.78rem;
+  height: auto;
+  margin-bottom: 0.2rem;
+  padding-top: 0.2rem;
+  padding-bottom: 0.2rem;
+  font-size: 0.7rem;
+  font-weight: 700;
   letter-spacing: -0.005em;
-  margin-bottom: 0.15rem;
+  color: var(--foreground);
+}
+/* Comfortable, full-width rows: padding around the entry text plus a small gap
+   between entries; each row stretches to the group's bounds so the highlight
+   reads as a selected row, not a text run. */
+[data-sidebar="menu"],
+[data-sidebar="menu-sub"] { gap: 0.2rem; }
+[data-sidebar="menu-button"] {
+  width: 100%;
+  max-width: 100%;
+  min-height: 2rem;
+  padding-top: 0.4rem;
+  padding-bottom: 0.4rem;
 }
 
 /* Soft active leaf — overrides the theme's `data-[active=true]:bg-accent

@@ -9,7 +9,7 @@
    instead of the upstream simple search dialog. #}
 {% set ai_enabled = config.theme.ai and config.theme.ai.deepwiki_repo %}
 {% set ai_examples = (config.theme.ai.examples if config.theme.ai and config.theme.ai.examples else [
-    "How do I install and configure Mewbo?",
+    "How do I install and configure " ~ config.site_name ~ "?",
     "How does the agent hypervisor work?",
     "How do I add MCP tools?",
     "How do I connect Home Assistant?"
@@ -93,10 +93,10 @@
 
                     <!-- Greeting block: avatar + multi-line message with inline product pill -->
                     <div class="mewbo-greeting">
-                        <div class="mewbo-greeting__avatar" aria-hidden="true">M</div>
+                        <div class="mewbo-greeting__avatar" aria-hidden="true">{{ config.site_name[0] | upper }}</div>
                         <div class="mewbo-greeting__text">
-                            <p>{{ _("I'm an AI assistant with Mewbo's codebase and documentation in context.") }}</p>
-                            <p>{% trans %}Ask me anything about <span class="mewbo-greeting__pill">Mewbo</span>.{% endtrans %}</p>
+                            <p>{% trans name=config.site_name %}I'm an AI assistant with {{ name }}'s codebase and documentation in context.{% endtrans %}</p>
+                            <p>{% trans name=config.site_name %}Ask me anything about <span class="mewbo-greeting__pill">{{ name }}</span>.{% endtrans %}</p>
                         </div>
                     </div>
 

@@ -8,6 +8,7 @@ theme:
   name: shadcn
   icon: null
   topbar_sections: false
+  carousel: true
   pygments_style:
     light: shadcn-light
     dark: github-dark
@@ -35,6 +36,7 @@ markdown_extensions:
   extra:
   pymdownx.blocks.details:
   pymdownx.tabbed:
+    alternate_style: true
   pymdownx.blocks.tab:
     combine_header_slug: true
     separator: ___

@@ -54,6 +54,19 @@ article .table-wrapper {
 }
 
 /*
+ * First-column readability. The break-words default above let auto table
+ * layout squeeze the first column (row labels / keys) down to one word per
+ * line when a table has several wide columns. Give the first column a
+ * comfortable minimum so labels stay legible. Cells still wrap — white-space
+ * stays `normal`, so the nowrap regression test keeps passing — and the
+ * `.table-wrapper` overflow-x fallback still catches genuinely narrow
+ * viewports. The other columns absorb the change by wrapping a little more.
+ */
+article table tr > :first-child {
+	min-width: 12rem;
+}
+
+/*
  * Opt-out: add class="nowrap" to a cell when single-line content with
  * horizontal scroll is actually wanted (e.g. a dense numeric data grid).
  */

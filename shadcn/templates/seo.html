@@ -1,14 +1,12 @@
 {% block seo %}
 
-{# Title format: "<page title> - Mewbo docs". Falls back to just the brand
-   on pages with no title (shouldn't happen, but safe). The "Mewbo" suffix
-   is part of the umbrella brand chrome and is intentionally fixed across
-   every product that consumes this theme. #}
+{# Title format: "<page title> · <site_name>". Falls back to just the
+   site_name on pages with no title. #}
 {% set _page_title = page.meta.title or page.title %}
 {% if _page_title and _page_title != config.site_name %}
-<title>{{ _page_title }} - Mewbo docs</title>
+<title>{{ _page_title }} · {{ config.site_name }}</title>
 {% else %}
-<title>Mewbo docs</title>
+<title>{{ config.site_name }}</title>
 {% endif %}
 
 {% if page.meta.description %}

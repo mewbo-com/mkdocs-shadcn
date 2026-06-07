@@ -22,7 +22,7 @@ ai:
 
   # Prefix prepended to EVERY question sent to DeepWiki. Use this to:
   #   - Disambiguate product names with internal aliases / codenames
-  #     (e.g. "Mewbo / Example / Example2 all refer to the same product.")
+  #     (e.g. "AppX and its internal codename refer to the same product.")
   #   - Set tone or scope of answers ("Give product-first, well-grounded
   #     answers." / "Cite source files when possible.")
   # The default fallback (when this is null) is a single generic line:
@@ -33,10 +33,10 @@ ai:
   # Example:
   #   theme:
   #     ai:
-  #       deepwiki_repo: example-org/your-docs
+  #       deepwiki_repo: your-org/your-repo
   #       question_prefix: |
   #         I'm a new user; give product-first, well-grounded answers.
-  #         Mewbo / Example / Example2 / Assistant all refer to the same product.
+  #         AppX and its internal codename refer to the same product.
   question_prefix: null
 
   # Example questions surfaced in the Ask AI welcome state. Falls back to a
@@ -103,3 +103,9 @@ show_version_switcher: false
 # (commit/branch/timestamp) produced by your CI. Default off — without
 # that artifact, the script logs a 404 on every page load.
 show_build_info: false
+
+# Image carousel support. When true, the theme loads Swiper (from CDN) plus its
+# init script (js/carousel.js) on every page; a page opts in by writing
+# `.swiper.ms-shots` markup. Default off so the CDN + script aren't fetched on
+# sites that have no carousel. Styling lives in css/mewbo.css (.ms-shots).
+carousel: false

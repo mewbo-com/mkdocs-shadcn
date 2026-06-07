@@ -143,3 +143,52 @@ def test_tables_wrap_no_horizontal_scroll(page: Page):
         assert sw <= cw + 1, (
             f"table overflows: scrollWidth={sw} clientWidth={cw}"
         )
+
+
+def test_alternate_style_tabs_switch(page: Page):
+    """Modern pymdownx `alternate_style: true` tabs must show/hide panels.
+
+    The theme originally styled only the legacy adjacency markup; the alternate
+    markup (`.tabbed-alternate` with `.tabbed-labels` + `.tabbed-block`) had no
+    rules, so panels rendered permanently hidden. This asserts the positional
+    CSS added in tailwind/tabs.css actually toggles the active panel.
+    """
+    page.goto(BASE + "/mewbo_components/", wait_until="networkidle")
+
+    tabset = page.locator(".tabbed-alternate").first
+    blocks = tabset.locator(".tabbed-content > .tabbed-block")
+    labels = tabset.locator(".tabbed-labels > label")
+    assert blocks.count() >= 3, "fixture should have 3 alternate-style tabs"
+
+    # First panel open by default, the others hidden.
+    assert blocks.nth(0).is_visible()
+    assert not blocks.nth(1).is_visible()
+    assert not blocks.nth(2).is_visible()
+
+    # Clicking the second label reveals panel 2 and hides panel 1.
+    labels.nth(1).click()
+    assert blocks.nth(1).is_visible()
+    assert not blocks.nth(0).is_visible()
+
+    # And the third.
+    labels.nth(2).click()
+    assert blocks.nth(2).is_visible()
+    assert not blocks.nth(1).is_visible()
+
+
+def test_carousel_mounts(page: Page):
+    """The carousel feature must initialise Swiper on `.ms-shots` blocks.
+
+    Guards the theme.carousel wiring (Swiper CDN + js/carousel.js) and the
+    class-based initialiser: carousel.js sets data-mounted and Swiper adds the
+    `swiper-initialized` class to the root once it boots.
+    """
+    page.goto(BASE + "/mewbo_components/", wait_until="networkidle")
+
+    # carousel.js polls briefly for the CDN-loaded Swiper, then mounts.
+    page.wait_for_selector(".ms-shots[data-mounted='1']", timeout=8000)
+    carousel = page.locator(".ms-shots").first
+    cls = carousel.get_attribute("class") or ""
+    assert "swiper-initialized" in cls, (
+        f"carousel did not initialise; class={cls!r}"
+    )

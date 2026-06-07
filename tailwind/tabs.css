@@ -25,3 +25,50 @@ article .tabbed-content .codehilite {
 article .tabbed-set input[type="radio"]:checked + label + div.tabbed-content {
 	@apply block;
 }
+
+/* ── Modern pymdownx `alternate_style: true` markup ──────────────────────────
+   Different structure from the legacy adjacency markup above: all radios come
+   first, then a `.tabbed-labels` row, then `.tabbed-content` holding N
+   `.tabbed-block` panels. The legacy rules never match it (there is no
+   input+label adjacency), so without these the panels render permanently
+   hidden. We key the active label/panel off the checked radio positionally.
+   Capped at 8 tabs — extend the two nth-lists below if a group needs more. */
+article .tabbed-set.tabbed-alternate {
+	@apply flex flex-col flex-wrap;
+}
+
+article .tabbed-alternate .tabbed-labels {
+	@apply flex flex-row flex-wrap border-b border-b-border;
+}
+
+article .tabbed-set.tabbed-alternate > .tabbed-content {
+	@apply block basis-full pt-3 overflow-auto;
+}
+
+article .tabbed-alternate .tabbed-content > .tabbed-block {
+	@apply hidden;
+}
+
+/* Active label: checked radio N highlights label N */
+article .tabbed-set.tabbed-alternate > input:nth-of-type(1):checked ~ .tabbed-labels > label:nth-child(1),
+article .tabbed-set.tabbed-alternate > input:nth-of-type(2):checked ~ .tabbed-labels > label:nth-child(2),
+article .tabbed-set.tabbed-alternate > input:nth-of-type(3):checked ~ .tabbed-labels > label:nth-child(3),
+article .tabbed-set.tabbed-alternate > input:nth-of-type(4):checked ~ .tabbed-labels > label:nth-child(4),
+article .tabbed-set.tabbed-alternate > input:nth-of-type(5):checked ~ .tabbed-labels > label:nth-child(5),
+article .tabbed-set.tabbed-alternate > input:nth-of-type(6):checked ~ .tabbed-labels > label:nth-child(6),
+article .tabbed-set.tabbed-alternate > input:nth-of-type(7):checked ~ .tabbed-labels > label:nth-child(7),
+article .tabbed-set.tabbed-alternate > input:nth-of-type(8):checked ~ .tabbed-labels > label:nth-child(8) {
+	@apply text-foreground border-b-primary;
+}
+
+/* Active panel: checked radio N shows block N */
+article .tabbed-set.tabbed-alternate > input:nth-of-type(1):checked ~ .tabbed-content > .tabbed-block:nth-child(1),
+article .tabbed-set.tabbed-alternate > input:nth-of-type(2):checked ~ .tabbed-content > .tabbed-block:nth-child(2),
+article .tabbed-set.tabbed-alternate > input:nth-of-type(3):checked ~ .tabbed-content > .tabbed-block:nth-child(3),
+article .tabbed-set.tabbed-alternate > input:nth-of-type(4):checked ~ .tabbed-content > .tabbed-block:nth-child(4),
+article .tabbed-set.tabbed-alternate > input:nth-of-type(5):checked ~ .tabbed-content > .tabbed-block:nth-child(5),
+article .tabbed-set.tabbed-alternate > input:nth-of-type(6):checked ~ .tabbed-content > .tabbed-block:nth-child(6),
+article .tabbed-set.tabbed-alternate > input:nth-of-type(7):checked ~ .tabbed-content > .tabbed-block:nth-child(7),
+article .tabbed-set.tabbed-alternate > input:nth-of-type(8):checked ~ .tabbed-content > .tabbed-block:nth-child(8) {
+	@apply block;
+}
