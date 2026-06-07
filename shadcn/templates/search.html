@@ -1,34 +1,168 @@
-<div class="hidden w-full flex-1 md:flex md:w-auto md:flex-none">
-    <button onclick="onSearchBarClick(event)" data-slot="dialog-trigger" data-variant="outline" data-size="default" class="inline-flex shrink-0 items-center gap-2 text-sm whitespace-nowrap transition-all outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 [&amp;_svg]:pointer-events-none [&amp;_svg]:shrink-0 [&amp;_svg:not([class*='size-'])]:size-4 border bg-background hover:text-accent-foreground dark:border-input dark:hover:bg-input/50 px-4 py-2 has-[&gt;svg]:px-3 relative h-8 w-full justify-start rounded-lg pl-3 font-normal text-foreground shadow-none hover:bg-muted/50 sm:pr-12 md:w-48 lg:w-56 xl:w-64 dark:bg-card" type="button" aria-haspopup="dialog" aria-expanded="false" aria-controls="radix-_r_1_" data-state="closed">
-        <span class="hidden lg:inline-flex">{{ _("Search documentation...") }}</span>
-        <span class="inline-flex lg:hidden">{{ _("Search...") }}</span>
-    </button>
-</div>
-<dialog id="search-dialog" onclick="onSearchDialogClick(event)"
-    class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-background rounded-lg shadow-lg border overflow-hidden p-0">
-    <div class="w-lg gap-4">
-        <div class="flex h-full w-full flex-col overflow-hidden rounded-md bg-popover text-popover-foreground">
-            <div data-slot="command-input-wrapper" class="flex h-9 items-center gap-2 border-b px-3"><svg
-                    xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                    class="lucide lucide-search size-4 shrink-0 opacity-50">
-                    <circle cx="11" cy="11" r="8"></circle>
-                    <path d="m21 21-4.3-4.3"></path>
-                </svg>
-                <input data-slot="command-input"
-                    class="placeholder:text-muted-foreground flex h-10 w-full rounded-md bg-transparent py-3 text-sm outline-hidden disabled:cursor-not-allowed disabled:opacity-50"
-                    placeholder="{{ _('Search documentation...') }}" cmdk-input="" autocomplete="off" autocorrect="off"
-                    spellcheck="false" aria-autocomplete="list" role="combobox" aria-expanded="true"
-                    aria-controls="radix-«r1t6»" aria-labelledby="radix-«r1t7»" id="radix-«r1t8»" type="text" value=""
-                    aria-activedescendant="radix-«r1th»" oninput="onInputHandler(event)">
+{# Unified Search + Ask AI modal. Search is always available; the Ask AI
+   tab is conditionally rendered based on whether `theme.ai.deepwiki_repo`
+   is configured.
+
+   The `mkdocs-search-results` ID must remain exactly that — Lunr/MkDocs
+   search populates it. The script block at the end overrides
+   `window.onSearchBarClick` so the theme's existing keyboard shortcut
+   (Cmd/Ctrl+K, defined in callbacks.js) routes through this modal
+   instead of the upstream simple search dialog. #}
+{% set ai_enabled = config.theme.ai and config.theme.ai.deepwiki_repo %}
+{% set ai_examples = (config.theme.ai.examples if config.theme.ai and config.theme.ai.examples else [
+    "How do I install and configure Mewbo?",
+    "How does the agent hypervisor work?",
+    "How do I add MCP tools?",
+    "How do I connect Home Assistant?"
+]) %}
+
+<dialog id="mewbo-modal" data-active="{{ 'ask-ai' if ai_enabled else 'search' }}" aria-label="{% if ai_enabled %}{{ _('Search and Ask AI') }}{% else %}{{ _('Search') }}{% endif %}">
+    <div class="mewbo-modal__inner">
+
+        <!-- Header row: mode-specific content (left) + grouped segmented toggle (right) -->
+        <div class="mewbo-modal__header">
+
+            <!-- Search mode: magnifier + input -->
+            <div class="mewbo-header__search" data-mode="search">
+                {{ "lucide:search" | iconify(height="16px") | safe }}
+                <input
+                    cmdk-input
+                    id="mewbo-search-input"
+                    type="text"
+                    placeholder="{{ _('Search for anything…') }}"
+                    autocomplete="off"
+                    autocorrect="off"
+                    spellcheck="false"
+                    aria-autocomplete="list"
+                    role="combobox"
+                    aria-expanded="true"
+                    aria-label="{{ _('Search documentation') }}"
+                    oninput="onInputHandler(event)"
+                />
             </div>
+
+            {% if ai_enabled %}
+            <!-- Ask AI mode: label -->
+            <div class="mewbo-header__label" data-mode="ask-ai">{{ _("Ask AI") }}</div>
+
+            <!-- Segmented toggle (always visible, top-right) -->
+            <div class="mewbo-toggle" role="tablist" aria-label="{{ _('Search or Ask AI') }}">
+                <button class="mewbo-toggle__btn" data-tab="search" role="tab" type="button">
+                    {{ "lucide:search" | iconify(height="12px") | safe }}
+                    {{ _("Search") }}
+                </button>
+                <button class="mewbo-toggle__btn" data-tab="ask-ai" role="tab" type="button">
+                    {{ "lucide:sparkles" | iconify(height="12px") | safe }}
+                    {{ _("Ask AI") }}
+                </button>
+            </div>
+            {% endif %}
+
         </div>
-        <div id="mkdocs-search-results">
-            <!-- search results go there -->
+
+        <!-- Search panel -->
+        <div id="mewbo-search-panel" role="tabpanel">
+
+            {% if ai_enabled %}
+            <!-- Ask AI handoff row -->
+            <div id="mewbo-ask-ai-shortcut" role="button" tabindex="0" aria-label="{{ _('Ask AI about your query') }}">
+                <span class="mewbo-shortcut__glyph" aria-hidden="true">
+                    {{ "lucide:sparkles" | iconify(height="14px") | safe }}
+                </span>
+                <span class="mewbo-shortcut__label">{{ _("Ask AI") }}</span>
+                <span id="mewbo-shortcut-query" class="mewbo-shortcut__query"></span>
+                <span class="mewbo-shortcut__cta">{{ _("Start conversation ↵") }}</span>
+            </div>
+            {% endif %}
+
+            <!-- Scope filter chips (populated by ask-ai.js when results exist) -->
+            <div id="mewbo-search-filters" class="mewbo-search-filters" aria-label="{{ _('Filter results by section') }}"></div>
+
+            <!-- Search results (Lunr populates this — ID must stay exactly mkdocs-search-results) -->
+            <div id="mkdocs-search-results" role="listbox" aria-label="{{ _('Search results') }}"></div>
+
         </div>
+
+        {% if ai_enabled %}
+        <!-- Ask AI panel -->
+        <div id="mewbo-ask-ai-panel" role="tabpanel">
+
+            <div class="mewbo-ask-ai__body">
+
+                <!-- Welcome state (visible before submit) -->
+                <div id="mewbo-welcome">
+
+                    <!-- Greeting block: avatar + multi-line message with inline product pill -->
+                    <div class="mewbo-greeting">
+                        <div class="mewbo-greeting__avatar" aria-hidden="true">M</div>
+                        <div class="mewbo-greeting__text">
+                            <p>{{ _("I'm an AI assistant with Mewbo's codebase and documentation in context.") }}</p>
+                            <p>{% trans %}Ask me anything about <span class="mewbo-greeting__pill">Mewbo</span>.{% endtrans %}</p>
+                        </div>
+                    </div>
+
+                    <div class="mewbo-examples__label">{{ _("EXAMPLE QUESTIONS") }}</div>
+                    <div class="mewbo-examples">
+                        {% for q in ai_examples %}
+                        <button class="mewbo-example-pill" data-question="{{ q }}" type="button">{{ q }}</button>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Answer state (hidden before submit) -->
+                <div id="mewbo-answer" style="display: none;">
+
+                    <!-- Skeleton shimmer (shown while loading) -->
+                    <div id="mewbo-skeleton">
+                        <div class="mewbo-skeleton__line"></div>
+                        <div class="mewbo-skeleton__line"></div>
+                        <div class="mewbo-skeleton__line"></div>
+                        <div class="mewbo-skeleton__line"></div>
+                    </div>
+
+                    <!-- Rendered answer text -->
+                    <div id="mewbo-answer-text"></div>
+
+                    <!-- Ask another question CTA -->
+                    <button id="mewbo-ask-another" type="button" style="display: none;">{{ _("Ask another question →") }}</button>
+
+                </div>
+
+            </div>
+
+            <!-- Input footer -->
+            <div class="mewbo-ask-ai__input-footer">
+                <input
+                    id="mewbo-ai-input"
+                    type="text"
+                    placeholder="{{ _('How do I get started?') }}"
+                    autocomplete="off"
+                    aria-label="{{ _('Ask AI a question') }}"
+                />
+                <button id="mewbo-ai-send" type="button" disabled aria-label="{{ _('Send question') }}">
+                    {{ "lucide:send" | iconify(height="16px") | safe }}
+                </button>
+            </div>
+
+        </div>
+        {% endif %}
+
     </div>
 </dialog>
+
+{% if ai_enabled %}
+<!-- Floating Ask AI button -->
+<button id="mewbo-fab" type="button" aria-label="{{ _('Ask AI') }}">
+    {{ "lucide:sparkles" | iconify(height="16px") | safe }}
+    {{ _("Ask AI") }}
+</button>
+{% endif %}
+
 <script>
-    document.removeEventListener("keydown", searchShortcutHandler);
-    document.addEventListener("keydown", searchShortcutHandler);
+    // Override theme's onSearchBarClick so Ctrl K / Cmd K open our modal
+    window.onSearchBarClick = function() {
+        var m = document.getElementById('mewbo-modal');
+        if (m && m.open) { m.close(); } else if (m) { m.dataset.active = 'search'; m.showModal(); }
+    };
+    document.removeEventListener('keydown', searchShortcutHandler);
+    document.addEventListener('keydown', searchShortcutHandler);
 </script>

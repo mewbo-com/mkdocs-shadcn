@@ -1,9 +1,13 @@
 [project]
-name = "mkdocs-shadcn"
-version = "0.10.7"
-description = "Documentation that also shines"
+name = "mkdocs-shadcn-mewbo"
+# Mewbo scheme; 1.1.0 absorbs the upstream mkdocs-shadcn v0.10.7 sync.
+version = "1.1.0"
+description = "Mewbo's brand-fork of mkdocs-shadcn — same theme entrypoint, plus Ask AI panel, three-zone header, sidebar nav-icons, prefetch speculation, full SEO, and the cream/clay Mewbo palette as default."
 authors = [
-    { name = "Alban Siffer", email = "31479857+asiffer@users.noreply.github.com" },
+    { name = "mewbo-com" },
+]
+maintainers = [
+    { name = "mewbo-com" },
 ]
 readme = "README.md"
 requires-python = ">=3.8"
@@ -13,6 +17,12 @@ dependencies = [
     "pymdown-extensions>=10.14.3",
     "gitpython>=3.1.45",
 ]
+
+[project.urls]
+Homepage = "https://github.com/mewbo-com/mkdocs-shadcn"
+Repository = "https://github.com/mewbo-com/mkdocs-shadcn"
+Issues = "https://github.com/mewbo-com/mkdocs-shadcn/issues"
+Upstream = "https://github.com/asiffer/mkdocs-shadcn"
 
 [dependency-groups]
 dev = [

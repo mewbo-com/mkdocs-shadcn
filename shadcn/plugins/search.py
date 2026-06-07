@@ -1,4 +1,5 @@
 import re
+from datetime import datetime, timezone
 from functools import partial
 
 from jinja2 import Environment
@@ -61,6 +62,9 @@ class SearchPlugin(
         env.filters["first_page"] = first_page
         env.filters["file_exists"] = partial(file_exists, config=config)
         env.filters["is_http_url"] = is_http_url
+        # Globals (no-arg values used by templates like footer.html). Computed
+        # at build time, so re-deploys to bump the year are explicit.
+        env.globals["current_year"] = datetime.now(tz=timezone.utc).year
         return super().on_env(env, config=config, files=files)
 
     def on_page_markdown(

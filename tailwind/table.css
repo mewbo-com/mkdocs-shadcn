@@ -15,7 +15,7 @@ article table tr {
 }
 
 article table thead tr th {
-	@apply text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px];
+	@apply text-foreground h-10 px-2 text-left align-middle font-medium [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px];
 }
 
 article table tbody {
@@ -23,13 +23,48 @@ article table tbody {
 }
 
 article table tbody tr td {
-	@apply p-2 align-middle whitespace-nowrap [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px];
+	@apply p-2 align-middle [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px];
+}
+
+/*
+ * Word-wrap every column by default so wide tables reflow to fit the content
+ * area instead of forcing a horizontal scrollbar (docs-style tables, matching
+ * the Devin/Mintlify wiki). The shadcn data-table component this theme derives
+ * from ships `whitespace-nowrap` on every th/td — correct for app data grids,
+ * wrong for prose docs — so we drop that default above and let cells wrap.
+ * `break-words` additionally breaks the rare unbreakable token (long URL/path)
+ * rather than letting it punch the column wider than the page.
+ *
+ * `.table-wrapper` (injected by shadcn/plugins/mixins/table.py) keeps
+ * overflow-x:auto as a *fallback* for genuinely un-wrappable content such as a
+ * long code span or a wide image, which still scroll instead of breaking.
+ *
+ * Regression guard:
+ * tests/test_browser.py::test_tables_wrap_no_horizontal_scroll asserts cells
+ * never compute to `white-space: nowrap`, so a future upstream sync that
+ * reintroduces nowrap fails CI instead of silently regressing.
+ */
+article table thead tr th,
+article table tbody tr td {
+	@apply break-words;
 }
 
 article .table-wrapper {
 	@apply relative w-full overflow-x-auto;
 }
 
+/*
+ * Opt-out: add class="nowrap" to a cell when single-line content with
+ * horizontal scroll is actually wanted (e.g. a dense numeric data grid).
+ */
+article table .nowrap {
+	white-space: nowrap;
+}
+
+/*
+ * Back-compat opt-in helper. The previous `white-space: wrap` was an invalid
+ * value (no-op); `normal` is the intended behaviour and now also the default.
+ */
 article table .wrap {
-	white-space: wrap;
+	white-space: normal;
 }

@@ -1,96 +1,194 @@
-on:
-  workflow_dispatch:
-  push:
-    # Pattern matched against refs/tags
-    tags:
-      - "*" # Push events to every tag not containing /
+name: Build wheel + publish to GitHub Releases
 
-name: Publish mkdocs-shadcn to PyPI
+# Two trigger modes:
+#
+#   1. Tag push  (refs/tags/v*) → official release at the tag.
+#                                 Refuses to publish if the tag and
+#                                 pyproject.toml version disagree.
+#                                 Wheel name: mkdocs_shadcn_mewbo-<X.Y.Z>-py3-none-any.whl
+#
+#   2. Branch push / dispatch  → commit-pinned PRE-release at tag
+#                                 commit-<short-sha>. The pyproject
+#                                 version is rewritten in CI to
+#                                 "<base>+<short-sha>" (PEP 440 local
+#                                 version), so each commit gets a
+#                                 unique, cacheable wheel.
+#                                 Wheel name: mkdocs_shadcn_mewbo-<X.Y.Z>+<sha>-py3-none-any.whl
+#
+# Consumers pin via the asset URL on the corresponding GitHub Release:
+#
+#   Tag pin:    "mkdocs-shadcn-mewbo @ https://github.com/mewbo-com/mkdocs-shadcn/releases/download/v1.0.0/mkdocs_shadcn_mewbo-1.0.0-py3-none-any.whl"
+#   Commit pin: "mkdocs-shadcn-mewbo @ https://github.com/mewbo-com/mkdocs-shadcn/releases/download/commit-abc1234/mkdocs_shadcn_mewbo-1.0.0+abc1234-py3-none-any.whl"
+
+on:
+  push:
+    branches: ["**"]
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+# Only one build per commit at a time. New pushes to the same ref cancel
+# in-flight runs, since the artifact they'd produce is about to be replaced.
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  build:
-    name: Build package
+  release:
+    name: Build + publish
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      # write: the publish step creates/replaces GitHub Releases + tags.
+      # (A read-only token here is what caused the 403 on release create.)
+      contents: write
     steps:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
+          fetch-depth: 0
+
       - name: Install uv
         uses: astral-sh/setup-uv@v5
-      - name: "Set up Python"
+
+      - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version-file: "pyproject.toml"
-      - name: Build a binary wheel and a source tarball
+
+      - name: Compute build metadata
+        id: meta
+        run: |
+          set -euo pipefail
+          PYPROJECT_VERSION=$(grep -E '^version = ' pyproject.toml | head -1 | cut -d'"' -f2)
+          SHORT_SHA=$(git rev-parse --short=7 HEAD)
+          echo "short_sha=$SHORT_SHA" >> "$GITHUB_OUTPUT"
+          echo "pyproject_version=$PYPROJECT_VERSION" >> "$GITHUB_OUTPUT"
+
+          if [[ "${GITHUB_REF}" == refs/tags/v* ]]; then
+            TAG_VERSION="${GITHUB_REF_NAME#v}"
+            if [ "$TAG_VERSION" != "$PYPROJECT_VERSION" ]; then
+              echo "::error::Tag $GITHUB_REF_NAME does not match pyproject.toml version $PYPROJECT_VERSION"
+              exit 1
+            fi
+            echo "kind=tag" >> "$GITHUB_OUTPUT"
+            echo "version=$PYPROJECT_VERSION" >> "$GITHUB_OUTPUT"
+            echo "release_tag=$GITHUB_REF_NAME" >> "$GITHUB_OUTPUT"
+            echo "release_title=$GITHUB_REF_NAME" >> "$GITHUB_OUTPUT"
+            echo "prerelease=false" >> "$GITHUB_OUTPUT"
+          else
+            DEV_VERSION="${PYPROJECT_VERSION}+${SHORT_SHA}"
+            echo "kind=commit" >> "$GITHUB_OUTPUT"
+            echo "version=$DEV_VERSION" >> "$GITHUB_OUTPUT"
+            echo "release_tag=commit-$SHORT_SHA" >> "$GITHUB_OUTPUT"
+            echo "release_title=${GITHUB_REF_NAME} @ ${SHORT_SHA}" >> "$GITHUB_OUTPUT"
+            echo "prerelease=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Pin pyproject version (commit builds only)
+        if: steps.meta.outputs.kind == 'commit'
+        run: |
+          set -euo pipefail
+          # PEP 440 allows local version segments after `+`. uv build
+          # passes them through unchanged into the wheel filename.
+          sed -i "s|^version = .*|version = \"${{ steps.meta.outputs.version }}\"|" pyproject.toml
+          echo "::group::Updated pyproject version"
+          grep -E '^version = ' pyproject.toml | head -1
+          echo "::endgroup::"
+
+      - name: Build wheel and sdist
         run: uv build
-      - name: Store the distribution packages
-        uses: actions/upload-artifact@v4
-        with:
-          name: mkdocs-shadcn
-          path: dist/
 
-  publish:
-    name: Publish to PyPI
-    needs:
-      - build
-    runs-on: ubuntu-latest
-    environment:
-      name: pypi
-      url: https://pypi.org/p/mkdocs-shadcn # Replace <package-name> with your PyPI project name
-    permissions:
-      id-token: write # IMPORTANT: mandatory for trusted publishing
-
-    steps:
-      - name: Download artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: mkdocs-shadcn
-          path: dist/
-      - name: Publish to PyPI
-        uses: pypa/gh-action-pypi-publish@release/v1
-
-  release:
-    name: >-
-      Sign the Python 🐍 distribution 📦 with Sigstore
-      and upload them to GitHub Release
-    needs:
-      - publish
-    runs-on: ubuntu-latest
-
-    permissions:
-      contents: write # IMPORTANT: mandatory for making GitHub Releases
-      id-token: write # IMPORTANT: mandatory for sigstore
-
-    steps:
-      - name: Download artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: mkdocs-shadcn
-          path: dist/
-      - name: Sign the dists with Sigstore
-        uses: sigstore/gh-action-sigstore-python@v3.0.0
-        with:
-          inputs: >-
-            ./dist/*.tar.gz
-            ./dist/*.whl
-      - name: Create GitHub Release
+      - name: Publish or replace GitHub Release with artifacts
         env:
-          GITHUB_TOKEN: ${{ github.token }}
-        run: >-
-          gh release create
-          "$GITHUB_REF_NAME"
-          --repo "$GITHUB_REPOSITORY"
-          --notes ""
-          --draft
-      - name: Upload artifact signatures to GitHub Release
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ steps.meta.outputs.release_tag }}
+          RELEASE_TITLE: ${{ steps.meta.outputs.release_title }}
+          IS_PRERELEASE: ${{ steps.meta.outputs.prerelease }}
+        run: |
+          set -euo pipefail
+          # Idempotent: re-runs of the same commit replace the previous
+          # release+tag rather than failing with "already exists". For
+          # tag builds (v*), this means a manual re-run can re-publish.
+          gh release delete "$RELEASE_TAG" --yes --cleanup-tag --repo "$GITHUB_REPOSITORY" || true
+
+          PRE_FLAG=()
+          if [ "$IS_PRERELEASE" = "true" ]; then
+            PRE_FLAG=(--prerelease)
+          fi
+
+          gh release create "$RELEASE_TAG" \
+            --repo "$GITHUB_REPOSITORY" \
+            --title "$RELEASE_TITLE" \
+            --target "$GITHUB_SHA" \
+            --generate-notes \
+            "${PRE_FLAG[@]}" \
+            dist/*.whl dist/*.tar.gz
+
+      - name: Surface install snippet in the run summary
         env:
-          GITHUB_TOKEN: ${{ github.token }}
-        # Upload to GitHub Release using the `gh` CLI.
-        # `dist/` contains the built packages, and the
-        # sigstore-produced signatures and certificates.
-        run: >-
-          gh release upload
-          "$GITHUB_REF_NAME" dist/**
-          --repo "$GITHUB_REPOSITORY"
+          RELEASE_TAG: ${{ steps.meta.outputs.release_tag }}
+          VERSION: ${{ steps.meta.outputs.version }}
+          KIND: ${{ steps.meta.outputs.kind }}
+        run: |
+          set -euo pipefail
+          REPO_HTML="https://github.com/${GITHUB_REPOSITORY}"
+          WHEEL_NAME="mkdocs_shadcn_mewbo-${VERSION}-py3-none-any.whl"
+          WHEEL_URL="${REPO_HTML}/releases/download/${RELEASE_TAG}/${WHEEL_NAME}"
+          {
+            echo "## Release \`${RELEASE_TAG}\` (${KIND} build)"
+            echo
+            echo "Pin in \`pyproject.toml\`:"
+            echo
+            echo '```toml'
+            echo "[project]"
+            echo "dependencies = ["
+            echo "  \"mkdocs-shadcn-mewbo @ ${WHEEL_URL}\","
+            echo "]"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      # Moving "latest-master" release: same wheel, no +<sha> local
+      # segment, so the asset URL is permanently
+      #   /releases/download/latest-master/mkdocs_shadcn_mewbo-<BASE>-py3-none-any.whl
+      # Consumers who want auto-tracking pin to that URL and run
+      #   uv lock --upgrade-package mkdocs-shadcn-mewbo
+      # to refresh. Reproducibility-first consumers stick with the
+      # commit-<sha> release published by the steps above.
+      - name: Replace "latest-master" moving release
+        if: github.ref == 'refs/heads/master'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BASE_VERSION: ${{ steps.meta.outputs.pyproject_version }}
+        run: |
+          set -euo pipefail
+          git checkout HEAD -- pyproject.toml
+          rm -rf dist
+          uv build
+
+          REPO_HTML="https://github.com/${GITHUB_REPOSITORY}"
+          WHEEL_NAME="mkdocs_shadcn_mewbo-${BASE_VERSION}-py3-none-any.whl"
+          WHEEL_URL="${REPO_HTML}/releases/download/latest-master/${WHEEL_NAME}"
+
+          gh release delete latest-master --yes --cleanup-tag --repo "$GITHUB_REPOSITORY" || true
+          gh release create latest-master \
+            --repo "$GITHUB_REPOSITORY" \
+            --title "Latest master build" \
+            --target "$GITHUB_SHA" \
+            --prerelease \
+            --notes "Auto-updated on every push to \`master\`. Currently at commit \`${GITHUB_SHA}\`. Pin: \`\"mkdocs-shadcn-mewbo @ ${WHEEL_URL}\"\` — URL is permanent; refresh with \`uv lock --upgrade-package mkdocs-shadcn-mewbo\`. For reproducibility, pin the matching \`commit-<sha>\` release instead." \
+            dist/*.whl dist/*.tar.gz
+
+          {
+            echo "## Moving release \`latest-master\`"
+            echo
+            echo "Stable pin (refresh with \`uv lock --upgrade-package mkdocs-shadcn-mewbo\`):"
+            echo
+            echo '```toml'
+            echo "[project]"
+            echo "dependencies = ["
+            echo "  \"mkdocs-shadcn-mewbo @ ${WHEEL_URL}\","
+            echo "]"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"

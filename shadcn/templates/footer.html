@@ -1,14 +1,136 @@
-<footer view-transition-name="footer"
-    class="group-has-[.section-soft]/body:bg-surface/40 3xl:fixed:bg-transparent dark:bg-transparent">
-    <div class="container-wrapper px-4 xl:px-6">
-        <div class="flex h-(--footer-height) items-center justify-between">
-            <div class="text-muted-foreground w-full text-center text-xs leading-loose sm:text-sm">
-                {% if config.site_author %}
-                {{ _("Built by") }}<!-- --> {{ config.site_author | parse_author}} &mdash;
-                {% endif %}
-                <a href="https://github.com/asiffer/mkdocs-shadcn">shadcn theme</a> {{ _("provided by") }}
-                <a href="https://github.com/asiffer">@asiffer</a>
-            </div>
-        </div>
+{# Brand footer — THREE HORIZONTAL COLUMNS, side by side.
+
+   Columns, left → right:
+     1. Intro    — logo + name + tagline
+     2. Connect  — bordered social-icon button cluster
+     3. Docs     — auto-derived link list from top-level `nav:`
+
+   Per-product `theme.footer.sections` entries become additional columns
+   appended after the docs column (so a product can add Resources /
+   Community / Legal etc.). Below all columns sits a thin baseline strip
+   with copyright + a small attribution link.
+#}
+
+{% set _f = config.theme.footer or {} %}
+{% set _tagline = _f.tagline or config.site_description %}
+{% set _copyright = _f.copyright or ("© " ~ current_year ~ " " ~ config.site_name) %}
+
+{# Auto-derive docs link list from top-level nav. Sections resolve to
+   their first leaf page so the link doesn't 404. #}
+{% set _doc_links = [] %}
+{% for item in nav %}
+  {% if item.is_page %}
+    {% set _unused =_doc_links.append({"title": item.title, "url": item.abs_url}) %}
+  {% elif item.is_section %}
+    {% set _first = item.children|selectattr("is_page")|first %}
+    {% if not _first %}
+      {% for child in item.children if child.is_section %}
+        {% if not _first %}
+          {% set _first = child.children|selectattr("is_page")|first %}
+        {% endif %}
+      {% endfor %}
+    {% endif %}
+    {% if _first %}
+      {% set _unused =_doc_links.append({"title": item.title, "url": _first.abs_url}) %}
+    {% endif %}
+  {% endif %}
+{% endfor %}
+
+{# Social — friendly platform names map to simple-icons slugs. The github
+   entry is auto-filled from `repo_url` if not explicitly set. #}
+{% set _social_alias = {
+  "x":         "simple-icons:x",
+  "twitter":   "simple-icons:x",
+  "github":    "simple-icons:github",
+  "discord":   "simple-icons:discord",
+  "linkedin":  "simple-icons:linkedin",
+  "youtube":   "simple-icons:youtube",
+  "mastodon":  "simple-icons:mastodon",
+  "bluesky":   "simple-icons:bluesky",
+  "instagram": "simple-icons:instagram",
+  "facebook":  "simple-icons:facebook",
+  "rss":       "lucide:rss",
+  "email":     "lucide:mail",
+  "website":   "lucide:globe"
+} %}
+{% set _social_user = _f.social or {} %}
+{% set _social_pairs = [] %}
+{% if _social_user.get("github") is none and config.repo_url and "github.com" in config.repo_url %}
+  {% set _unused =_social_pairs.append(("github", config.repo_url, "simple-icons:github")) %}
+{% endif %}
+{% for key, url in _social_user.items() if url %}
+  {% set _slug = _social_alias.get(key, key if ":" in key else "simple-icons:" ~ key) %}
+  {% set _unused =_social_pairs.append((key, url, _slug)) %}
+{% endfor %}
+
+<footer class="mewbo-footer" view-transition-name="footer">
+  <div class="mewbo-footer__container">
+
+    {# Column 1 — Intro #}
+    <div class="mewbo-footer__col mewbo-footer__col--intro">
+      <a class="mewbo-footer__logo" href="{{ config.site_url }}" aria-label="{{ config.site_name }} home">
+        <span class="mewbo-footer__glyph">{% include "templates/icon.html" %}</span>
+        <span class="mewbo-footer__name">{{ config.site_name }}</span>
+      </a>
+      {% if _tagline %}
+      <p class="mewbo-footer__tagline">{{ _tagline }}</p>
+      {% endif %}
     </div>
+
+    {# Column 2 — Connect (social bordered buttons) #}
+    {% if _social_pairs %}
+    <div class="mewbo-footer__col mewbo-footer__col--social">
+      <h4 class="mewbo-footer__col-heading">{{ _("Connect") }}</h4>
+      <div class="mewbo-footer__social" role="list" aria-label="{{ _('Social media') }}">
+        {% for key, url, slug in _social_pairs %}
+        <a class="mewbo-footer__social-btn" href="{{ url }}" target="_blank" rel="noreferrer"
+           role="listitem" aria-label="{{ key|capitalize }}" title="{{ key|capitalize }}">
+          {{ slug | iconify(height="16px") | safe }}
+        </a>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+    {# Column 3 — Documentation TOC #}
+    {% if _doc_links %}
+    <nav class="mewbo-footer__col" aria-label="{{ _('Documentation links') }}">
+      <h4 class="mewbo-footer__col-heading">{{ _("Documentation") }}</h4>
+      <ul class="mewbo-footer__col-links">
+        {% for link in _doc_links %}
+        <li><a href="{{ link.url }}">{{ link.title }}</a></li>
+        {% endfor %}
+      </ul>
+    </nav>
+    {% endif %}
+
+    {# Columns 4+ — extras from theme.footer.sections #}
+    {% for section in (_f.sections or []) %}
+    <nav class="mewbo-footer__col" aria-label="{{ section.title }} links">
+      <h4 class="mewbo-footer__col-heading">{{ section.title }}</h4>
+      <ul class="mewbo-footer__col-links">
+        {% for link in section.links %}
+        <li>
+          {% set _is_external = link.url.startswith("http://") or link.url.startswith("https://") %}
+          <a href="{{ link.url }}"{% if _is_external %} target="_blank" rel="noreferrer"{% endif %}>
+            {{ link.title }}
+          </a>
+        </li>
+        {% endfor %}
+      </ul>
+    </nav>
+    {% endfor %}
+
+  </div>
+
+  {# Baseline strip — copyright + attribution #}
+  <div class="mewbo-footer__baseline">
+    <span class="mewbo-footer__copyright">{{ _copyright }}</span>
+    {% if _f.show_attribution is not sameas false %}
+    <span class="mewbo-footer__attribution">
+      {{ _("Built with") }}
+      <a href="https://github.com/mewbo-com/mkdocs-shadcn" target="_blank" rel="noreferrer">mkdocs-shadcn-mewbo</a>
+    </span>
+    {% endif %}
+  </div>
 </footer>

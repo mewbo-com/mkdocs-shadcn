@@ -1,50 +1,110 @@
 
 ![banner](./.github/assets/banner.png)
 
-<p align="center">
-  <a href="https://github.com/squidfunk/mkdocs-shadcn/actions"><img
-    src="https://github.com/asiffer/mkdocs-shadcn/actions/workflows/testing.yaml/badge.svg"
-    alt="Testing"
-  /></a>
-  <a href="https://pypistats.org/packages/mkdocs-shadcn"><img
-    src="https://img.shields.io/pypi/dm/mkdocs-shadcn.svg"
-    alt="Downloads"
-  /></a>
-  <a href="https://pypi.org/project/mkdocs-shadcn"><img
-    src="https://img.shields.io/pypi/v/mkdocs-shadcn.svg"
-    alt="Python Package Index"
-  /></a>
-</p>
+# mkdocs-shadcn-mewbo
 
+> [!IMPORTANT]
+> This is **mewbo-com's brand fork** of [`asiffer/mkdocs-shadcn`](https://github.com/asiffer/mkdocs-shadcn). It bakes in the Mewbo brand chrome (cream/clay palette, three-zone header, sidebar nav-icons, ToC rail, mobile nav sheet, dual-mode Search + Ask AI modal, full SEO + Speculation Rules prefetch) so every product under the mewbo-com umbrella consumes a single dependency instead of copy-pasting overrides per repo.
+>
+> The theme entrypoint is still `theme: shadcn` — only the pip package name changes (`mkdocs-shadcn` → `mkdocs-shadcn-mewbo`).
+>
+> The original `mkdocs-shadcn` is an unofficial port of shadcn/ui to MkDocs and is not affiliated with [@shadcn](https://twitter.com/shadcn).
 
-![screenshot](./.github/assets/screenshot.png)
+## Install
 
+This fork is **not published to PyPI**. Every push produces a downloadable wheel attached to a GitHub Release; consumers pin to either a stable version tag or to the exact commit a feature branch is on.
 
-> [!IMPORTANT]  
-> This is an unofficial port of shadcn/ui to MkDocs, and is not affiliated with [@shadcn](https://twitter.com/shadcn).
+### Pin to a stable tag (recommended for shipping consumers)
 
-
-## Documentation
-
-Yes, yes, the [documentation](https://asiffer.github.io/mkdocs-shadcn/) is built with this theme.
-
-## Quick start
-
-`mkdocs-shadcn` can be installed with `pip` (you may also need `Pygments` for syntax highlighting).
-
-```shell
-pip install mkdocs-shadcn
+```toml
+# pyproject.toml
+[project]
+dependencies = [
+    "mkdocs-shadcn-mewbo @ https://github.com/mewbo-com/mkdocs-shadcn/releases/download/v1.0.0/mkdocs_shadcn_mewbo-1.0.0-py3-none-any.whl",
+]
 ```
 
-Add the following line to `mkdocs.yml`:
+### Pin to a specific commit (use this while a feature branch is in flight)
+
+Every branch push triggers a workflow that builds a wheel named `mkdocs_shadcn_mewbo-<base>+<short-sha>-py3-none-any.whl` and attaches it to a `commit-<short-sha>` pre-release:
+
+```toml
+# pyproject.toml — pinned to commit abc1234 of any branch
+[project]
+dependencies = [
+    "mkdocs-shadcn-mewbo @ https://github.com/mewbo-com/mkdocs-shadcn/releases/download/commit-abc1234/mkdocs_shadcn_mewbo-1.0.0+abc1234-py3-none-any.whl",
+]
+```
+
+The exact URL is surfaced in the workflow run's job summary, or via:
+
+```shell
+gh release view commit-abc1234 --repo mewbo-com/mkdocs-shadcn --json assets -q '.assets[] | select(.name | endswith(".whl")) | .url'
+```
+
+### Or pin via VCS (no wheel download — pip/uv build at install time)
+
+```toml
+[project]
+dependencies = [
+    # by tag
+    "mkdocs-shadcn-mewbo @ git+https://github.com/mewbo-com/mkdocs-shadcn.git@v1.0.0",
+    # by branch (uv resolves to a SHA in uv.lock)
+    # "mkdocs-shadcn-mewbo @ git+https://github.com/mewbo-com/mkdocs-shadcn.git@master",
+    # by exact commit
+    # "mkdocs-shadcn-mewbo @ git+https://github.com/mewbo-com/mkdocs-shadcn.git@abc1234abc1234abc1234abc1234abc1234abcd",
+]
+```
+
+Then in `mkdocs.yml`:
 
 ```yaml
 theme:
   name: shadcn
+  ai:
+    deepwiki_repo: my-org/my-product   # enables Ask AI panel
+    question_prefix: |                  # optional: product aliases / tone
+      Give product-first, well-grounded answers.
+  nav_icons:                            # optional sidebar icons (Iconify slugs)
+    Home: lucide:house
+    "Get Started": lucide:rocket
+  versions_root: my-product             # optional: github.io/<my-product>/<version>/
 ```
 
-> [!NOTE]  
-> [MkDocs is stale](https://fpgmaas.com/blog/collapse-of-mkdocs/). You can use [ProperDocs](github.com/ProperDocs/properdocs) as a drop-in replacement.
+## Releasing
+
+> [!NOTE]
+> Because this repo is a fork, GitHub disables Actions on the first clone. After enabling Actions in the repo settings, the **first** workflow run must be triggered manually (`gh workflow run release.yaml --ref <branch>`); subsequent pushes auto-trigger the workflow as configured.
+
+The release workflow (`.github/workflows/release.yaml`) runs in two modes:
+
+| Trigger | Release tag | Wheel name | Marked |
+|---|---|---|---|
+| Push of a `v*` tag | `vX.Y.Z` | `mkdocs_shadcn_mewbo-X.Y.Z-py3-none-any.whl` | normal |
+| Any other push (branch, dispatch) | `commit-<short-sha>` | `mkdocs_shadcn_mewbo-X.Y.Z+<sha>-py3-none-any.whl` | **pre-release** |
+
+Every commit therefore has its own pinnable artifact — consumers can bump to a feature-branch commit before the official tag exists, then switch to the tag wheel once it's cut.
+
+To cut an official release:
+
+```shell
+# bump pyproject.toml `version = "X.Y.Z"`, commit, then:
+git tag v1.0.1
+git push origin v1.0.1
+```
+
+The workflow refuses to publish if the tag and `pyproject.toml` version don't agree — you cannot accidentally ship a mislabelled wheel. For commit builds, the `pyproject.toml` version is rewritten in CI to `<base>+<short-sha>` (PEP 440 local segment) before `uv build`, so each commit's wheel is uniquely cacheable. Each run's job summary surfaces the exact `pyproject.toml` snippet to paste into a consumer.
+
+## Cloudflare Worker (agent discoverability)
+
+Every Mewbo umbrella product gets the same `.well-known/` scaffold (`api-catalog`, `mcp/server-card.json`, `agent-skills/index.json`) plus RFC 8288 `Link:` headers via a product-neutral worker shipped under [`cloudflare/`](./cloudflare/README.md). Configure via `wrangler.toml [vars]`; the worker JS itself never needs editing per-product.
+
+## Documentation
+
+The original theme's documentation (still valid for everything except the brand chrome / theme config keys this fork adds) lives at [asiffer.github.io/mkdocs-shadcn](https://asiffer.github.io/mkdocs-shadcn/). The fork-specific theme config keys (`ai.deepwiki_repo`, `ai.question_prefix`, `ai.examples`, `nav_icons`, `versions_root`, `show_version_switcher`, `show_build_info`) are documented inline in `shadcn/mkdocs_theme.yml`.
+
+> [!NOTE]
+> Upstream notes that [MkDocs is stale](https://fpgmaas.com/blog/collapse-of-mkdocs/) and suggests [ProperDocs](github.com/ProperDocs/properdocs) as a drop-in replacement.
 
 ## Extensions
 

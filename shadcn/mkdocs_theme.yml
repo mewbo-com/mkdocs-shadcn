@@ -8,3 +8,98 @@ topbar_sections: false
 katex_options: null
 show_datetime: false
 accent: null
+
+# Mewbo brand-fork additions ─────────────────────────────────────────────────
+
+# Ask AI panel (DeepWiki backend). Set deepwiki_repo to enable. Setting to
+# null (default) hides the entire Ask AI UI: the header CTA, the modal tab,
+# the floating action button, the search-result handoff row, and the script
+# tags themselves.
+ai:
+  # GitHub repo (owner/name) to use as DeepWiki context for Ask AI. Setting
+  # this is the on/off switch for the entire Ask AI feature.
+  deepwiki_repo: null
+
+  # Prefix prepended to EVERY question sent to DeepWiki. Use this to:
+  #   - Disambiguate product names with internal aliases / codenames
+  #     (e.g. "Mewbo / Example / Example2 all refer to the same product.")
+  #   - Set tone or scope of answers ("Give product-first, well-grounded
+  #     answers." / "Cite source files when possible.")
+  # The default fallback (when this is null) is a single generic line:
+  #     "Give product-first, well-grounded answers.\n\n"
+  # so the prefix never silently leaks another product's aliases. Set this
+  # explicitly per consumer.
+  #
+  # Example:
+  #   theme:
+  #     ai:
+  #       deepwiki_repo: example-org/your-docs
+  #       question_prefix: |
+  #         I'm a new user; give product-first, well-grounded answers.
+  #         Mewbo / Example / Example2 / Assistant all refer to the same product.
+  question_prefix: null
+
+  # Example questions surfaced in the Ask AI welcome state. Falls back to a
+  # Mewbo-flavoured default list if empty/unset.
+  examples: []
+
+# Map sidebar nav-titles to Iconify slugs. Titles must match `nav:` labels
+# exactly. Pages whose titles aren't in this map render with no icon.
+# Example:
+#   nav_icons:
+#     Home: lucide:house
+#     Get Started: lucide:rocket
+nav_icons: {}
+
+# Subpath prefix for version-switching when docs are served from a
+# subdirectory (e.g. /your-docs on GitHub Pages). Leave null when serving
+# from the domain root.
+versions_root: null
+
+# Brand footer (replaces the upstream "shadcn provided by @asiffer" line).
+# All sub-keys are optional; the footer auto-derives sensible defaults
+# from `nav`, `repo_url`, `site_description`, and `site_name`.
+footer:
+  # Tagline shown under the brand mark. Defaults to `site_description`.
+  tagline: null
+
+  # Per-product custom columns. Each section is rendered as its own column
+  # of links. Example:
+  #   theme.footer.sections:
+  #     - title: Community
+  #       links:
+  #         - { title: Discord, url: "https://discord.gg/mewbo" }
+  #         - { title: Blog,    url: "https://blog.mewbo.com" }
+  sections: []
+
+  # Social-icon row inside the brand cluster. Friendly platform names
+  # (github, x, twitter, discord, linkedin, youtube, mastodon, bluesky,
+  # instagram, facebook, rss, email, website) auto-resolve to the right
+  # Iconify slug; any other key is treated as a literal Iconify slug.
+  # The `github` entry is auto-filled from `repo_url` if not set.
+  # Example:
+  #   theme.footer.social:
+  #     github:  https://github.com/mewbo-com/mkdocs-shadcn
+  #     x:       https://x.com/mewbo
+  #     discord: https://discord.gg/mewbo
+  social: {}
+
+  # Copyright line in the baseline strip. Defaults to "© <year> <site_name>"
+  # where <year> is computed at build time via the `current_year` Jinja global.
+  copyright: null
+
+  # Small "Built with mkdocs-shadcn-mewbo" attribution link in the baseline
+  # strip. Set to false to remove it (the LICENSE file's attribution still
+  # satisfies the upstream MIT obligation).
+  show_attribution: true
+
+# Header dropdown that switches between mike-published versions. Requires
+# `extra.version.provider: mike` on the consumer side AND a versions.json
+# at the deployment root. Default off — without those artifacts, the
+# script logs a 404 on every page load.
+show_version_switcher: false
+
+# Footer "build <commit>" badge that fetches a build-info.json artifact
+# (commit/branch/timestamp) produced by your CI. Default off — without
+# that artifact, the script logs a 404 on every page load.
+show_build_info: false

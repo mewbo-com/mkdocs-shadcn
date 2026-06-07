@@ -1,0 +1,34 @@
+# Per-product Cloudflare Worker config for mkdocs-shadcn-mewbo docs.
+#
+# Copy this file as `wrangler.toml` (NOT `.example.toml`), fill in the
+# routes + [vars] block, and `wrangler deploy` from this directory.
+#
+# Required: SITE_URL, API_URL.
+# Optional vars are documented in worker.js.
+
+name = "mewbo-docs-discovery"     # change per product
+main = "worker.js"                # leave as-is — sits next to this file
+compatibility_date = "2026-01-01"
+
+# Tell Cloudflare which hostname this worker should sit in front of.
+# The hostname's CNAME must be orange-cloud-proxied through Cloudflare
+# for the route to fire.
+routes = [
+  { pattern = "docs.mewbo.com/*", zone_name = "mewbo.com" },
+]
+
+[vars]
+# Required ────────────────────────────────────────────────────────────
+SITE_URL = "https://docs.mewbo.com"
+API_URL  = "https://api.mewbo.com"
+
+# Optional ────────────────────────────────────────────────────────────
+MCP_SERVER_NAME    = "Mewbo"
+MCP_SERVER_VERSION = "1.0.0"
+# MCP_SERVER_URL   = "https://api.mewbo.com/mcp"        # default: ${API_URL}/mcp
+# API_OPENAPI_URL  = "https://api.mewbo.com/openapi.json" # default: ${API_URL}/swagger.json
+# API_HEALTH_URL   = "https://api.mewbo.com/healthz"     # default: ${API_URL}/healthz
+# REFERENCE_PATH   = "/reference/"                       # link rel="service-doc"
+
+# Optional: populated agent-skills index. JSON-encoded; one line.
+# SKILLS_INDEX_JSON = '{"$schema":"https://agentskills.io/schema/v0.2.0/index.json","skills":[{"id":"summarize","title":"Summarize","entrypoint":"https://api.mewbo.com/skills/summarize"}]}'

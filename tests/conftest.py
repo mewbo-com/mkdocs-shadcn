@@ -10,7 +10,8 @@ import pytest
 
 PAGES_DIR = Path(__file__).parent.parent / "pages"
 SITE_DIR = Path(__file__).parent / "_site"
-HOST, PORT = "127.0.0.1", 8081
+HOST = os.environ.get("MKDOCS_TEST_HOST", "127.0.0.1")
+PORT = int(os.environ.get("MKDOCS_TEST_PORT", "8081"))
 BASE = f"http://{HOST}:{PORT}"
 
 site_url_re = re.compile(r"^site_url:.*$", re.MULTILINE)

@@ -21,6 +21,37 @@
 
     <link href="{{ 'css/base.css' | url }}" rel="stylesheet"/>
 <link href="{{ 'css/geist.css' | url }}" rel="stylesheet"/>
+<link href="{{ 'css/mewbo.css' | url }}" rel="stylesheet"/>
+
+    {# Inject runtime config for theme JS. Placed in head so window globals
+       exist before deferred scripts at the body end read them.
+
+       - MEWBO_AI_CONFIG → deepwiki-backend.js (REPO + QUESTION_PREFIX)
+       - MEWBO_VERSIONS_ROOT → version-switcher.js + copy-page.js
+         (GitHub-Pages-subpath rooting for mike-versioned sites)
+       - MEWBO_REPO → copy-page.js (parsed from `config.repo_url` to
+         "owner/repo"); used to build raw.githubusercontent.com URLs #}
+    <script>
+        {% if config.theme.ai and config.theme.ai.deepwiki_repo %}
+        window.MEWBO_AI_CONFIG = {
+            deepwiki_repo: {{ config.theme.ai.deepwiki_repo | tojson }}
+            {%- if config.theme.ai.question_prefix -%},
+            question_prefix: {{ config.theme.ai.question_prefix | tojson }}
+            {%- endif %}
+        };
+        {% endif %}
+        {% if config.theme.versions_root %}
+        window.MEWBO_VERSIONS_ROOT = {{ config.theme.versions_root | tojson }};
+        {% endif %}
+        {%- if config.repo_url -%}
+        {%- set _repo = config.repo_url
+              | replace('https://github.com/', '')
+              | replace('http://github.com/', '')
+              | replace('.git', '')
+              | trim('/') -%}
+        window.MEWBO_REPO = {{ _repo | tojson }};
+        {%- endif %}
+    </script>
 
     {% if "codehilite" in config.markdown_extensions %}
     {% include "templates/external/pygments.html" %}
@@ -113,6 +144,31 @@
     <script integrity="sha384-JLNLRFGzvOp0up707XKgSnAjjt1w5BF/+lbeLQvlf6mNwf0m89IXFdpNAk4t6Hcs" src="{{ 'js/copy-button.js' | url }}"></script>
 <script integrity="sha384-JBx6cBEiyhK1KPwZgBHiI6GDaAmvlOxMQFyWAZTEpW5Ifo5XQ2LBcJ61GVOumwF1" src="{{ 'js/sidebar.js' | url }}"></script>
 <script integrity="sha384-fNURFMRt0p/HqXnQnV4+CT9dX1GiU5F0fC3pFbg7gfoANytoUMErSW7suWSBkSuF" src="{{ 'js/slider.js' | url }}"></script>
+
+    {# Theme-shipped enhancement scripts. Order matters: pygments-theme syncs
+       light/dark code blocks before search-enhance attaches feedback states;
+       marked + deepwiki-backend define window.mewboAskAI before ask-ai wires
+       the UI to it; mermaid CDN before mermaid-init; iconify-icon CDN before
+       icon-inject runs. #}
+    <script integrity="sha384-fNifZa2zJzBUcKyN6ceWa8F0WlBRnrWGxxsA1GhFIT2idlBucX8dpOqGbkT5L55d" src="{{ 'js/pygments-theme.js' | url }}"></script>
+<script integrity="sha384-GkZQUis3UGkud4fe2p4WO9VQEiwRkpFctrQq4sSNvrHPyHqHCUCtAKhXh8JXA/dw" src="{{ 'js/search-enhance.js' | url }}"></script>
+    {% if config.theme.ai and config.theme.ai.deepwiki_repo %}
+    <script src="https://cdn.jsdelivr.net/npm/marked@14.1.4/lib/marked.umd.min.js"></script>
+<script integrity="sha384-9wTiXjNp90MbOJ4H6FbR7nJZBOwZLf6QB+LHRCsmLPM8tF3kQLpB7BoM1WO40p2X" src="{{ 'js/deepwiki-backend.js' | url }}"></script>
+<script integrity="sha384-W0Al3wnLjhcWtFXOlc7pn5mJHfctk3LrEm4/lK4x96CXyEMGzmqiqXe1PwM9ct5I" src="{{ 'js/ask-ai.js' | url }}"></script>
+    {% endif %}
+    <script src="https://unpkg.com/mermaid@10.9.0/dist/mermaid.min.js"></script>
+<script integrity="sha384-6GuwRLPG8aLMfdxAiFvBfZLMI5eAykX1IS8Pgr/2c4qnQxgw4XzV3IMdjCaS+lZh" src="{{ 'js/mermaid-init-v2.js' | url }}"></script>
+    {% if config.theme.show_version_switcher %}
+    <script integrity="sha384-F/S2/0ShS11BHvGMhzTrKSey3G6SmR8NOWr5q/zaXHIChKNwB218GmFvb2X9z+E2" src="{{ 'js/version-switcher.js' | url }}"></script>
+    {% endif %}
+    <script integrity="sha384-dyxKJGmhS12sg3uN81TYUooHUG36rrM4tOYxusmDiB+vu9YXqttM7q3095B2aymA" src="{{ 'js/copy-page.js' | url }}"></script>
+    {% if config.theme.show_build_info %}
+    <script integrity="sha384-DkxjftaVOhpl2QYQ/Usl5HQClKExwDdXlxndEvoihMGxcCSzZ8TlIs9+I394dVbz" src="{{ 'js/build-info.js' | url }}"></script>
+    {% endif %}
+    <script integrity="sha384-R0dMMD7RQawR63Rfb07XSVwfm9uFphXtt1B/b/n9MSJzE9apgm5Om3O22bPYhS/E" src="{{ 'js/webmcp.js' | url }}"></script>
+<script src="https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js"></script>
+<script integrity="sha384-6lMRhr13K4K/NSf0o8N0I02SgL5rORyw06JuoCUJAxA0M7hCWWllRnPdY7j2mHu9" src="{{ 'js/icon-inject.js' | url }}"></script>
 <script>updatePygmentsStylesheet();</script>
     {% if config.theme.show_stargazers %}
     <script>fetchStargazers("{{ config.repo_url }}");</script>

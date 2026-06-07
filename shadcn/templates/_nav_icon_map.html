@@ -1,0 +1,29 @@
+{#
+  Sidebar nav-title → Lucide icon mapping. Included by both
+  templates/sidebar_item.html (leaf pages) and
+  templates/sidebar_section.html (expandable groups).
+
+  The mapping is product-supplied: declare it under `theme.nav_icons`
+  in mkdocs.yml so each product can name its own icons without forking
+  the theme. Titles must match mkdocs.yml `nav:` labels exactly — no
+  substring matching. Pages whose titles aren't in the map render
+  with no icon (purely decorative; the theme degrades gracefully).
+
+  Icons are fetched at build time via the theme's `iconify` filter
+  (LRU-cached per build, so each icon is fetched only once). Use any
+  Iconify slug — Lucide is conventional ("lucide:rocket"), but
+  simple-icons:* and others work too.
+
+  Example mkdocs.yml:
+
+      theme:
+        name: shadcn
+        nav_icons:
+          Home: lucide:house
+          Get Started: lucide:rocket
+#}
+{% macro nav_icon(title) -%}
+    {%- if config.theme.nav_icons and title in config.theme.nav_icons -%}
+        {{ config.theme.nav_icons[title] | iconify(height="16px") | safe }}
+    {%- endif -%}
+{%- endmacro %}

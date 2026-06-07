@@ -99,3 +99,47 @@ def test_all_pages_no_browser_errors(page: Page):
                 to_visit.append(link)
 
     assert not errors_by_page, format_errors(errors_by_page)
+
+
+def test_tables_wrap_no_horizontal_scroll(page: Page):
+    """Regression test: table cells must NOT have white-space:nowrap.
+
+    Root cause of the original bug: the theme applied `whitespace-nowrap`
+    to every `th` and `td`, which — combined with the
+    `.table-wrapper { overflow-x: auto }` wrapper — caused wide tables to
+    produce a horizontal scrollbar instead of wrapping their content.
+
+    This test will FAIL if any upstream merge reintroduces that style.
+    """
+    page.set_viewport_size({"width": 800, "height": 1000})
+    page.goto(
+        BASE + "/table_wrap_regression/",
+        wait_until="networkidle",
+    )
+
+    cells = page.locator("article table td, article table th")
+    cell_count = cells.count()
+    assert cell_count > 0, (
+        "No table cells found — check that table_wrap_regression.md is "
+        "built and served at /table_wrap_regression/"
+    )
+
+    for i in range(cell_count):
+        cell = cells.nth(i)
+        ws = page.evaluate(
+            "el => getComputedStyle(el).whiteSpace",
+            cell.element_handle(),
+        )
+        assert ws != "nowrap", (
+            f"Cell {i} has white-space:nowrap — "
+            "reintroduction of the whitespace-nowrap regression"
+        )
+
+    wrappers = page.locator(".table-wrapper")
+    for i in range(wrappers.count()):
+        wrapper = wrappers.nth(i)
+        sw = page.evaluate("el => el.scrollWidth", wrapper.element_handle())
+        cw = page.evaluate("el => el.clientWidth", wrapper.element_handle())
+        assert sw <= cw + 1, (
+            f"table overflows: scrollWidth={sw} clientWidth={cw}"
+        )
