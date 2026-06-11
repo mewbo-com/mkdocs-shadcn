@@ -1,0 +1,57 @@
+{# End-of-body script tail, extracted verbatim from main.html so alternate
+   top-level templates (app.html) get identical interactivity — search
+   overlay, theme toggle, mobile menu, Ask AI, icon injection — without
+   re-listing (and drifting from) the SRI'd script set. #}
+{%- for script in config.extra_javascript %}
+    {% include "templates/script.html" %}
+    {%- endfor %}
+
+    {% if page.meta.extra_javascript %}
+    {%- for script in page.meta.extra_javascript %}
+    {% include "templates/script.html" %}
+    {%- endfor %}
+    {% endif %}
+
+    <script integrity="sha384-JLNLRFGzvOp0up707XKgSnAjjt1w5BF/+lbeLQvlf6mNwf0m89IXFdpNAk4t6Hcs" src="{{ 'js/copy-button.js' | url }}"></script>
+<script integrity="sha384-JBx6cBEiyhK1KPwZgBHiI6GDaAmvlOxMQFyWAZTEpW5Ifo5XQ2LBcJ61GVOumwF1" src="{{ 'js/sidebar.js' | url }}"></script>
+<script integrity="sha384-fNURFMRt0p/HqXnQnV4+CT9dX1GiU5F0fC3pFbg7gfoANytoUMErSW7suWSBkSuF" src="{{ 'js/slider.js' | url }}"></script>
+
+    {# Theme-shipped enhancement scripts. Order matters: pygments-theme syncs
+       light/dark code blocks before search-enhance attaches feedback states;
+       marked + deepwiki-backend define window.mewboAskAI before ask-ai wires
+       the UI to it; mermaid CDN before mermaid-init; iconify-icon CDN before
+       icon-inject runs. #}
+    <script integrity="sha384-fNifZa2zJzBUcKyN6ceWa8F0WlBRnrWGxxsA1GhFIT2idlBucX8dpOqGbkT5L55d" src="{{ 'js/pygments-theme.js' | url }}"></script>
+<script integrity="sha384-GkZQUis3UGkud4fe2p4WO9VQEiwRkpFctrQq4sSNvrHPyHqHCUCtAKhXh8JXA/dw" src="{{ 'js/search-enhance.js' | url }}"></script>
+    {% if config.theme.ai and config.theme.ai.deepwiki_repo %}
+    <script src="https://cdn.jsdelivr.net/npm/marked@14.1.4/lib/marked.umd.min.js"></script>
+<script integrity="sha384-9wTiXjNp90MbOJ4H6FbR7nJZBOwZLf6QB+LHRCsmLPM8tF3kQLpB7BoM1WO40p2X" src="{{ 'js/deepwiki-backend.js' | url }}"></script>
+<script integrity="sha384-W0Al3wnLjhcWtFXOlc7pn5mJHfctk3LrEm4/lK4x96CXyEMGzmqiqXe1PwM9ct5I" src="{{ 'js/ask-ai.js' | url }}"></script>
+    {% endif %}
+    <script src="https://unpkg.com/mermaid@10.9.0/dist/mermaid.min.js"></script>
+<script integrity="sha384-6GuwRLPG8aLMfdxAiFvBfZLMI5eAykX1IS8Pgr/2c4qnQxgw4XzV3IMdjCaS+lZh" src="{{ 'js/mermaid-init-v2.js' | url }}"></script>
+    {% if config.theme.carousel %}
+    <script src="https://cdn.jsdelivr.net/npm/swiper@12/swiper-bundle.min.js"></script>
+<script integrity="sha384-UF8bTJNuMpApPFPRYJMvsOYUkjMJ02+v0wzxdYWJ2kuakxvY7VzK8X0WKnTXvAJW" src="{{ 'js/carousel.js' | url }}"></script>
+    {% endif %}
+    {% if config.theme.show_version_switcher %}
+    <script integrity="sha384-1hsmgovd+8XvQC7c0UqXIF6e6O81K9j9a/gDatEwP5cWwsXGpBFgJf5mni7MpXAU" src="{{ 'js/version-switcher.js' | url }}"></script>
+    {% endif %}
+    <script integrity="sha384-TVMudAJ6PHLmxdMRthX+f4R0JBiuTZ5BzvdLvMe/XkVDPEDqhRO5arcz7HEZE7Su" src="{{ 'js/copy-page.js' | url }}"></script>
+    {% if config.theme.show_build_info %}
+    <script integrity="sha384-DkxjftaVOhpl2QYQ/Usl5HQClKExwDdXlxndEvoihMGxcCSzZ8TlIs9+I394dVbz" src="{{ 'js/build-info.js' | url }}"></script>
+    {% endif %}
+    <script integrity="sha384-TGiz4wIFd0aefgdd7YzFXtLJuYTwn2AWj1XU7sz5wTHdmXH+TfTAa37lgobFlnIa" src="{{ 'js/webmcp.js' | url }}"></script>
+<script src="https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js"></script>
+<script integrity="sha384-6lMRhr13K4K/NSf0o8N0I02SgL5rORyw06JuoCUJAxA0M7hCWWllRnPdY7j2mHu9" src="{{ 'js/icon-inject.js' | url }}"></script>
+<script>updatePygmentsStylesheet();</script>
+    {% if config.theme.show_stargazers %}
+    <script>fetchStargazers("{{ config.repo_url }}");</script>
+    {% endif %}
+    {% if "mkdocstrings" in config.plugins %}
+    {% include "templates/external/mkdocstrings.html" %}
+    {% endif %}
+    {% if "shadcn.extensions.codexec" in config.markdown_extensions %}
+    {% include "templates/external/codexec.html" %}
+    {% endif %}
+    {% include "templates/speculation_rules.html" %}
