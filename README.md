@@ -69,7 +69,19 @@ theme:
     Home: lucide:house
     "Get Started": lucide:rocket
   versions_root: my-product             # optional: github.io/<my-product>/<version>/
+  header_tabs:                          # optional second header row (tab rail)
+    - label: Documentation
+      icon: lucide:book-open            # optional Iconify slug
+      url: .                            # site-root-relative; "."/"" = docs root
+    - label: API Reference
+      icon: lucide:braces
+      url: rest-api/
 ```
+
+Two opt-in layout features ship with the theme:
+
+- **`header_tabs`** — a horizontal tab rail fused to the bottom of the sticky header (icon + label items, accent underline on the active tab). Null/absent emits zero markup, so existing consumers are unaffected.
+- **`template: app.html`** (page front matter) — a full-bleed page template: no sidebar, no ToC, no article wrapper, no footer — just the brand header (+ tab rail) over a single `<main>` that fills the viewport and scrolls internally. Made for embedding full-page apps (e.g. a Scalar API reference) under the shared header.
 
 ## Releasing
 
@@ -101,7 +113,7 @@ Every Mewbo umbrella product gets the same `.well-known/` scaffold (`api-catalog
 
 ## Documentation
 
-The original theme's documentation (still valid for everything except the brand chrome / theme config keys this fork adds) lives at [asiffer.github.io/mkdocs-shadcn](https://asiffer.github.io/mkdocs-shadcn/). The fork-specific theme config keys (`ai.deepwiki_repo`, `ai.question_prefix`, `ai.examples`, `nav_icons`, `versions_root`, `show_version_switcher`, `show_build_info`) are documented inline in `shadcn/mkdocs_theme.yml`.
+The original theme's documentation (still valid for everything except the brand chrome / theme config keys this fork adds) lives at [asiffer.github.io/mkdocs-shadcn](https://asiffer.github.io/mkdocs-shadcn/). The fork-specific theme config keys (`ai.deepwiki_repo`, `ai.question_prefix`, `ai.examples`, `nav_icons`, `versions_root`, `show_version_switcher`, `show_build_info`, `header_tabs`) are documented inline in `shadcn/mkdocs_theme.yml`.
 
 > [!NOTE]
 > Upstream notes that [MkDocs is stale](https://fpgmaas.com/blog/collapse-of-mkdocs/) and suggests [ProperDocs](github.com/ProperDocs/properdocs) as a drop-in replacement.

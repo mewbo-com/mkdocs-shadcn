@@ -192,3 +192,150 @@ def test_carousel_mounts(page: Page):
     assert "swiper-initialized" in cls, (
         f"carousel did not initialise; class={cls!r}"
     )
+
+
+def test_header_tabs_rail_renders(page: Page):
+    """theme.header_tabs renders the rail with exactly one active tab.
+
+    Guards the optional second header row: the configured labels render in
+    order, exactly one item carries aria-current="page" (the build-time
+    Jinja resolution in templates/header_tabs.html), and the active item's
+    computed color equals the theme accent (--primary) — i.e. the .ms-*
+    kit in mewbo.css actually applies.
+    """
+    page.goto(BASE + "/", wait_until="networkidle")
+
+    rail = page.locator(".ms-header-tabs")
+    assert rail.count() == 1, "rail should render when header_tabs is set"
+
+    labels = page.locator(
+        ".ms-header-tabs__item > span:not(.ms-header-tabs__icon)"
+    ).all_inner_texts()
+    assert labels == ["Documentation", "App Demo"], labels
+
+    active = page.locator('.ms-header-tabs__item[aria-current="page"]')
+    assert active.count() == 1, "exactly one tab must be aria-current"
+    assert "Documentation" in active.inner_text(), (
+        "the root tab must be active on the docs root"
+    )
+
+    got, expected = page.evaluate(
+        """el => {
+            const probe = document.createElement('div');
+            probe.style.color = 'var(--primary)';
+            document.body.appendChild(probe);
+            const expected = getComputedStyle(probe).color;
+            probe.remove();
+            return [getComputedStyle(el).color, expected];
+        }""",
+        active.element_handle(),
+    )
+    assert got == expected, (
+        f"active tab color {got!r} != resolved --primary {expected!r}"
+    )
+
+
+def test_header_tabs_grow_header_height(page: Page):
+    """With tabs on, --header-height covers BOTH rows; the top row is pinned.
+
+    The docs layout derives the sidebar/ToC sticky offsets from
+    --header-height, so when the rail is enabled body.ms-has-header-tabs
+    must raise the token by the rail's 2.5rem while .mewbo-header__row is
+    pinned back to the original spacing*14. Otherwise content slides under
+    the taller header.
+    """
+    page.goto(BASE + "/", wait_until="networkidle")
+
+    m = page.evaluate(
+        """() => {
+            const probe = document.createElement('div');
+            probe.style.height = 'var(--header-height)';
+            document.body.appendChild(probe);
+            const token = probe.getBoundingClientRect().height;
+            probe.remove();
+            const px = (el) => el.getBoundingClientRect().height;
+            const sidebar =
+                document.querySelector('[data-slot="sidebar"]');
+            return {
+                token,
+                header: px(document.querySelector('.mewbo-header')),
+                row: px(document.querySelector('.mewbo-header__row')),
+                rail: px(document.querySelector('.ms-header-tabs')),
+                sidebarTop: sidebar
+                    ? parseFloat(getComputedStyle(sidebar).top)
+                    : null,
+            };
+        }"""
+    )
+
+    base = 14 * 4  # calc(var(--spacing) * 14) at the default 16px root
+    rail = 2.5 * 16
+    assert abs(m["row"] - base) < 1, (
+        f"top row must stay pinned at {base}px, got {m['row']}"
+    )
+    assert abs(m["token"] - (base + rail)) < 1, (
+        f"--header-height must grow to {base + rail}px, got {m['token']}"
+    )
+    assert m["token"] > base, "--header-height must be larger with tabs on"
+    # Real rendered header ≈ token (±borders): nothing slides under it.
+    assert abs(m["header"] - m["token"]) <= 3, (
+        f"header renders {m['header']}px but --header-height says "
+        f"{m['token']}px — sticky offsets would drift"
+    )
+    assert m["sidebarTop"] is not None and m["sidebarTop"] >= m["header"], (
+        f"sidebar sticky top {m['sidebarTop']} < header {m['header']} — "
+        "the sidebar would slide under the header"
+    )
+
+
+def test_app_template_full_bleed(page: Page):
+    """`template: app.html` keeps the header (+ rail) and drops the grid.
+
+    The page must render NO sidebar, ToC, article wrapper, prev/next or
+    footer, while the brand header and tab rail stay; its single
+    .ms-app-main slot must span the viewport below the header (the page's
+    own full-height div fills it completely).
+    """
+    page.goto(BASE + "/app_demo/", wait_until="networkidle")
+
+    assert page.locator(".mewbo-header").count() == 1
+    assert page.locator(".ms-header-tabs").count() == 1
+    active = page.locator('.ms-header-tabs__item[aria-current="page"]')
+    assert active.count() == 1
+    assert "App Demo" in active.inner_text()
+
+    for absent in (
+        '[data-slot="sidebar"]',
+        '[data-slot="docs"]',
+        "article",
+        "footer",
+        ".mewbo-toc",
+    ):
+        assert page.locator(absent).count() == 0, (
+            f"app.html must not render {absent}"
+        )
+
+    m = page.evaluate(
+        """() => {
+            const main = document.querySelector('.ms-app-main');
+            const fill = document.getElementById('app-demo-fill');
+            const probe = document.createElement('div');
+            probe.style.height = 'var(--header-height)';
+            document.body.appendChild(probe);
+            const token = probe.getBoundingClientRect().height;
+            probe.remove();
+            return {
+                main: main.getBoundingClientRect().height,
+                fill: fill.getBoundingClientRect().height,
+                viewport: window.innerHeight,
+                token,
+            };
+        }"""
+    )
+    assert abs(m["main"] - (m["viewport"] - m["token"])) < 2, (
+        f"app slot {m['main']}px should fill viewport {m['viewport']}px "
+        f"minus header {m['token']}px"
+    )
+    assert abs(m["fill"] - m["main"]) < 2, (
+        "the page's 100%-height div must fill the whole app slot"
+    )

@@ -5,7 +5,7 @@
    already used by the sidebar — no hand-rolled SVG paths. #}
 <header class="mewbo-header bg-background sticky top-0 z-50 w-full" view-transition-name="header">
     <div class="container-wrapper 3xl:fixed:px-0 px-6">
-        <div class="3xl:fixed:container flex h-(--header-height) items-center gap-3">
+        <div class="mewbo-header__row 3xl:fixed:container flex h-(--header-height) items-center gap-3">
 
             {# Mobile menu trigger (theme-styled animated hamburger; only flex below lg). #}
             <button id="menu-button" data-slot="popover-trigger" onclick="onMobileMenuButtonClick(event)"
@@ -85,5 +85,8 @@
             </div>
         </div>
     </div>
+    {% if config.theme.header_tabs %}
+    {% include "templates/header_tabs.html" %}
+    {% endif %}
 </header>
 {% include "templates/search.html" %}

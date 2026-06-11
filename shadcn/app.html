@@ -1,0 +1,22 @@
+{#- Full-bleed page template. A page opts in with `template: app.html` in its
+   front matter and escapes the docs grid entirely — no sidebar, no ToC, no
+   article wrapper, no prev/next, no footer — while keeping the brand header
+   (+ tab rail) and the exact same head/scripts as main.html, so dark mode,
+   fonts, search overlay, theme toggle and mobile menu all behave
+   identically. Use case: embedding a full-page app (e.g. a Scalar API
+   reference) under the shared header. The page's own content fills
+   .ms-app-main, which spans the viewport below the header (see mewbo.css). -#}
+<!DOCTYPE html>
+
+<html lang="en">
+{% include "templates/head.html" %}
+<body class="text-foreground group/body overscroll-none font-sans antialiased [--footer-height:calc(var(--spacing)*14)] [--header-height:calc(var(--spacing)*14)] xl:[--footer-height:calc(var(--spacing)*24)] theme-default{% if config.theme.header_tabs %} ms-has-header-tabs{% endif %}">
+<div class="bg-background relative z-10 flex min-h-svh flex-col" id="inner-body">
+        {% include "templates/header.html" %}
+        <main class="ms-app-main">{{ page.content }}</main>
+    </div>
+
+
+    {%- include "templates/scripts.html" %}
+</body>
+</html>

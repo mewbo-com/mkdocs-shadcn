@@ -9,6 +9,13 @@ theme:
   icon: null
   topbar_sections: false
   carousel: true
+  header_tabs:
+    - label: Documentation
+      icon: lucide:book-open
+      url: .
+    - label: App Demo
+      icon: lucide:braces
+      url: app_demo/
   pygments_style:
     light: shadcn-light
     dark: github-dark

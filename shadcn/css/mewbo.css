@@ -1276,6 +1276,65 @@ article a,
 }
 .mewbo-nav-ask-ai-btn:hover { background: var(--muted); border-color: var(--ring); }
 
+/* ─── Header tab rail (theme.header_tabs) ──────────────────────────────────
+   Second row of the sticky header, fused under the utility row on the SAME
+   surface: the rail lives inside .mewbo-header, so the header's hairline +
+   shadow land under it and both rows stick/scroll as one unit. The divider
+   between the rows is the rail's own border-top. Items are quiet by
+   default; the active tab takes the accent (--primary) plus a thin 2px
+   underline sitting on the rail's bottom edge, flagged aria-current="page".
+   On narrow screens the rail scrolls horizontally with hidden scrollbars.
+   ───────────────────────────────────────────────────────────────────────── */
+
+.ms-header-tabs { border-top: 1px solid var(--border); }
+.ms-header-tabs__rail {
+  display: flex; align-items: stretch; gap: 0.25rem;
+  height: 2.5rem;
+  overflow-x: auto;
+  scrollbar-width: none;            /* Firefox */
+}
+.ms-header-tabs__rail::-webkit-scrollbar { display: none; }
+.ms-header-tabs__item {
+  position: relative;
+  display: inline-flex; align-items: center; gap: 0.45rem;
+  padding: 0 0.65rem;
+  color: var(--muted-foreground);
+  font-size: 0.875rem; font-weight: 500; white-space: nowrap;
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+.ms-header-tabs__item:hover { color: var(--foreground); }
+.ms-header-tabs__icon {
+  display: inline-flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.ms-header-tabs__icon svg { width: 0.9375rem; height: 0.9375rem; }
+.ms-header-tabs__item[aria-current="page"] { color: var(--primary); }
+/* The underline hugs the rail's bottom edge (items stretch full height),
+   inset to the item's padding box so it underlines icon + label only. */
+.ms-header-tabs__item[aria-current="page"]::after {
+  content: "";
+  position: absolute; left: 0.65rem; right: 0.65rem; bottom: 0;
+  height: 2px; background: var(--primary);
+}
+
+/* Header-height bookkeeping: sidebar/ToC sticky offsets all derive from
+   --header-height (set on <body> by a Tailwind arbitrary-property utility —
+   these unlayered rules beat it). With the rail on, the total grows by the
+   rail's 2.5rem while the top row is pinned back to its original height
+   (it sizes itself with h-(--header-height), which now names the TOTAL). */
+body.ms-has-header-tabs { --header-height: calc(var(--spacing) * 14 + 2.5rem); }
+body.ms-has-header-tabs .mewbo-header__row { height: calc(var(--spacing) * 14); }
+
+/* ─── Full-bleed app slot (app.html) ───────────────────────────────────────
+   `template: app.html` pages render their content into this single <main>:
+   it spans exactly the viewport below the sticky header and scrolls
+   internally, so an embedded full-page app (e.g. Scalar) owns the space. */
+.ms-app-main {
+  height: calc(100svh - var(--header-height));
+  overflow: auto;
+}
+
 /* ─── Mewbo Ask AI + Unified Search Modal ──────────────────────────────────── */
 
 /* ── B. Modal container + backdrop ──────────────────────────────────────── */

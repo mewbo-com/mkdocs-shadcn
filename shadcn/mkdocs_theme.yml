@@ -109,3 +109,21 @@ show_build_info: false
 # `.swiper.ms-shots` markup. Default off so the CDN + script aren't fetched on
 # sites that have no carousel. Styling lives in css/mewbo.css (.ms-shots).
 carousel: false
+
+# Horizontal tab rail fused to the bottom of the sticky header (second row on
+# the same surface, hairline divider above it). Null/absent (default) emits
+# zero markup. Each item: a label, an optional Iconify slug, and a
+# site-root-relative url ("." or "" means the docs root). The tab whose url
+# prefixes the current page.url is marked active (accent color + underline +
+# aria-current="page"); if none match, the root tab is. Absolute http(s)
+# urls are left untouched. Styling lives in css/mewbo.css (.ms-header-tabs).
+# Example:
+#   theme:
+#     header_tabs:
+#       - label: Documentation
+#         icon: lucide:book-open     # optional, any iconify name the theme already supports
+#         url: .                      # site-root-relative; "." or "" means the docs root
+#       - label: API Reference
+#         icon: lucide:braces
+#         url: rest-api/
+header_tabs: null

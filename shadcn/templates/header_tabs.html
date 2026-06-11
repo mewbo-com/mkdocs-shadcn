@@ -1,0 +1,41 @@
+{# Header tab rail (theme.header_tabs) — second row of the sticky header,
+   rendered INSIDE <header class="mewbo-header"> so both rows share one
+   surface (and the header's bottom hairline + shadow land under the rail).
+   The container-wrapper/px-6 shell mirrors the top row so the first tab
+   left-aligns with the brand mark.
+
+   Active-tab resolution (build time, namespace() — never rebind `_`):
+   normalize each tab url (drop a leading "./", outer slashes; "." ≡ "")
+   and pick the FIRST tab whose non-empty normalized url prefixes
+   `page.url`; if none match, the root tab ("" / ".") wins. Exactly one
+   tab carries aria-current="page". #}
+{%- set ns = namespace(active=-1, root=-1) -%}
+{%- set current = page.url if page else "" -%}
+{%- for tab in config.theme.header_tabs -%}
+    {%- set raw = (tab.url or "") | string | trim -%}
+    {%- set raw = raw[2:] if raw.startswith("./") else raw -%}
+    {%- set norm = raw.strip("/") -%}
+    {%- set norm = "" if norm == "." else norm -%}
+    {%- if norm -%}
+        {%- if ns.active < 0 and current.startswith(norm) -%}
+            {%- set ns.active = loop.index0 -%}
+        {%- endif -%}
+    {%- elif ns.root < 0 -%}
+        {%- set ns.root = loop.index0 -%}
+    {%- endif -%}
+{%- endfor -%}
+{%- set active_idx = ns.active if ns.active >= 0 else ns.root -%}
+<nav class="ms-header-tabs" aria-label="{{ _('Sections') }}">
+    <div class="container-wrapper 3xl:fixed:px-0 px-6">
+        <div class="3xl:fixed:container ms-header-tabs__rail">
+            {%- for tab in config.theme.header_tabs %}
+            <a class="ms-header-tabs__item" href="{{ tab.url | url }}"{% if loop.index0 == active_idx %} aria-current="page"{% endif %}>
+                {%- if tab.icon %}
+                <span class="ms-header-tabs__icon" aria-hidden="true">{{ tab.icon | iconify(height="15px") | safe }}</span>
+                {%- endif %}
+                <span>{{ tab.label }}</span>
+            </a>
+            {%- endfor %}
+        </div>
+    </div>
+</nav>
