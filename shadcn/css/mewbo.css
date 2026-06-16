@@ -65,9 +65,16 @@
   --destructive: hsl(0 55% 47%);
   --destructive-foreground: hsl(0 0% 100%);
 
-  --border: hsl(53 12% 74% / 0.55);
+  /* Faint warm hairline (~#e9e6dd): a quiet step off the cream page, replacing
+     the old translucent tan that composited to a loud ~#cecCC1. Mirrors how
+     Devin keeps light-mode borders near-invisible (#eff1f5). */
+  --border: hsl(48 16% 89%);
   --input: hsl(48 25% 92.2%);
   --ring: hsl(14.8 63.1% 59.6%);
+
+  /* Clean white panel behind transparent-PNG media: brighter than the cream
+     page, so framed images read as a raised surface. */
+  --image-backing: hsl(0 0% 100%);
 
   --sidebar: hsl(45 28.6% 97.3%);
   --sidebar-foreground: hsl(0 0% 4%);
@@ -75,46 +82,60 @@
   --sidebar-primary-foreground: hsl(0 0% 100%);
   --sidebar-accent: hsl(48 25% 92.2%);
   --sidebar-accent-foreground: hsl(60 3% 21%);
-  --sidebar-border: hsl(53 12% 74% / 0.5);
+  --sidebar-border: hsl(48 16% 90%);
   --sidebar-ring: hsl(14.8 63.1% 59.6%);
 }
 
 .dark {
-  --background: hsl(60 2.7% 14.5%);
+  /* Deep warm carbon. Tuned to sit at ~#161513 — matching Devin/Mintlify's
+     #141414 page surface, far deeper than the old washed #262624. One flat
+     surface for page/header/sidebar; borders (not shade steps) do the
+     separating, so contrast against the near-white foreground stays high. */
+  --background: hsl(40 6% 8%);
   --foreground: hsl(60 14% 97%);
 
-  --card: hsl(60 2% 17%);
+  /* Cards & code blocks lift a hair above the page so framed content reads
+     as slightly raised — the only place we keep a shade step. */
+  --card: hsl(40 5% 12%);
   --card-foreground: hsl(60 14% 97%);
 
-  --popover: hsl(60 2.7% 14.5%);
+  /* Popovers / the search-&-Ask-AI modal float just above the page. */
+  --popover: hsl(40 5% 11%);
   --popover-foreground: hsl(60 14% 97%);
 
   --primary: hsl(14.8 63.1% 59.6%);
   --primary-foreground: hsl(0 0% 100%);
 
-  --secondary: hsl(60 3% 11%);
+  --secondary: hsl(40 4% 14%);
   --secondary-foreground: hsl(55 9% 74%);
 
-  --muted: hsl(60 3% 21%);
-  --muted-foreground: hsl(48 5% 57%);
+  --muted: hsl(40 4% 16%);
+  --muted-foreground: hsl(48 6% 62%);
 
-  --accent: hsl(60 3% 21%);
+  --accent: hsl(40 4% 17%);
   --accent-foreground: hsl(60 14% 97%);
 
   --destructive: hsl(0 73% 59%);
   --destructive-foreground: hsl(0 0% 100%);
 
-  --border: hsl(55 9% 74% / 0.35);
-  --input: hsl(60 2% 17%);
+  /* Whisper-subtle hairline (~#2c2b29): only ~+18 rgb over the page, the same
+     low-contrast step Devin uses (#26292d over #141414). Solid, not the old
+     translucent light-gray that composited to a loud ~#5d5d54. */
+  --border: hsl(40 5% 17%);
+  --input: hsl(40 5% 15%);
   --ring: hsl(14.8 63.1% 59.6%);
 
-  --sidebar: hsl(60 2% 12%);
+  /* Deeper-than-page backing for transparent-PNG media so framed images gain
+     depth instead of dissolving into the surface. */
+  --image-backing: hsl(40 7% 5%);
+
+  --sidebar: hsl(40 6% 8%);
   --sidebar-foreground: hsl(60 14% 97%);
   --sidebar-primary: hsl(14.8 63.1% 59.6%);
   --sidebar-primary-foreground: hsl(0 0% 100%);
-  --sidebar-accent: hsl(60 3% 21%);
+  --sidebar-accent: hsl(40 4% 17%);
   --sidebar-accent-foreground: hsl(60 14% 97%);
-  --sidebar-border: hsl(55 9% 74% / 0.2);
+  --sidebar-border: hsl(40 5% 15%);
   --sidebar-ring: hsl(14.8 63.1% 59.6%);
 }
 
@@ -169,13 +190,33 @@ div.mermaid {
 }
 
 /* Inline & hero images in article content: subtle border + rounded corners so
-   screenshots and diagrams sit cleanly on the page, matching code blocks. */
+   screenshots and diagrams sit cleanly on the page, matching code blocks. A
+   contrasting backing (deeper than the page in dark, clean white in light)
+   shows through transparent PNGs and forms a thin matte frame, giving media a
+   sense of depth instead of dissolving into the surface. Opt out with
+   `.no-border` for images that must bleed (logos, badges). */
 article img:not(.no-border),
 .md-content img:not(.no-border) {
+  box-sizing: border-box;
+  padding: 0.5rem;
+  background: var(--image-backing, var(--card));
   border: 1px solid var(--border, rgba(120, 120, 120, 0.2));
   border-radius: 0.5rem;
   max-width: 100%;
   height: auto;
+}
+/* The .ms-* media kit (screenshot figure, device mockups, carousel) carries
+   its own bespoke framing + backing token, so exempt those images from the
+   generic backing above to avoid double-framing. */
+article .ms-shot__frame img,
+article .ms-shots img,
+article .ms-devices img,
+.md-content .ms-shot__frame img,
+.md-content .ms-shots img,
+.md-content .ms-devices img {
+  padding: 0;
+  background: transparent;
+  border: 0;
 }
 
 /* Sticky top nav: subtle bottom border so it's clear where the header ends and
@@ -1155,15 +1196,14 @@ article a,
    shell — reused for mobile-search, GitHub link, and theme toggle.
    ───────────────────────────────────────────────────────────────────────── */
 
-/* Soft bottom edge + tiny drop shadow. The hairline defines the edge in both
-   modes; the shadow adds just enough elevation that scrolling content reads
-   as passing UNDER the header instead of colliding with it. Negative spread
-   keeps the shadow feathering downward only (no sideways bleed). */
+/* Flat edge, no elevation. A single subtle hairline marks where the header
+   ends — matching Devin/Mintlify, which separate the header with a border
+   alone. The old drop shadow (esp. the heavy 0.20 dark variant) feathered
+   down over the left sidebar's top, reading as a smudge; it's gone. */
 .mewbo-header {
-  border-bottom: 1px solid color-mix(in srgb, var(--border) 50%, transparent);
-  box-shadow: 0 1px 3px -1px rgb(0 0 0 / 0.04);
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+  box-shadow: none;
 }
-.dark .mewbo-header { box-shadow: 0 1px 3px -1px rgb(0 0 0 / 0.20); }
 
 /* Brand cluster: glyph + wordmark optically aligned.
    No `display` declaration here — the template's `hidden lg:inline-flex`
@@ -1248,7 +1288,9 @@ article a,
   transition: border-color 0.15s, background 0.15s, color 0.15s;
 }
 .mewbo-nav-search-pill:hover {
-  border-color: var(--ring); background: var(--muted); color: var(--foreground);
+  /* Quiet hover: the hairline firms up a touch, no loud clay ring. */
+  border-color: color-mix(in srgb, var(--foreground) 16%, var(--border));
+  background: var(--muted); color: var(--foreground);
 }
 .mewbo-nav-search-pill svg { flex-shrink: 0; opacity: 0.6; }
 .mewbo-nav-search-pill span { flex: 1; text-align: left; }
@@ -1265,16 +1307,23 @@ article a,
 }
 @media (max-width: 639px) { .mewbo-kbd { display: none; } }
 
-/* Ask AI button: same h-9 token. */
+/* Ask AI button: same h-9 token. Quiet by default — the label rides at
+   muted-foreground (not stark white) so it sits as a peer of the search pill
+   rather than shouting; the sparkle inherits that tone. It warms to full
+   foreground on hover. */
 .mewbo-nav-ask-ai-btn {
   display: inline-flex; align-items: center; gap: 0.4rem;
   height: 2.25rem; padding: 0 0.85rem;
   border: 1px solid var(--border); border-radius: 0.5rem;
-  background: var(--background); color: var(--foreground);
+  background: var(--background); color: var(--muted-foreground);
   font-size: 0.875rem; font-weight: 500; white-space: nowrap; cursor: pointer;
-  transition: background 0.15s, border-color 0.15s;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
 }
-.mewbo-nav-ask-ai-btn:hover { background: var(--muted); border-color: var(--ring); }
+.mewbo-nav-ask-ai-btn svg { opacity: 0.85; }
+.mewbo-nav-ask-ai-btn:hover {
+  background: var(--muted); color: var(--foreground);
+  border-color: color-mix(in srgb, var(--foreground) 16%, var(--border));
+}
 
 /* ─── Header tab rail (theme.header_tabs) ──────────────────────────────────
    Second row of the sticky header, fused under the utility row on the SAME
@@ -1286,7 +1335,7 @@ article a,
    On narrow screens the rail scrolls horizontally with hidden scrollbars.
    ───────────────────────────────────────────────────────────────────────── */
 
-.ms-header-tabs { border-top: 1px solid var(--border); }
+.ms-header-tabs { border-top: 1px solid color-mix(in srgb, var(--border) 70%, transparent); }
 .ms-header-tabs__rail {
   display: flex; align-items: stretch; gap: 0.25rem;
   height: 2.5rem;
@@ -1432,7 +1481,7 @@ body.ms-has-header-tabs .mewbo-header__row { height: calc(var(--spacing) * 14); 
 
 .mewbo-header__label {
   flex: 1; min-width: 0;
-  font-size: 0.9375rem; font-weight: 600; color: var(--foreground);
+  font-size: 0.9375rem; font-weight: 500; color: var(--foreground);
   letter-spacing: -0.005em;
 }
 
