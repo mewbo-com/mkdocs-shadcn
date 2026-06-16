@@ -17,6 +17,7 @@ from shadcn.filters import (
     parse_author,
     setattribute,
 )
+from shadcn.plugins.mixins.code_refs import CodeRefsMixin
 from shadcn.plugins.mixins.dev import DevServerMixin
 from shadcn.plugins.mixins.git import GitTimestampsMixin
 from shadcn.plugins.mixins.i18n import I18nMixin
@@ -34,6 +35,7 @@ class SearchPlugin(
     OrderMixin,
     MkdocstringsMixin,
     KatexMixin,
+    CodeRefsMixin,
     TableMixin,
     MarkdownMixin,
     BaseSearchPlugin,

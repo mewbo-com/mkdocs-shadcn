@@ -16,6 +16,12 @@ theme:
     - label: App Demo
       icon: lucide:braces
       url: app_demo/
+  code_refs:
+    endpoint:
+      reference_page: app_demo/
+      tags:
+        /api/users: Users
+        /api/items: Items
   pygments_style:
     light: shadcn-light
     dark: github-dark

@@ -35,8 +35,8 @@ The wheel ships the `shadcn/` package only.
   `shadcn/templates/external/*.html` — optional integrations (katex, echarts,
   pygments, mkdocstrings, codexec).
 - `shadcn/plugins/` — a custom `SearchPlugin` subclass composed from
-  `plugins/mixins/*` (i18n, git, dev, order, mkdocstrings, katex, table,
-  markdown). The `TableMixin` wraps every `<table>` in
+  `plugins/mixins/*` (i18n, git, dev, order, mkdocstrings, katex, code_refs,
+  table, markdown). The `TableMixin` wraps every `<table>` in
   `<div class="table-wrapper">` via `on_page_content`.
 - `shadcn/js/*.js` — theme + Mewbo enhancement scripts.
 - Brand content components live in `mewbo.css` as the `.ms-*` kit: the landing
@@ -94,6 +94,19 @@ The wheel ships the `shadcn/` package only.
   error → the Playwright crawler test fails). The tool uses BeautifulSoup and
   reserializes the touched template, so keep void tags self-closed (e.g.
   `<link ... />`) to avoid stray `</link>` artifacts.
+- **Code-reference badges (`theme.code_refs`, v1.4.0).** The `CodeRefsMixin`
+  rewrites markdown links with two custom URI schemes into inline pills in
+  `on_page_content`: `repo:<path>#L1-L9` → octicon file badge, `endpoint:GET
+  /path` → method-tinted badge. It runs *after* markdown rendering, so refs
+  inside fenced code blocks (not anchors) survive verbatim. Disabled unless
+  `theme.code_refs` is non-null. **Nothing is hardcoded to a consumer**: the
+  file-badge base URL derives from `config.repo_url` (`/blob/<sha>/…`, SHA from
+  git with a configurable `default_ref` fallback), and endpoint badges only
+  activate with `theme.code_refs.endpoint` (a `reference_page` + a path-prefix→
+  tag map) — the endpoint href is resolved *relative to the current page* via
+  `mkdocs.utils.get_relative_url`, so any nav depth works. Styling lives in
+  `shadcn/css/code-refs.css`, `<link>`'d only when the feature is on (head.html
+  gates it). No JS, so no SRI; no Tailwind, so no `base.css` rebuild.
 - **Versioning.** This fork uses its own SemVer (`1.x`) independent of
   upstream's `0.10.x`. `pyproject.toml` is the source of truth; the
   `sync-version` hook copies it into `package.json`.

@@ -26,6 +26,9 @@
     <link href="https://cdn.jsdelivr.net/npm/swiper@12/swiper-bundle.min.css" rel="stylesheet"/>
 {%- endif %}
 <link href="{{ 'css/mewbo.css' | url }}" rel="stylesheet"/>
+{%- if config.theme.code_refs is not none %}
+<link href="{{ 'css/code-refs.css' | url }}" rel="stylesheet"/>
+{%- endif %}
 
     {# Inject runtime config for theme JS. Placed in head so window globals
        exist before deferred scripts at the body end read them.

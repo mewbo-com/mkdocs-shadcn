@@ -127,3 +127,27 @@ carousel: false
 #         icon: lucide:braces
 #         url: rest-api/
 header_tabs: null
+
+# Code-reference badges. Authors write markdown links with two custom URI
+# schemes and the theme renders them as inline two-cell pills (styling in
+# css/code-refs.css, loaded only when this is set):
+#   [`app/main.py`](repo:app/main.py#L12-L20)   → octicon file badge, deep-linked
+#                                                  to the repo at the build commit
+#   [POST /api/x](endpoint:POST /api/x)          → method-tinted endpoint badge
+# Null/absent (default) disables the feature entirely (no CSS, no rewriting).
+# Set to an empty mapping (`code_refs: {}`) to enable file badges using
+# `repo_url`. Endpoint badges stay off until you configure `endpoint` below.
+# Example:
+#   theme:
+#     code_refs:
+#       # File badges link to "<repo_url>/blob/<sha>/...". Override the base
+#       # only if repo_url isn't a blob-style host (GitHub/Gitea/GitLab are).
+#       repo_blob_url: null
+#       # Ref used when the build commit SHA can't be resolved from git.
+#       default_ref: main
+#       # Endpoint badges — omit this whole block to leave endpoint: links be.
+#       endpoint:
+#         reference_page: rest-api/   # site-root-relative API reference page
+#         tags:                       # path-prefix → tag (first match wins)
+#           /api/sessions: Sessions
+code_refs: null
