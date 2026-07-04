@@ -79,12 +79,18 @@ theme:
       section: API Reference            # scope the sidebar to this nav Section
       match:                            # extra prefixes that also activate the tab
         - reference/
+  footer:
+    docs:                               # optional shortlist for the footer's
+      - Get Started                     # "Documentation" column: top-level nav
+      - API Reference                   # titles to keep; empty = all of them
 ```
 
 Two per-item keys refine the rail:
 
 - **`section`** (exact top-level nav Section title) scopes the left sidebar to the tab. On any page inside the named Section the sidebar shows only that Section's children; on every other (root-tab) page it shows the full nav minus all claimed Sections. It activates as soon as one tab declares it, and when set it takes precedence over `topbar_sections`.
 - **`match`** (list of site-root-relative url prefixes) adds prefixes that also activate the tab, normalized exactly like `url`. Use it when one tab fronts several top-level url trees. First-match-wins across tabs and the root fallback stay unchanged.
+
+The footer's auto-derived "Documentation" column can be shortlisted with **`footer.docs`**: a list of top-level `nav:` titles to keep, in nav order. Titles and link targets still come from `nav`, so the column never duplicates a URL. Empty or absent keeps the historical behavior (every top-level nav item).
 
 Two opt-in layout features ship with the theme:
 

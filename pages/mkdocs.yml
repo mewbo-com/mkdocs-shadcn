@@ -22,6 +22,11 @@ theme:
     - label: App Demo
       icon: lucide:braces
       url: app_demo/
+  footer:
+    docs:
+      - Get started
+      - Guides
+      - Reference
   code_refs:
     endpoint:
       reference_page: app_demo/

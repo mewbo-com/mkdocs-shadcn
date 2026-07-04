@@ -63,6 +63,13 @@ footer:
   # Tagline shown under the brand mark. Defaults to `site_description`.
   tagline: null
 
+  # Shortlist for the auto-derived "Documentation" column: a list of
+  # top-level `nav:` titles to keep, in nav order. Empty = every top-level
+  # nav item. Links still resolve from `nav`, so no URLs are duplicated.
+  # Example:
+  #   theme.footer.docs: ["Get Started", "Terminal", "API"]
+  docs: []
+
   # Per-product custom columns. Each section is rendered as its own column
   # of links. Example:
   #   theme.footer.sections:

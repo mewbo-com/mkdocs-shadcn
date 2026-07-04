@@ -16,10 +16,14 @@
 {% set _copyright = _f.copyright or ("© " ~ current_year ~ " " ~ config.site_name) %}
 
 {# Auto-derive docs link list from top-level nav. Sections resolve to
-   their first leaf page so the link doesn't 404. #}
+   their first leaf page so the link doesn't 404. An optional
+   `theme.footer.docs` list of top-level nav titles shortlists the column;
+   titles and URLs still come from `nav`, so there is one source of truth. #}
+{% set _docs_filter = _f.docs or [] %}
 {% set _doc_links = [] %}
 {% for item in nav %}
-  {% if item.is_page %}
+  {% if _docs_filter and item.title not in _docs_filter %}
+  {% elif item.is_page %}
     {% set _unused =_doc_links.append({"title": item.title, "url": item.abs_url}) %}
   {% elif item.is_section %}
     {% set _first = item.children|selectattr("is_page")|first %}

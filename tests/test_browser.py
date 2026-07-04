@@ -409,3 +409,18 @@ def test_header_tabs_match_prefix_activates_tab(page: Page):
     assert "Guides" in active.inner_text(), (
         f"the match: prefix must activate the Guides tab: {active.inner_text()!r}"
     )
+
+
+def test_footer_docs_shortlist(page: Page):
+    """theme.footer.docs shortlists the footer Documentation column.
+
+    The fixture declares docs: [Get started, Guides, Reference]; the
+    auto-derived column (a dozen entries without the shortlist) must
+    render exactly those three, in nav order (templates/footer.html).
+    """
+    page.goto(BASE + "/", wait_until="networkidle")
+
+    links = page.locator(
+        'nav[aria-label="Documentation links"] li'
+    ).all_inner_texts()
+    assert [t.strip() for t in links] == ["Get started", "Guides", "Reference"], links
