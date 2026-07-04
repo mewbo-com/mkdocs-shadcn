@@ -117,6 +117,17 @@ carousel: false
 # prefixes the current page.url is marked active (accent color + underline +
 # aria-current="page"); if none match, the root tab is. Absolute http(s)
 # urls are left untouched. Styling lives in css/mewbo.css (.ms-header-tabs).
+#
+# Two optional per-item keys refine the rail:
+#   section: <exact top-level nav Section title> — scopes the LEFT sidebar to
+#     this tab. On any page inside the named Section the sidebar shows ONLY
+#     that Section's children; on every other (root-tab) page it shows the
+#     full nav minus every claimed Section. Active whenever at least one tab
+#     declares it; when set it wins over topbar_sections.
+#   match: [<url-prefix>, ...] — extra site-root-relative prefixes that also
+#     activate this tab (same normalization as url). Use it when one tab
+#     fronts several top-level url trees. First-match-wins across tabs and the
+#     root fallback are unchanged.
 # Example:
 #   theme:
 #     header_tabs:
@@ -126,6 +137,9 @@ carousel: false
 #       - label: API Reference
 #         icon: lucide:braces
 #         url: rest-api/
+#         section: API Reference      # sidebar shows only this Section on its pages
+#         match:                       # these prefixes also light up this tab
+#           - reference/
 header_tabs: null
 
 # Code-reference badges. Authors write markdown links with two custom URI

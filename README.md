@@ -76,7 +76,15 @@ theme:
     - label: API Reference
       icon: lucide:braces
       url: rest-api/
+      section: API Reference            # scope the sidebar to this nav Section
+      match:                            # extra prefixes that also activate the tab
+        - reference/
 ```
+
+Two per-item keys refine the rail:
+
+- **`section`** (exact top-level nav Section title) scopes the left sidebar to the tab. On any page inside the named Section the sidebar shows only that Section's children; on every other (root-tab) page it shows the full nav minus all claimed Sections. It activates as soon as one tab declares it, and when set it takes precedence over `topbar_sections`.
+- **`match`** (list of site-root-relative url prefixes) adds prefixes that also activate the tab, normalized exactly like `url`. Use it when one tab fronts several top-level url trees. First-match-wins across tabs and the root fallback stay unchanged.
 
 Two opt-in layout features ship with the theme:
 

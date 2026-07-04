@@ -1,13 +1,11 @@
 {% if nav|length > 1 %}
 
-{% if config.theme.topbar_sections %}
-{% set current = nav|active_section|attr('children') %}
-{% else %}
-{% set current = nav %}
-{% endif %}
+{# scoped_nav owns the resolution: header_tabs per-tab section claiming (fork),
+   else upstream topbar_sections, else the full nav. See shadcn/filters.py. #}
+{% set current = nav|scoped_nav(config.theme) %}
 
 {% if not current %}
-{# when there is not active section, keep only the top level pages #}
+{# when there is no active/scoped selection, keep only the top level pages #}
 {% set current = nav|selectattr("is_page") %}
 {% endif %}
 

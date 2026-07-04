@@ -211,7 +211,7 @@ def test_header_tabs_rail_renders(page: Page):
     labels = page.locator(
         ".ms-header-tabs__item > span:not(.ms-header-tabs__icon)"
     ).all_inner_texts()
-    assert labels == ["Documentation", "App Demo"], labels
+    assert labels == ["Documentation", "Guides", "App Demo"], labels
 
     active = page.locator('.ms-header-tabs__item[aria-current="page"]')
     assert active.count() == 1, "exactly one tab must be aria-current"
@@ -338,4 +338,74 @@ def test_app_template_full_bleed(page: Page):
     )
     assert abs(m["fill"] - m["main"]) < 2, (
         "the page's 100%-height div must fill the whole app slot"
+    )
+
+
+def _sidebar_link_paths(page: Page) -> List[str]:
+    """Pathnames of every left-sidebar nav link on the current page."""
+    return page.locator(
+        '[data-slot="sidebar"] a[data-slot="sidebar-menu-button"]'
+    ).evaluate_all("els => els.map(e => new URL(e.href).pathname)")
+
+
+def _sidebar_group_labels(page: Page) -> List[str]:
+    """Section group-label texts in the left sidebar on the current page."""
+    return page.locator(
+        '[data-slot="sidebar"] [data-sidebar="group-label"]'
+    ).all_inner_texts()
+
+
+def test_scoped_sidebar_shows_only_claimed_section(page: Page):
+    """A header_tabs `section:` claim scopes the sidebar to that section.
+
+    The Guides tab declares `section: Guides`. On a page inside the Guides
+    section the left sidebar must list ONLY the Guides children and drop the
+    rest of the nav (Extensions/Plugins/Reference).
+    """
+    page.goto(BASE + "/guides/alpha/", wait_until="networkidle")
+
+    paths = _sidebar_link_paths(page)
+    assert paths, "the scoped sidebar should still render the guides links"
+    assert all(p.startswith("/guides/") for p in paths), paths
+    assert not any(
+        p.startswith(("/extensions/", "/plugins/", "/reference/"))
+        for p in paths
+    ), paths
+    # The Guides children are flat pages, so no sub-section group-labels leak.
+    labels = _sidebar_group_labels(page)
+    assert "Extensions" not in labels and "Plugins" not in labels, labels
+
+
+def test_scoped_sidebar_root_excludes_claimed_sections(page: Page):
+    """On a root-tab page the sidebar shows the full nav minus claimed sections.
+
+    The docs root is not inside any claimed section, so the sidebar keeps the
+    unclaimed sections (Extensions/Reference) but drops the claimed Guides
+    section entirely.
+    """
+    page.goto(BASE + "/", wait_until="networkidle")
+
+    labels = _sidebar_group_labels(page)
+    assert "Guides" not in labels, labels
+    assert "Extensions" in labels, (
+        f"unclaimed sections must still render on root pages: {labels}"
+    )
+
+    paths = _sidebar_link_paths(page)
+    assert not any(p.startswith("/guides/") for p in paths), paths
+
+
+def test_header_tabs_match_prefix_activates_tab(page: Page):
+    """A `match:` prefix marks the tab active outside its own url subtree.
+
+    `/reference/` is not the Guides tab's url (`guides/`) but is listed in its
+    `match:` prefixes, so the Guides tab carries aria-current on reference
+    pages while every other tab stays inactive.
+    """
+    page.goto(BASE + "/reference/api/", wait_until="networkidle")
+
+    active = page.locator('.ms-header-tabs__item[aria-current="page"]')
+    assert active.count() == 1, "exactly one tab must be aria-current"
+    assert "Guides" in active.inner_text(), (
+        f"the match: prefix must activate the Guides tab: {active.inner_text()!r}"
     )

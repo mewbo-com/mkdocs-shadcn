@@ -13,6 +13,12 @@ theme:
     - label: Documentation
       icon: lucide:book-open
       url: .
+    - label: Guides
+      icon: lucide:compass
+      url: guides/
+      section: Guides
+      match:
+        - reference/
     - label: App Demo
       icon: lucide:braces
       url: app_demo/

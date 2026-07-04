@@ -5,23 +5,45 @@
    left-aligns with the brand mark.
 
    Active-tab resolution (build time, namespace() — never rebind `_`):
-   normalize each tab url (drop a leading "./", outer slashes; "." ≡ "")
-   and pick the FIRST tab whose non-empty normalized url prefixes
-   `page.url`; if none match, the root tab ("" / ".") wins. Exactly one
-   tab carries aria-current="page". #}
+   normalize each tab url AND every entry of its optional `match` list (drop
+   a leading "./", outer slashes; "." ≡ "") and pick the FIRST tab any of
+   whose non-empty normalized prefixes prefixes `page.url`; if none match,
+   the root tab ("" / ".") wins. A tab whose url normalizes to "" is the
+   root fallback and its (empty) url is never used as a catch-all prefix,
+   but its `match` prefixes still count. Exactly one tab carries
+   aria-current="page". #}
 {%- set ns = namespace(active=-1, root=-1) -%}
 {%- set current = page.url if page else "" -%}
 {%- for tab in config.theme.header_tabs -%}
+    {%- set tab_idx = loop.index0 -%}
+    {%- set cand = namespace(prefixes=[], is_root=false) -%}
     {%- set raw = (tab.url or "") | string | trim -%}
     {%- set raw = raw[2:] if raw.startswith("./") else raw -%}
     {%- set norm = raw.strip("/") -%}
     {%- set norm = "" if norm == "." else norm -%}
     {%- if norm -%}
-        {%- if ns.active < 0 and current.startswith(norm) -%}
-            {%- set ns.active = loop.index0 -%}
+        {%- set cand.prefixes = cand.prefixes + [norm] -%}
+    {%- else -%}
+        {%- set cand.is_root = true -%}
+    {%- endif -%}
+    {%- for m in (tab.match or []) -%}
+        {%- set mraw = (m or "") | string | trim -%}
+        {%- set mraw = mraw[2:] if mraw.startswith("./") else mraw -%}
+        {%- set mnorm = mraw.strip("/") -%}
+        {%- set mnorm = "" if mnorm == "." else mnorm -%}
+        {%- if mnorm -%}
+            {%- set cand.prefixes = cand.prefixes + [mnorm] -%}
         {%- endif -%}
-    {%- elif ns.root < 0 -%}
-        {%- set ns.root = loop.index0 -%}
+    {%- endfor -%}
+    {%- if ns.active < 0 -%}
+        {%- for p in cand.prefixes -%}
+            {%- if ns.active < 0 and current.startswith(p) -%}
+                {%- set ns.active = tab_idx -%}
+            {%- endif -%}
+        {%- endfor -%}
+    {%- endif -%}
+    {%- if cand.is_root and ns.root < 0 -%}
+        {%- set ns.root = tab_idx -%}
     {%- endif -%}
 {%- endfor -%}
 {%- set active_idx = ns.active if ns.active >= 0 else ns.root -%}
