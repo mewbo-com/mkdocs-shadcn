@@ -1290,7 +1290,11 @@ article a:hover,
   margin-bottom: 0.2rem;
   padding-top: 0.2rem;
   padding-bottom: 0.2rem;
-  font-size: 0.7rem;
+  /* A group label names the entries under it, so it cannot be smaller than
+     they are. At 0.7rem it rendered 11.2px against a 12.8px menu entry, which
+     read as a caption on the rail rather than as the heading of a section.
+     It now sits one step above the entries and carries the weight. */
+  font-size: 0.85rem;
   font-weight: 700;
   letter-spacing: -0.005em;
   color: var(--foreground);

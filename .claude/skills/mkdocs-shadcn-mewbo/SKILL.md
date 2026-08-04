@@ -85,6 +85,68 @@ is. It is lifted out of the body into the page header, so it never appears
 twice. The first H2 renders as the **page's visual title** at a `clamp()` up to
 2.4rem, set 4px under the label so the pair reads as one block.
 
+### Writing the H1 and the H2
+
+This is the part that gets rewritten three times if you get it wrong, so it is
+worth reading before you write a single page. The pair is a product's front
+door. It has to welcome a reader and tell them what they are looking at.
+
+**The H1 names where the reader is.** It matches the navigation entry. It is a
+label, not a claim. `Get Started`, `Troubleshooting`, `Plan Mode`.
+
+**The H2 is the page's real title, and it must be a short noun phrase.** Not a
+sentence. Not a clause with a verb chain. Not two halves joined by a comma. The
+reference point is how a mature product documents itself: a short title, and
+the descriptive sentence living underneath as prose rather than folded into the
+heading. Your first paragraph is that slot, and you already have it.
+
+    # Get Started
+
+    ## Installing Mewbo
+
+    Run the server, then pick a client. Setup for each client lives on its own
+    page, and this page routes you there.
+
+**The bar to clear:** a staff engineer and a college sophomore both learn the
+same correct thing about the page from the H2 alone. If either one would be
+left guessing, it is not done.
+
+**Length is set by what fits, not by taste.** At most **32 characters**. The
+title renders around 38px in a ~672px column and wraps past roughly 33. Count
+the characters, because a wrapped title is the single most obvious defect on
+the page. 3 to 6 words is what 32 characters buys you.
+
+#### The three ways this goes wrong, all of them observed
+
+| Failure | Example | Why it fails |
+|---|---|---|
+| **A sentence** | `Watch replies stream in and manage your session history` | Wraps to three lines at 38px and reads as prose, not a title |
+| **A cryptic label** | `Spoken turns`, `Review first`, `On demand` | Short and meaningless. The reader learns nothing and has no reason to read on |
+| **Describing the wrong thing** | `Fix a failing session` on a page about the whole product | Narrows the page to one symptom class and hides the rest |
+
+The middle one is the trap, because it looks disciplined. Compressing until the
+words stop meaning anything is not concision. **Objectivity beats cleverness.**
+A verb is usually what makes a title mean something, so use one when it helps.
+
+    Voice control in your home     ->  Mewbo inside Home Assistant
+    Threaded replies               ->  Reply from your inbox
+    Review first                   ->  Approve the plan first
+    Default tools                  ->  File, shell and edit tools
+    See how a live app works       ->  Apps an agent builds and runs
+    Run the server, pick a client  ->  Installing Mewbo
+
+#### Checks before you ship a title
+
+- Under 32 characters. Counted, not estimated.
+- A noun phrase. No comma joining two clauses.
+- Does not restate the H1. `Skills` then `About skills` wastes the line.
+- **True of the whole page**, not of its first section.
+- Unique across the site. Two pages sharing a title is a reader who cannot tell
+  them apart.
+- Does not collide with another heading on the same page, which builds
+  `strict: true` will not catch but a broken inbound anchor will.
+- Sentence case, no trailing punctuation, no em dash or colon.
+
 ### The rules, and why each one exists
 
 - **The subtitle H2 is a title, not a sentence. Never more than 4 words, and
