@@ -127,6 +127,15 @@ carousel: false
 # Off by default, so a site pays for nothing it does not use.
 lightbox: false
 
+# Raw HTML reference checking. MkDocs rewrites and validates markdown links,
+# but an `<img src=…>`, `<video poster=…>` or `<a href=…>` written by hand
+# inside a Markdown file passes through verbatim, so a wrong relative prefix
+# 404s in production while the build stays green.
+# Off by default, like every other optional capability here: consuming the
+# theme costs nothing you did not ask for, and this one walks the whole built
+# site. Switch it on and it WARNS, then raises under `strict`.
+link_check: false
+
 # Sortable tables. When true the theme loads Tablesort (MIT, from CDN) plus
 # js/sortable-tables.js, and every prose table with a header and more than one
 # body row becomes click-to-sort. Off by default so a site that does not want

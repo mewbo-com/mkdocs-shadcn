@@ -352,6 +352,32 @@ both rather than picking one.
   `data-lightbox="false"`. It is GLightbox from the CDN, so a site with the
   flag off ships none of it.
 
+### Raw HTML links, and the one that bites
+
+**MkDocs rewrites and validates markdown links. It does neither for raw HTML.**
+An `<a href=…>`, `<img src=…>` or `<video poster=…>` you write by hand inside a
+Markdown file is emitted verbatim, so a wrong relative prefix 404s in
+production while `mkdocs build --strict` stays green.
+
+The trap is that correctness depends on the DEPTH of the page. With
+`use_directory_urls`, a page at `topic.md` serves from `/topic/`, so:
+
+```html
+<a href="guide/">      <!-- from the landing page: /guide/        correct -->
+<a href="guide/">      <!-- from topic.md:        /topic/guide/   404     -->
+<a href="../guide/">   <!-- from topic.md:        /guide/         correct -->
+```
+
+A section index is the exception: `terminal/index.md` also serves from
+`/terminal/`, and its children really are under it, so `href="interface/"` is
+right there. That is why the mistake spreads. The same markup is correct on one
+page and wrong on the next.
+
+Set `theme.link_check: true` and the theme resolves every raw `src`, `poster`
+and `href` in the built site against the directory its page landed in. It warns,
+and raises under `strict`. Off by default, because it walks every built page and
+consuming the theme should cost nothing you did not ask for.
+
 ### Tables
 
 Cells wrap by default; wide tables reflow rather than scrolling. Add

@@ -1210,8 +1210,7 @@ article a:hover,
   padding: 0;
   border: 1px solid color-mix(in srgb, var(--border, #d4d4d8) 70%, transparent);
   border-radius: 0.55rem;
-  background: color-mix(in srgb, var(--background, #fff) 78%, transparent);
-  backdrop-filter: blur(8px);
+  background: color-mix(in srgb, var(--background, #fff) 94%, transparent);
   color: var(--foreground, #0a0a0a);
   cursor: pointer;
   box-shadow: 0 1px 2px -1px rgb(0 0 0 / 0.2), 0 4px 12px -4px rgb(0 0 0 / 0.25);
@@ -1240,9 +1239,19 @@ article a:hover,
 .glightbox-container .gslide-media {
   box-shadow: none;
 }
+/* NO backdrop-filter here. A blur on a full viewport overlay makes the browser
+   snapshot and re-rasterize the whole page behind it, and the library fades
+   this element in over 500ms with `transition: all`, so the page visibly tore
+   itself apart for the length of the animation and again on close. A solid
+   wash costs one paint and looks the same once it has settled. */
 .glightbox-container .goverlay {
-  background: color-mix(in srgb, var(--background, #0b0b0b) 82%, #000);
-  backdrop-filter: blur(6px);
+  background: color-mix(in srgb, var(--background, #0b0b0b) 14%, #000);
+}
+/* The library sets `transition: all` on its overlay, which animates every
+   property it is given, including ones it never meant to. */
+.glightbox-container .goverlay,
+.glightbox-container .gslide-media {
+  transition: opacity 0.2s ease;
 }
 .glightbox-container .gslide-description {
   background: transparent;
@@ -1267,8 +1276,7 @@ article a:hover,
   opacity: 1;
   border: 1px solid color-mix(in srgb, #fff 22%, transparent);
   border-radius: 999px;
-  background: color-mix(in srgb, #000 45%, transparent);
-  backdrop-filter: blur(10px);
+  background: color-mix(in srgb, #000 55%, transparent);
   transition: background-color 0.15s ease, transform 0.1s ease;
 }
 .glightbox-container .gclose:hover,

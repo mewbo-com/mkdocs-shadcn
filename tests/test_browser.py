@@ -875,3 +875,25 @@ def test_lightbox_opens_images_fullscreen(page: Page, local_deployment: str):
         "distinct images — slide clones are leaking in"
     )
     assert not opened["zoom"], "zoom should be off; the ask was full screen only"
+
+
+def test_search_index_is_written(page: Page, local_deployment: str):
+    """The search index must exist and parse, whatever mixins are stacked.
+
+    Regression guard. Every mixin in SearchPlugin cooperates through
+    `Mixin._super_method_or`, and the search plugin at the END of the MRO
+    writes `search_index.json` from its own `on_post_build`. A mixin that
+    overrides that hook and returns early WITHOUT delegating silently drops
+    the index: the build stays green, the pages all render, and the only
+    symptom is the search worker parsing a 404 page as JSON at runtime.
+
+    Asserted on the artifact rather than on the plugin, so it holds for any
+    future mixin regardless of where it lands in the order.
+    """
+    response = page.request.get(BASE + "/search/search_index.json")
+    assert response.ok, (
+        f"search_index.json returned {response.status}; a mixin's "
+        "on_post_build is not delegating to the search plugin"
+    )
+    index = response.json()
+    assert index.get("docs"), "search index parsed but holds no documents"
