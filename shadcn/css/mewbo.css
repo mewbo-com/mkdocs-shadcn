@@ -1185,6 +1185,63 @@ article a:hover,
   color: var(--muted-foreground, currentColor);
 }
 
+/* ── Surface elevation ─────────────────────────────────────────────────────
+   One scale for every large surface, so the page reads as a single stack
+   instead of a set of independently tinted panels.
+
+   Vertically the chrome descends into the page: the top bar is the most
+   elevated, the sub navigation sits one step under it, and the content canvas
+   is the floor. Horizontally the rails sit BELOW the canvas, which is what
+   pulls the eye to the middle column where the reading happens.
+
+       top nav      most elevated
+       sub nav      one step down
+       content      the canvas
+       rails        recessed
+
+   Measured before this existed: in light the sub navigation was 0.8963
+   luminance against a 0.9473 top bar and a 0.9473 canvas, so it read as a dark
+   band across the page, and it sat within 0.017 of the search input's fill, so
+   the two competed. In dark it was 0.0098 against a 0.0075 top bar, which is
+   the flow running backwards. Both rails matched the canvas exactly, so
+   nothing drew the eye inward.
+
+   Elevation lightens in both modes. In dark that is the usual convention; in
+   light it keeps the reading surface off the very top of the scale without
+   ever darkening the text's own background. */
+:root {
+  --surface-nav: #fdfcfa;
+  --surface-subnav: #fbfaf7;
+  --surface-rail: #f5f3ee;
+  --surface-content: #faf9f6;
+}
+.dark {
+  --surface-nav: #1e1d1a;
+  --surface-subnav: #1a1917;
+  --surface-rail: #111110;
+  --surface-content: #161513;
+}
+
+/* Every large surface reads from the scale below, so a future retune moves
+   one set of values rather than five unrelated rules. */
+.mewbo-header {
+  background: var(--surface-nav);
+}
+
+/* The rails are NOT painted. Neither fills its column: the sidebar stops short
+   of the viewport and the table of contents is shorter still, so painting them
+   drew two floating panels with light strips above and below. The recession
+   comes from the page instead. `body` carries the rail level and the content
+   column is lifted off it, which puts the SAME contrast between rail and
+   centre with no box edges anywhere, and covers the gutters too. */
+body {
+  background: var(--surface-rail);
+}
+article {
+  background: var(--surface-content);
+}
+
+
 /* The scrollbar gutter is reserved permanently.
 
    Any overlay that locks scrolling sets `overflow: hidden` on the root, and on
@@ -3241,7 +3298,7 @@ div:has(> #toc) {
 /* ── Tab rail: its own plane between header and page ─────────────────── */
 
 .ms-header-tabs {
-  background: color-mix(in srgb, var(--muted) 55%, var(--background));
+  background: var(--surface-subnav);
   border-top: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
   border-bottom: 1px solid color-mix(in srgb, var(--border) 90%, transparent);
   /* Bottom-only, short, and no blur spread sideways — depth against the page
@@ -3252,7 +3309,6 @@ div:has(> #toc) {
 }
 
 .dark .ms-header-tabs {
-  background: color-mix(in srgb, var(--muted) 40%, var(--background));
   box-shadow: 0 2px 6px -2px rgb(0 0 0 / 0.45);
 }
 
@@ -3293,10 +3349,6 @@ div:has(> #toc) {
 
 .dark .mewbo-nav-search-pill:hover {
   background: color-mix(in srgb, var(--muted) 55%, var(--background));
-}
-
-.dark .ms-header-tabs {
-  background: color-mix(in srgb, var(--muted) 22%, var(--background));
 }
 
 /* One shadow for the whole nav block, cast onto the page.
