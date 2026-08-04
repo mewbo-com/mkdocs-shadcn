@@ -699,7 +699,7 @@ article .typography > :first-child {
    spaces its own children with a flex gap, and mkdocstrings holds a symbol's
    docstring deliberately tight under its signature. */
 article .typography :is(h2, h3, h4, h5, h6):not(.ms-hero *, .doc *)
-  + :is(p, ul, ol, dl, pre, blockquote, figure, table, details, section, div, h2, h3, h4, h5, h6) {
+  + :is(p, ul, ol, dl, pre, blockquote, figure, table, details, section, div, video, h2, h3, h4, h5, h6) {
   margin-top: var(--prose-heading-lead) !important;
 }
 
@@ -1183,6 +1183,20 @@ article a:hover,
   text-align: center;
   font-size: 0.85rem;
   color: var(--muted-foreground, currentColor);
+}
+
+/* The scrollbar gutter is reserved permanently.
+
+   Any overlay that locks scrolling sets `overflow: hidden` on the root, and on
+   a browser with CLASSIC scrollbars that removes ~15px of width and reflows
+   every element on the page, then reflows it back on close. It reads as the
+   page zooming and rebuilding itself around the viewer. It does NOT reproduce
+   in a headless browser, which uses overlay scrollbars and therefore has no
+   gutter to lose, so a measurement of the overlay's own styles will report the
+   fix working while a real desktop still jumps. Reserve the gutter and hiding
+   overflow costs no layout at all. */
+:root {
+  scrollbar-gutter: stable;
 }
 
 /* Full-screen image viewer (GLightbox, theme `lightbox: true`).
