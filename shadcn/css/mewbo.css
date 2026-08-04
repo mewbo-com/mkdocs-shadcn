@@ -2770,3 +2770,72 @@ div:has(> #toc) {
    to full foreground on the new deeper plane looked reasonable and was wrong:
    it removes the only colour cue distinguishing the active tab from its
    neighbours, leaving just the underline. */
+
+/* ─────────────────────────────────────────────────────────────────────────
+   Dark-mode header depth
+
+   The filled search field and the tab rail were mixed too far toward
+   `--muted` in dark mode: against a #161513 header they read as noticeably
+   lighter panels sitting on top of the chrome rather than as part of it.
+   Light mode is unaffected — there the same mixes land correctly, because
+   `--muted` sits BELOW the page white rather than above the page black.
+
+   Pulled back toward the header so each surface is a step, not a slab. Both
+   stay measurably distinct from the header, which is what
+   `test_keyboard_keys_and_header_chrome` pins.
+
+   The shadow moves to the BOTTOM of the whole navigation block. Previously
+   the rail cast its own, which reads as two stacked planes; the header and
+   the rail are one piece of chrome and should cast one shadow onto the page
+   beneath them. Deeper and softer than the old one so it is visible against
+   the page while scrolling, and still spread-free so it cannot feather
+   sideways onto the sidebar.
+   ───────────────────────────────────────────────────────────────────────── */
+
+.dark .mewbo-nav-search-pill {
+  background: color-mix(in srgb, var(--muted) 38%, var(--background));
+  border-color: color-mix(in srgb, var(--border) 85%, transparent);
+  box-shadow:
+    inset 0 1px 0 0 rgb(255 255 255 / 0.02),
+    0 1px 2px -1px rgb(0 0 0 / 0.4);
+}
+
+.dark .mewbo-nav-search-pill:hover {
+  background: color-mix(in srgb, var(--muted) 55%, var(--background));
+}
+
+.dark .ms-header-tabs {
+  background: color-mix(in srgb, var(--muted) 22%, var(--background));
+}
+
+/* One shadow for the whole nav block, cast onto the page.
+
+   Which element carries it depends on whether a tab rail exists: with tabs,
+   the rail is the bottom edge; without them, the header is. `body` gets
+   `ms-has-header-tabs` when tabs are configured, so both cases are covered
+   without either element ever painting two shadows. */
+.dark .ms-has-header-tabs .ms-header-tabs,
+.ms-has-header-tabs .ms-header-tabs {
+  box-shadow:
+    0 4px 6px -4px rgb(0 0 0 / 0.28),
+    0 10px 20px -12px rgb(0 0 0 / 0.22);
+}
+
+.dark .ms-has-header-tabs .ms-header-tabs {
+  box-shadow:
+    0 4px 8px -4px rgb(0 0 0 / 0.6),
+    0 12px 24px -12px rgb(0 0 0 / 0.5);
+}
+
+/* No tab rail: the header itself is the bottom edge of the chrome. */
+body:not(.ms-has-header-tabs) .mewbo-header {
+  box-shadow:
+    0 4px 6px -4px rgb(0 0 0 / 0.22),
+    0 10px 20px -12px rgb(0 0 0 / 0.18);
+}
+
+.dark body:not(.ms-has-header-tabs) .mewbo-header {
+  box-shadow:
+    0 4px 8px -4px rgb(0 0 0 / 0.55),
+    0 12px 24px -12px rgb(0 0 0 / 0.45);
+}
