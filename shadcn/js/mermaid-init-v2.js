@@ -203,8 +203,20 @@ const renderToSvg = async (source) => {
 const EXPAND_ICON =
   '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h6v6"/><path d="M9 21H3v-6"/><path d="M21 3l-7 7"/><path d="M3 21l7-7"/></svg>';
 
-/** Below this fraction of natural size, label text stops being readable. */
-const LEGIBLE_SCALE = 0.55;
+/**
+ * Fitting the diagram to the column is the DEFAULT, and the bar for giving up
+ * on it is deliberately low.
+ *
+ * The inline card is a preview — Expand is one click away and renders the
+ * diagram at full size with zoom and pan — so a preview that is small but
+ * whole beats one that is cropped behind a scrollbar. An earlier, stricter
+ * value sent most real diagrams to the scroll path, which reads as the card
+ * failing to lay the diagram out rather than as a deliberate affordance.
+ *
+ * So only a diagram close to three times the column width falls back to
+ * scrolling at natural size; everything narrower shrinks to fit.
+ */
+const LEGIBLE_SCALE = 0.35;
 
 /**
  * Tag a figure as too wide or too tall to show whole, so CSS can switch it
@@ -255,11 +267,9 @@ const buildCard = (source, svg, index) => {
 
   figure.append(stage, expand);
 
-  // Scaling a diagram down to the column width is right until the text stops
-  // being readable. Past roughly half size the labels are mush, and shrinking
-  // further to avoid a scrollbar trades a minor inconvenience for a diagram
-  // nobody can read. Beyond that ratio the card scrolls sideways at a legible
-  // size instead — horizontal growth before vertical, without the cramping.
+  // Fit to the column first; fall back to scrolling only when the diagram is
+  // so much wider than the column that shrinking it would leave nothing
+  // readable at all. See LEGIBLE_SCALE.
   //
   // Measured once after layout: `useMaxWidth` gives the SVG a max-width in
   // px equal to its natural width, so the ratio is available without

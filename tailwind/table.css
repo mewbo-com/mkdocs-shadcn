@@ -1,9 +1,13 @@
-article table:not(.codehilitetable) {
-	@apply [&:not(:first-child)]:mt-6;
-}
+/* Scoped away from `.codehilitetable` throughout: that table is pygments'
+   line-number gutter inside a code block, not prose, and prose rules gave it
+   a full-width layout that pushed the code off its own left edge.
 
+   These rules descend from shadcn/ui's APP data-table component. Selectors
+   that only ever fire in an app grid — `data-[state=selected]`,
+   `[role=checkbox]` — were carried over with it and matched nothing a
+   markdown table emits; they are removed rather than left as decoration. */
 article table:not(.codehilitetable) {
-	@apply w-full caption-bottom text-sm;
+	@apply w-full caption-bottom text-sm [&:not(:first-child)]:mt-6;
 }
 
 article table:not(.codehilitetable) thead {
@@ -11,11 +15,11 @@ article table:not(.codehilitetable) thead {
 }
 
 article table:not(.codehilitetable) tr {
-	@apply hover:bg-muted/50 data-[state=selected]:bg-muted border-b transition-colors;
+	@apply hover:bg-muted/50 border-b transition-colors;
 }
 
 article table:not(.codehilitetable) thead tr th {
-	@apply text-foreground h-10 px-2 text-left align-middle font-medium [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px];
+	@apply text-foreground h-10 px-2 text-left align-middle font-medium;
 }
 
 article table:not(.codehilitetable) tbody {
@@ -23,7 +27,7 @@ article table:not(.codehilitetable) tbody {
 }
 
 article table:not(.codehilitetable) tbody tr td {
-	@apply p-2 align-middle [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px];
+	@apply p-2 align-middle;
 }
 
 /*
@@ -51,6 +55,17 @@ article table:not(.codehilitetable) tbody tr td {
 
 article .table-wrapper {
 	@apply relative w-full overflow-x-auto;
+	/* The wrapper scrolls as a fallback for content that genuinely cannot
+	   wrap, but nothing said so — a clipped table looked finished. A mask
+	   fades the right edge only while there is more to scroll to: the
+	   `scroll-timeline`-free trick is that the gradient is painted on a
+	   background attached to the scroll container, so it disappears once the
+	   content ends. Same cue the sidebar and the ToC use. */
+	background:
+		linear-gradient(to right, var(--background) 30%, transparent) left / 2rem 100% no-repeat local,
+		linear-gradient(to left, var(--background) 30%, transparent) right / 2rem 100% no-repeat local,
+		radial-gradient(farthest-side at 0 50%, color-mix(in srgb, var(--foreground) 12%, transparent), transparent) left / 0.6rem 100% no-repeat scroll,
+		radial-gradient(farthest-side at 100% 50%, color-mix(in srgb, var(--foreground) 12%, transparent), transparent) right / 0.6rem 100% no-repeat scroll;
 }
 
 /*
@@ -80,4 +95,34 @@ article table:not(.codehilitetable) .nowrap {
  */
 article table:not(.codehilitetable) .wrap {
 	white-space: normal;
+}
+
+/*
+ * Sortable affordance. `is-sortable` is set by js/sortable-tables.js only on
+ * tables it actually attached to, so a header never advertises a behaviour
+ * that is not wired up (no header row, one body row, or opted out).
+ */
+article table.is-sortable thead tr th {
+	@apply cursor-pointer select-none relative pr-5;
+}
+
+article table.is-sortable thead tr th::after {
+	content: "";
+	@apply absolute right-1 top-1/2 -translate-y-1/2 opacity-0 transition-opacity;
+	border-left: 4px solid transparent;
+	border-right: 4px solid transparent;
+	border-bottom: 5px solid currentColor;
+}
+
+article table.is-sortable thead tr th:hover::after {
+	@apply opacity-40;
+}
+
+article table.is-sortable thead tr th[aria-sort="ascending"]::after {
+	@apply opacity-90;
+}
+
+article table.is-sortable thead tr th[aria-sort="descending"]::after {
+	@apply opacity-90;
+	transform: translateY(-50%) rotate(180deg);
 }

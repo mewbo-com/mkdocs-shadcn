@@ -117,6 +117,13 @@ show_build_info: false
 # sites that have no carousel. Styling lives in css/mewbo.css (.ms-shots).
 carousel: false
 
+# Sortable tables. When true the theme loads Tablesort (MIT, from CDN) plus
+# js/sortable-tables.js, and every prose table with a header and more than one
+# body row becomes click-to-sort. Off by default so a site that does not want
+# it pays for neither the request nor the behaviour. Opt one table out with
+# `data-no-sort`. Pygments' line-number tables are excluded structurally.
+sortable_tables: false
+
 # Horizontal tab rail fused to the bottom of the sticky header (second row on
 # the same surface, hairline divider above it). Null/absent (default) emits
 # zero markup. Each item: a label, an optional Iconify slug, and a

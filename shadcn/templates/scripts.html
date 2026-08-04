@@ -29,7 +29,12 @@
 <script integrity="sha384-W0Al3wnLjhcWtFXOlc7pn5mJHfctk3LrEm4/lK4x96CXyEMGzmqiqXe1PwM9ct5I" src="{{ 'js/ask-ai.js' | url }}"></script>
     {% endif %}
     <script src="https://unpkg.com/mermaid@11.16.0/dist/mermaid.min.js"></script>
-<script integrity="sha384-M8tput5azuJgOQVshg5KpCHGbvgVdVMbSXjqscFrKjOaJA4Hf5e8OZy+R39NGOMg" src="{{ 'js/mermaid-init-v2.js' | url }}"></script>
+<script integrity="sha384-yPUQFG58EUZ7cItZ9a+2hIP7xTz7Gj7OUAG18XWx5cPJgQm3ZWQkLOlCux9JhjB3" src="{{ 'js/mermaid-init-v2.js' | url }}"></script>
+    {% if config.theme.sortable_tables %}
+    <script src="https://unpkg.com/tablesort@5.3.0/dist/tablesort.min.js"></script>
+<script integrity="sha384-7ZjYsz2Ob3jfwev3AYGCT+uZqWDBiMBmyNqRxZN3B5qq+T93+cRSAfgLCs5lzrS+" src="{{ 'js/sortable-tables.js' | url }}"></script>
+    {% endif %}
+<script integrity="sha384-Jtie1PQTGN8nRA60xLW4umsbcPMtW120BXo88MSZO7VMvva+LPQXjlBHX/A25clz" src="{{ 'js/video-autoplay.js' | url }}"></script>
     {% if config.theme.carousel %}
     <script src="https://cdn.jsdelivr.net/npm/swiper@12/swiper-bundle.min.js"></script>
 <script integrity="sha384-UF8bTJNuMpApPFPRYJMvsOYUkjMJ02+v0wzxdYWJ2kuakxvY7VzK8X0WKnTXvAJW" src="{{ 'js/carousel.js' | url }}"></script>

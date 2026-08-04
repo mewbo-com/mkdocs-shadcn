@@ -55,8 +55,28 @@ def test_all_pages_no_browser_errors(page: Page):
     base_url = urlparse(BASE)
     errors: List[BrowserError] = []
 
+    def _is_third_party_fetch(msg: ConsoleMessage) -> bool:
+        """A failed request to somebody else's server is not a theme defect.
+
+        The header's stargazer count calls api.github.com, which answers 403
+        the moment the host is rate limited. That surfaces as a console error
+        and failed this whole crawl for a reason no change to this repo can
+        fix — which is worse than useless, because a suite that is red for
+        environmental reasons is a suite people stop reading.
+
+        Only requests to origins the site does not own are excused, and only
+        resource-load failures: a JavaScript error thrown BY a third-party
+        script still fails, because that one we chose to ship.
+        """
+        text = msg.text or ""
+        if "Failed to load resource" not in text:
+            return False
+        location = getattr(msg, "location", None) or {}
+        origin = location.get("url", "") if isinstance(location, dict) else ""
+        return bool(origin) and base_url.netloc not in origin
+
     def console_error_handler(msg: ConsoleMessage):
-        if msg.type == "error":
+        if msg.type == "error" and not _is_third_party_fetch(msg):
             errors.append(msg)
 
     def page_error_handler(err: Error):
@@ -529,4 +549,81 @@ def test_code_block_features(page: Page):
     )
     assert style["marginTop"] == "0px", (
         f"inline highlighted code has margin-top {style['marginTop']}"
+    )
+
+
+def test_abbr_tooltips_are_marked(page: Page):
+    """`abbr` gives a native tooltip; the theme must SHOW that one exists."""
+    page.goto(BASE + "/tooltips/", wait_until="networkidle")
+    abbr = page.locator("article abbr[title]").first
+    assert abbr.count() > 0, "no <abbr> — check the abbr extension is enabled"
+    style = page.evaluate(
+        """el => ({deco: getComputedStyle(el).textDecorationStyle,
+                  cursor: getComputedStyle(el).cursor})""",
+        abbr.element_handle(),
+    )
+    assert style["deco"] == "dotted", "abbreviation carries no underline cue"
+    assert style["cursor"] == "help"
+
+
+def test_sortable_tables(page: Page):
+    """Clicking a header must reorder rows, and only PROSE tables attach.
+
+    A pygments line-number gutter is a <table> too; sorting one would
+    scramble a code block, so the attach step excludes it structurally.
+    """
+    page.goto(BASE + "/table_wrap_regression/", wait_until="networkidle")
+    table = page.locator("article table.is-sortable").first
+    assert table.count() > 0, "no sortable table — check theme.sortable_tables"
+
+    result = page.evaluate(
+        """() => {
+             const t = document.querySelector('article table.is-sortable');
+             const col = r => r.cells[0].textContent.trim();
+             const before = [...t.tBodies[0].rows].map(col);
+             t.tHead.rows[0].cells[0].click();
+             const after = [...t.tBodies[0].rows].map(col);
+             return {before, after,
+                     sorted: JSON.stringify(after) ===
+                             JSON.stringify([...after].sort())};
+           }"""
+    )
+    assert result["before"] != result["after"], "clicking the header did nothing"
+    assert result["sorted"], f"rows are not in order: {result['after'][:3]}"
+
+    assert page.evaluate(
+        "() => !document.querySelector('table.codehilitetable.is-sortable')"
+    ), "a code block's line-number table was made sortable"
+
+
+def test_videos_prepared_for_viewport_autoplay(page: Page):
+    """The theme must normalise videos so viewport autoplay is possible.
+
+    Playback itself depends on the browser's autoplay policy, which differs
+    between a headless run and a real one, so this asserts the part the theme
+    actually controls: a clip is muted, inline and looping, and a clip that
+    opted out is left completely alone.
+    """
+    page.goto(BASE + "/video/", wait_until="networkidle")
+    page.wait_for_timeout(500)
+
+    state = page.evaluate(
+        """() => [...document.querySelectorAll('article video')].map(v => ({
+             optedOut: v.hasAttribute('data-no-autoplay'),
+             muted: v.muted, loop: v.loop,
+             playsinline: v.hasAttribute('playsinline'),
+           }))"""
+    )
+    assert len(state) >= 2, "expected the video fixture's two clips"
+
+    managed = [v for v in state if not v["optedOut"]]
+    assert managed, "no managed clip in the fixture"
+    for v in managed:
+        assert v["muted"], "a clip the theme starts must be muted to be allowed to"
+        assert v["playsinline"], "without playsinline iOS goes fullscreen instead"
+        assert v["loop"], "short illustration clips loop"
+
+    opted = [v for v in state if v["optedOut"]]
+    assert opted and not opted[0]["muted"], (
+        "data-no-autoplay must leave a clip entirely alone, including its audio"
     )

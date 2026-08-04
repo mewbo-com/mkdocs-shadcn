@@ -42,3 +42,25 @@ span.hover-card:hover {
 .hover-card p:first-of-type {
 	@apply mt-0;
 }
+
+/* ── Glossary tooltips (`abbr`) ──────────────────────────────────────────
+   `*[HTML]: HyperText Markup Language` emits `<abbr title="…">`, which the
+   browser already gives a native tooltip — no CSS or JS needed to make it
+   WORK. What was missing is any hint that a term carries one, so the
+   affordance was invisible: a dotted underline is the long-standing
+   convention and costs nothing.
+
+   Deliberately NOT replaced with a custom popover. mkdocs-material swaps the
+   native tooltip for its own positioned one, but that is the same JS
+   positioning engine its annotations need — a real project, for polish on a
+   feature that already works. The native tooltip is keyboard- and
+   screen-reader-accessible for free; a hand-rolled one is not, unless that
+   work is done properly too. */
+article abbr[title] {
+	@apply cursor-help underline decoration-dotted decoration-muted-foreground underline-offset-4;
+	text-decoration-thickness: 1px;
+}
+
+article abbr[title]:hover {
+	@apply decoration-foreground;
+}

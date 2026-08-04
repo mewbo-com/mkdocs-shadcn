@@ -9,6 +9,7 @@ theme:
   icon: null
   topbar_sections: false
   carousel: true
+  sortable_tables: true
   header_tabs:
     - label: Documentation
       icon: lucide:book-open
