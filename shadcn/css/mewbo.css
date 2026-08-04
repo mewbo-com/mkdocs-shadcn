@@ -733,23 +733,18 @@ article #page-header h1 {
   word-break: normal;
 }
 
-/* The copy and pager buttons sit in the same row as the H1 and are 38px tall.
-   Now that the H1 is a 19px label they, not the title, set the masthead's
-   height, which held the subtitle roughly 30px below its own label however far
-   the block above was pulled up. Taking the cluster out of flow puts the row's
-   height back under the label's control. The reserved padding keeps a long H1
-   from running under the buttons. */
+/* The copy and pager buttons share the label's row and are 38px tall against a
+   19px label, so they set the masthead's height. Bottom-aligning the two puts
+   the label directly above the title and stops the cluster hanging past it.
+
+   An earlier revision lifted the cluster out of flow instead. That did close
+   the gap, but it left the cluster overlapping whatever came next, so both the
+   label and the title had to reserve 7rem of right padding to clear it. On a
+   short title that padding wrapped the line early and read as a stray indent
+   on a heading with nothing beside it. Aligning costs nothing and reserves
+   nothing. */
 article #page-header {
-  position: relative;
-  align-items: center;
-}
-article #page-header > div:last-child {
-  position: absolute;
-  top: 0;
-  right: 0;
-}
-article #page-header h1 {
-  padding-right: 7rem;
+  align-items: flex-end;
 }
 
 /* The masthead is one unit, so the article's 2rem inter-block gap must not
@@ -764,10 +759,10 @@ article .typography > h2:first-child {
   line-height: 1.15;
   letter-spacing: -0.02em;
   font-weight: 700;
-  /* The button cluster is out of flow and hangs past the label into this
-     heading's first line, so the title keeps clear of it. Only the subtitle
-     needs this. Every later H2 starts well below the cluster. */
-  padding-right: 7rem;
+  /* The title gets the full column, so a short one never wraps. If a consumer
+     writes one long enough to wrap anyway, balance splits it evenly instead of
+     leaving a single orphan word on the last line. */
+  text-wrap: balance;
 }
 
 /* Hero. The elaborate variant of the same masthead, opted into by the class. */
