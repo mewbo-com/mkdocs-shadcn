@@ -1626,24 +1626,59 @@ body.ms-has-header-tabs .mewbo-header__row { height: calc(var(--spacing) * 14); 
        adding ~32px that nothing else shares. That centring is what dominates
        the misalignment, and it is the only offset here that is decorative.
 
-   The line is the header container's 24px gutter. Each widget cancels its OWN
-   declared padding against it, so the LABEL lands on the line and only the
-   hover/active background bleeds outward — the shadcn idiom. Every offset
-   below is the negation of a padding declared elsewhere in this file or in
-   the template, not a measured constant. */
+   Each widget cancels its OWN declared padding against the line, so the LABEL
+   lands on it and only the hover/active background bleeds outward — the shadcn
+   idiom. Every offset below is the negation of a padding declared elsewhere in
+   this file or in the template, not a measured constant. */
 .mewbo-brand { margin-inline-start: -0.25rem; }          /* .mewbo-brand padding */
 .ms-header-tabs__rail { margin-inline-start: -0.65rem; } /* .ms-header-tabs__item padding */
 /* Below lg the brand is hidden and the menu trigger is what the rail lines up
    against, so it takes the same treatment. */
 .mewbo-menu-btn { margin-inline-start: -0.5rem; }        /* .mewbo-menu-btn padding */
 
-/* Dropping the centring is enough on the sidebar side, because the column's
-   8px start plus the group's `p-2` plus the menu button's `p-2` already sums
-   to the same 24px. Desktop only: the mobile navigation dialog includes this
-   same markup and owns its own gutter. */
+/* WHERE THE LINE COMES FROM. It is not chosen. The sidebar rail is a fixed
+   `--sidebar-menu-width` sitting in a wider `--sidebar-width` column, and
+   centring it in that column is the only placement that does not leave the
+   rail hugging one edge with all the slack on the other. That centring sets
+   the number, and the header follows it:
+
+       8px   the body container's own `px-2`, where the column starts
+     + 32px  half the slack between the column and the rail
+     + 16px  the group's `p-2` plus the menu button's `p-2`
+     ------
+       56px
+
+   An earlier revision solved the same misalignment by DROPPING the centring
+   and pulling everything onto the header's 24px gutter. That aligned the three
+   surfaces, but it pushed all 64px of column slack to the right of the rail
+   and left every navigation surface hard against the viewport edge.
+
+   Below lg there is no rail beside the header to agree with, since the sidebar
+   becomes a dialog, so the gutter has no partner and stays on the container's
+   own 24px. At 390px a 56px inset is a seventh of the viewport. */
+:root {
+  --mewbo-nav-gutter: 1.5rem;
+}
+@media (min-width: 1024px) {
+  :root {
+    --mewbo-nav-gutter: 3.5rem;
+  }
+}
+
+/* The header row and the tab rail share a `.container-wrapper` whose `px-6`
+   was the old line. Only the inline-start moves: the right edge carries the
+   theme toggle and the repo link, which already sit on the header's own
+   24px and have no rail below them to line up with. */
+.mewbo-header > .container-wrapper,
+.ms-header-tabs > .container-wrapper {
+  padding-inline-start: var(--mewbo-nav-gutter);
+}
+
+/* Desktop only: the mobile navigation dialog includes this same markup, owns
+   its own gutter, and has no header rail beside it to agree with. */
 @media (min-width: 1024px) {
   [data-sidebar="content"] {
-    margin-inline: 0;
+    margin-inline: auto;
     padding-inline: 0 0.5rem;
   }
   /* The menu button draws a 1px border (transparent until active) that neither
