@@ -606,6 +606,103 @@ dialog#search-dialog > div {
   color: var(--muted-foreground, currentColor);
 }
 
+/* ── Prose vertical rhythm ────────────────────────────────────────────────
+   One scale, four steps, named for the job each one does. Change the rhythm
+   here; do not reach for a Tailwind spacing utility in a page or a partial.
+
+       flow          one block to the next inside a passage
+       topic gap     before an H4
+       subsection    before an H3
+       section       before an H2
+
+   The ladder must stay strictly increasing: section > subsection > topic >
+   flow. That is what tells a reader how deep a break is without reading it.
+
+   The old scale broke in two places. An H2 carried `mt-12 lg:mt-20`, so on a
+   wide screen a section opened 80px down — over three times the paragraph
+   step, which is what reads as "a massive gap". And an H4 carried exactly the
+   paragraph step, so the shallowest heading announced itself no more than an
+   ordinary line break.
+
+   ONE OWNER PER GAP: the top margin of the block that follows. Bottom margins
+   on top-level blocks are zeroed below. Margins collapse inside .typography,
+   so a gap is max(prev.margin-bottom, next.margin-top) — not a sum — but two
+   authors setting the two halves is how a list ends up 24px from the next
+   paragraph while an admonition ends up 20px from it. Zeroing one half makes
+   the surviving half the whole answer.
+
+   The one seam where margins genuinely ADD is above .typography: `article` is
+   a flex column with `gap: 2rem`, and a flex gap does not collapse with a
+   margin. So a first block carrying its own top margin sits 2rem + its margin
+   below the masthead. `> *:first-child` zeroes it, leaving the flex gap as the
+   single source there too.
+
+   Every selector matches the reach of the rule it replaces. The prose rules in
+   base.css are unlayered and reach (0,1,2) — `article .typography h2`,
+   `article p:not(:first-child)` — and mewbo.css is linked after base.css, so an
+   equal-specificity selector wins on source order and a shorter one loses in
+   silence. See the masthead note below, which says the same thing at length.
+
+   This block sits BEFORE the masthead and hero sections on purpose. Several of
+   their rules — `article .ms-hero > :is(h1, …, h6) { margin: 0 }` in
+   particular — reach the same (0,1,2) as the rules here, so they need to come
+   after to win. A page-level composition owns its own spacing; the ladder is
+   the default it opts out of.
+   ────────────────────────────────────────────────────────────────────────── */
+article {
+  --prose-flow: 1.5rem;
+  --prose-topic-gap: 2rem;
+  --prose-subsection-gap: 2.5rem;
+  --prose-section-gap: 3rem;
+  /* After a heading, before what it introduces. Deliberately much tighter than
+     the space above the heading: a heading has to read as belonging to the
+     content under it, not floating between two passages. */
+  --prose-heading-lead: 1rem;
+}
+
+/* Descendant, not child, to match base.css's `article .typography h2` exactly —
+   a heading nested in a tabbed block or an admonition is on the same ladder.
+   The masthead title is `article .typography > h2:first-child` at (0,2,2) and
+   is therefore untouched by these. */
+article .typography h2 { margin-top: var(--prose-section-gap); }
+article .typography h3 { margin-top: var(--prose-subsection-gap); }
+article .typography h4,
+article .typography h5,
+article .typography h6 { margin-top: var(--prose-topic-gap); }
+
+/* Every other top-level block sits on the flow step. `hr` is excluded on
+   purpose: it owns a symmetric 2.5rem separator of its own, above. */
+article .typography > :is(p, ul, ol, dl, pre, blockquote, figure, table, details, section, div):not(:first-child) {
+  margin-top: var(--prose-flow);
+}
+
+/* Top margins own the rhythm, so bottom margins contribute nothing. */
+article .typography > :is(p, ul, ol, dl, pre, blockquote, figure, table, details, section, div, h2, h3, h4, h5, h6) {
+  margin-bottom: 0;
+}
+
+/* The article's flex gap already separates the masthead from the prose, and it
+   does not collapse — a top margin here would add to it. */
+article .typography > :first-child {
+  margin-top: 0;
+}
+
+/* `!important` fights base.css's `article .typography h2+p{margin-top:…
+   !important}`, the built form of `[&+p]:!mt-4` in tailwind/article.css. Two
+   important declarations are settled by specificity, and that one reaches
+   (0,1,3), so the shape of this selector is what makes it win. It generalises
+   the idea the Tailwind rule was groping at for H2 and paragraphs alone: every
+   heading, and whatever it introduces.
+
+   Being important, this rule cannot be beaten by source order, so the two
+   compositions with a hand-tuned internal rhythm are excluded by name. The hero
+   spaces its own children with a flex gap, and mkdocstrings holds a symbol's
+   docstring deliberately tight under its signature. */
+article .typography :is(h2, h3, h4, h5, h6):not(.ms-hero *, .doc *)
+  + :is(p, ul, ol, dl, pre, blockquote, figure, table, details, section, div, h2, h3, h4, h5, h6) {
+  margin-top: var(--prose-heading-lead) !important;
+}
+
 /* ─────────────────────────────────────────────────────────────────────────
    Landing page — hero, card grids, lifecycle strip, compatibility chips.
    Kept scoped via .ms-* class names so they only affect the home page
@@ -725,6 +822,7 @@ article .ms-hero__lede {
 article .typography h2 { font-weight: 600; }
 article .typography h3 { font-weight: 650; }
 article .typography h4 { font-weight: 650; }
+
 .ms-cta-row {
   display: flex;
   flex-wrap: wrap;

@@ -16,7 +16,15 @@
    heading is likewise the page's name rather than one of its sections. #}
 {% set roottoc = (page.toc | list) if page else [] %}
 {% set body = page.content.lstrip() if page and page.content else "" %}
-{% set has_subtitle = body.startswith('<h2') or '<section class="ms-hero"' in body %}
+{% set hero_at = body.find('<section class="ms-hero"') %}
+{% set heading_at = body.find('<h') %}
+{# The hero only owns the page's name when it comes BEFORE the first heading.
+   Testing for a hero anywhere in the body would drop a real section link from
+   any page that happens to use one further down. Anchoring on position rather
+   than on a fixed prefix window also survives a page that opens with an HTML
+   comment, which is what the Assistant's landing page does. #}
+{% set hero_titled = hero_at >= 0 and (heading_at < 0 or hero_at < heading_at) %}
+{% set has_subtitle = body.startswith('<h2') or hero_titled %}
 {% set entries = ((roottoc[1:] if has_subtitle else roottoc)
                   if roottoc | length > 1
                   else (roottoc[0].children | list if roottoc else [])) %}
