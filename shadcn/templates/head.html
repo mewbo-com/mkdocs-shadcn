@@ -10,8 +10,15 @@
            the search Web Worker was constructed cross-origin on every preview,
            staging and local build and threw a SecurityError — taking Search and
            the Ask AI panel with it. Production happened to work, so it looked
-           fine exactly where anyone would check. #}
-        const base_url = "{{ base_url }}"; /* for search plugin notably */
+           fine exactly where anyone would check.
+
+           This is upstream's expression, adopted during the v0.12.0 sync in
+           preference to our own page-relative `{{ base_url }}`: resolving
+           against `window.location` yields an ABSOLUTE url on whatever origin
+           is serving, which is what `new Worker()` wants, and keeping the two
+           forks identical here means this line stops conflicting on every
+           future merge. #}
+        const base_url = (new URL("{{ '.' | url }}", window.location)).href.replace(/\/+$/, ""); /* for search plugin notably */
     </script>
     {% include "templates/dark.html" %}
 
@@ -19,7 +26,13 @@
     <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
 
+    {# `page` is None for a static template — upstream's 404.html, new in the
+       v0.12.0 sync — and seo.html dereferences `page.meta`. Upstream guards
+       this in main.html; the guard was lost when this fork extracted <head>
+       into a partial, so a 404 page failed the whole build. #}
+    {% if page %}
     {% include "templates/seo.html" %}
+    {% endif %}
 
     {%- if config.theme.favicon %}
     <link href="{{ config.theme.favicon | url }}" rel="icon"/>
@@ -81,7 +94,7 @@
     <link href="{{ path | url }}" rel="stylesheet"/>
     {%- endfor %}
 
-    {% if page.meta.extra_css %}
+    {% if page and page.meta.extra_css %}
     {%- for path in page.meta.extra_css %}
     <link href="{{ path | url }}" rel="stylesheet"/>
     {%- endfor %}

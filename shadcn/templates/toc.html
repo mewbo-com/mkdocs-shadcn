@@ -9,7 +9,7 @@
             <span class="mewbo-toc__heading-glyph">{{ "lucide:list" | iconify(height="14px") | safe }}</span>
             {{ _("On This Page") }}
         </p>
-        {% if page.toc %}
+        {% if page and page.toc %}
         {% with roottoc = page.toc | list %}
         {% with toc = roottoc if roottoc | length > 1 else roottoc[0].children %}
         <div class="mewbo-toc__list">

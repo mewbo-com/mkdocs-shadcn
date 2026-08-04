@@ -3,12 +3,14 @@
     <div class="flex flex-col gap-2">
       <div id="page-header" class="flex items-start justify-between">
         <h1 class="scroll-m-20 text-4xl font-semibold tracking-tight sm:text-3xl xl:text-4xl">
-          {% if page.meta.title %}{{ page.meta.title }}{% else %}{{ page.title }}{% endif %}
+          {% if page and page.meta.title %}{{ page.meta.title }}{% else %}{{ page.title }}{% endif %}
         </h1>
 
         <div class="flex items-center gap-2 pt-1.5">
+          {% if not config.theme.hide_source_files %}
           {% include "templates/copy_button.html" %}
-          {% if page.previous_page %}
+          {% endif %}
+          {% if page and page.previous_page %}
           <a data-slot="button" id="previous-button"
             class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg:not([class*='size-'])]:size-4 shrink-0 [&amp;_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive bg-secondary text-secondary-foreground hover:bg-secondary/80 extend-touch-target size-8 shadow-none md:size-7"
             href="{{ page.previous_page.url | url }}">
@@ -22,7 +24,7 @@
             <span class="sr-only">{{ _("Previous") }}</span>
           </a>
           {% endif %}
-          {% if page.next_page %}
+          {% if page and page.next_page %}
           <a data-slot="button" id="next-button"
             class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg:not([class*='size-'])]:size-4 shrink-0 [&amp;_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive bg-secondary text-secondary-foreground hover:bg-secondary/80 extend-touch-target size-8 shadow-none md:size-7"
             href="{{ page.next_page.url | url }}">
@@ -38,14 +40,14 @@
           {% endif %}
         </div>
       </div>
-      {% if page.meta.summary %}
+      {% if page and page.meta.summary %}
       <p id="summary" class="text-muted-foreground text-[1.05rem] text-balance sm:text-base">
         {{ page.meta.summary }}
       </p>
       {% endif %}
     </div>
     <div class="flex justify-end items-center">
-      {% if page.meta.external_links %}
+      {% if page and page.meta.external_links %}
       <div class="grow flex items-center space-x-2 pt-4 external_links">
         {% for link_name, href in page.meta.external_links.items() %}
         <a target="_blank" rel="noreferrer" data-slot="badge"
@@ -62,7 +64,7 @@
         {% endfor %}
       </div>
       {% endif %}
-      {% if page.meta.show_datetime == True %}
+      {% if page and page.meta.show_datetime == True %}
       {% include "templates/datetime.html" %}
       {% elif page.meta.show_datetime == False %}
       {# do nothing #}

@@ -73,6 +73,7 @@ theme:
   name: shadcn
   show_title: true # show the title in the top bar
   show_stargazers: true # show the stargazers in the top bar
+  hide_source_files: false # excludes markdown source files in output site and remove copy page button
   pygments_style: # default styles 
         light: shadcn-light
         dark: github-dark
@@ -90,10 +91,16 @@ theme:
 
 If `false`, only the icon will be visible in the top bar (left-side). Default to `true`.
 
-
 ### `show_stargazers: bool`
 
 If `false`, hides the GitHub stargazers besides the repo icon in the top bar (right side). Default to `true`.
+
+### `hide_source_files: bool`
+
+If `true`, excludes the source markdown files in output, and removes the copy button besides the previous and next buttons. Default to `false`.
+
+!!! warning "Important "
+    By default, the markdown source files are exposed. By setting `hide_source_files: true`, markdown files are not shipped with the final build and the copy button disappears.
 
 ### `pygments_style: str | dict`
 
@@ -231,3 +238,4 @@ If you want to disable it for a specific page, you can set `show_datetime: false
 
 Defines an accent color. Currently it is only used for ["new" badges](./20_pages.md#extra).
 If not defined, the default shadcn color used (tailwind [blue-500](https://tailwindcss.com/docs/colors)).
+

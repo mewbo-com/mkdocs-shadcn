@@ -6,7 +6,7 @@
     {% include "templates/script.html" %}
     {%- endfor %}
 
-    {% if page.meta.extra_javascript %}
+    {% if page and page.meta.extra_javascript %}
     {%- for script in page.meta.extra_javascript %}
     {% include "templates/script.html" %}
     {%- endfor %}

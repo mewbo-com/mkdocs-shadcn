@@ -6,7 +6,9 @@ from jinja2 import Environment
 from mkdocs.config.defaults import MkDocsConfig
 from mkdocs.contrib.search import SearchPlugin as BaseSearchPlugin
 from mkdocs.structure.files import Files
+from mkdocs.structure.nav import Navigation
 from mkdocs.structure.pages import Page
+from mkdocs.utils.templates import TemplateContext
 
 from shadcn.filters import (
     active_section,
@@ -14,8 +16,10 @@ from shadcn.filters import (
     first_page,
     iconify,
     is_http_url,
+    is_svg,
     parse_author,
     scoped_nav,
+    read_file,
     setattribute,
 )
 from shadcn.plugins.mixins.code_refs import CodeRefsMixin
@@ -69,6 +73,8 @@ class SearchPlugin(
         # Globals (no-arg values used by templates like footer.html). Computed
         # at build time, so re-deploys to bump the year are explicit.
         env.globals["current_year"] = datetime.now(tz=timezone.utc).year
+        env.filters["read_file"] = partial(read_file, config=config)
+        env.filters["is_svg"] = is_svg
         return super().on_env(env, config=config, files=files)
 
     def on_page_markdown(
@@ -86,3 +92,15 @@ class SearchPlugin(
             config=config,
             files=files,
         )
+
+    def on_page_context(
+        self,
+        context: TemplateContext,
+        page: Page,
+        config: MkDocsConfig,
+        nav: Navigation,
+    ):
+        return super().on_page_context(context, page, config=config, nav=nav)
+
+    def on_post_build(self, config: MkDocsConfig):
+        return super().on_post_build(config=config)

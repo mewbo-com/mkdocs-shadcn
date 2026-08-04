@@ -1,5 +1,6 @@
 icon: null
 show_title: true
+hide_source_files: false
 show_stargazers: true
 pygments_style:
   light: shadcn-light
@@ -179,3 +180,7 @@ header_tabs: null
 #         tags:                       # path-prefix → tag (first match wins)
 #           /api/sessions: Sessions
 code_refs: null
+
+# From upstream: ships a 404 page as a static template.
+static_templates:
+  - 404.html

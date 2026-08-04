@@ -47,9 +47,9 @@ def format_errors(errors_by_page: Dict[str, List[BrowserError]]) -> str:
 
 
 # fixtures: see https://playwright.dev/python/docs/test-runners#fixtures
-def test_all_pages_no_browser_errors(page: Page):
+def test_all_pages_no_browser_errors(page: Page, local_deployment: str):
     visited = set()
-    to_visit = [BASE + "/"]
+    to_visit = [local_deployment + "/"]
     errors_by_page: Dict[str, List[BrowserError]] = defaultdict(list)
 
     base_url = urlparse(BASE)
@@ -121,7 +121,7 @@ def test_all_pages_no_browser_errors(page: Page):
     assert not errors_by_page, format_errors(errors_by_page)
 
 
-def test_tables_wrap_no_horizontal_scroll(page: Page):
+def test_tables_wrap_no_horizontal_scroll(page: Page, local_deployment: str):
     """Regression test: table cells must NOT have white-space:nowrap.
 
     Root cause of the original bug: the theme applied `whitespace-nowrap`
@@ -165,7 +165,7 @@ def test_tables_wrap_no_horizontal_scroll(page: Page):
         )
 
 
-def test_alternate_style_tabs_switch(page: Page):
+def test_alternate_style_tabs_switch(page: Page, local_deployment: str):
     """Modern pymdownx `alternate_style: true` tabs must show/hide panels.
 
     The theme originally styled only the legacy adjacency markup; the alternate
@@ -196,7 +196,7 @@ def test_alternate_style_tabs_switch(page: Page):
     assert not blocks.nth(1).is_visible()
 
 
-def test_carousel_mounts(page: Page):
+def test_carousel_mounts(page: Page, local_deployment: str):
     """The carousel feature must initialise Swiper on `.ms-shots` blocks.
 
     Guards the theme.carousel wiring (Swiper CDN + js/carousel.js) and the
@@ -214,7 +214,7 @@ def test_carousel_mounts(page: Page):
     )
 
 
-def test_header_tabs_rail_renders(page: Page):
+def test_header_tabs_rail_renders(page: Page, local_deployment: str):
     """theme.header_tabs renders the rail with exactly one active tab.
 
     Guards the optional second header row: the configured labels render in
@@ -255,7 +255,7 @@ def test_header_tabs_rail_renders(page: Page):
     )
 
 
-def test_header_tabs_grow_header_height(page: Page):
+def test_header_tabs_grow_header_height(page: Page, local_deployment: str):
     """With tabs on, --header-height covers BOTH rows; the top row is pinned.
 
     The docs layout derives the sidebar/ToC sticky offsets from
@@ -308,7 +308,7 @@ def test_header_tabs_grow_header_height(page: Page):
     )
 
 
-def test_app_template_full_bleed(page: Page):
+def test_app_template_full_bleed(page: Page, local_deployment: str):
     """`template: app.html` keeps the header (+ rail) and drops the grid.
 
     The page must render NO sidebar, ToC, article wrapper, prev/next or
@@ -375,7 +375,7 @@ def _sidebar_group_labels(page: Page) -> List[str]:
     ).all_inner_texts()
 
 
-def test_scoped_sidebar_shows_only_claimed_section(page: Page):
+def test_scoped_sidebar_shows_only_claimed_section(page: Page, local_deployment: str):
     """A header_tabs `section:` claim scopes the sidebar to that section.
 
     The Guides tab declares `section: Guides`. On a page inside the Guides
@@ -396,7 +396,7 @@ def test_scoped_sidebar_shows_only_claimed_section(page: Page):
     assert "Extensions" not in labels and "Plugins" not in labels, labels
 
 
-def test_scoped_sidebar_root_excludes_claimed_sections(page: Page):
+def test_scoped_sidebar_root_excludes_claimed_sections(page: Page, local_deployment: str):
     """On a root-tab page the sidebar shows the full nav minus claimed sections.
 
     The docs root is not inside any claimed section, so the sidebar keeps the
@@ -415,7 +415,7 @@ def test_scoped_sidebar_root_excludes_claimed_sections(page: Page):
     assert not any(p.startswith("/guides/") for p in paths), paths
 
 
-def test_header_tabs_match_prefix_activates_tab(page: Page):
+def test_header_tabs_match_prefix_activates_tab(page: Page, local_deployment: str):
     """A `match:` prefix marks the tab active outside its own url subtree.
 
     `/reference/` is not the Guides tab's url (`guides/`) but is listed in its
@@ -431,7 +431,7 @@ def test_header_tabs_match_prefix_activates_tab(page: Page):
     )
 
 
-def test_footer_docs_shortlist(page: Page):
+def test_footer_docs_shortlist(page: Page, local_deployment: str):
     """theme.footer.docs shortlists the footer Documentation column.
 
     The fixture declares docs: [Get started, Guides, Reference]; the
@@ -446,7 +446,7 @@ def test_footer_docs_shortlist(page: Page):
     assert [t.strip() for t in links] == ["Get started", "Guides", "Reference"], links
 
 
-def test_tabs_beyond_eight_render(page: Page):
+def test_tabs_beyond_eight_render(page: Page, local_deployment: str):
     """Regression test: a tab set larger than eight must still render.
 
     `alternate_style` emits every radio first, then one label row, then one
@@ -484,7 +484,7 @@ def test_tabs_beyond_eight_render(page: Page):
         )
 
 
-def test_code_block_features(page: Page):
+def test_code_block_features(page: Page, local_deployment: str):
     """The markup `pymdownx.highlight` emits must actually be styled.
 
     The theme was styled for `codehilite`'s markup while the docs site it was
@@ -552,7 +552,7 @@ def test_code_block_features(page: Page):
     )
 
 
-def test_abbr_tooltips_are_marked(page: Page):
+def test_abbr_tooltips_are_marked(page: Page, local_deployment: str):
     """`abbr` gives a native tooltip; the theme must SHOW that one exists."""
     page.goto(BASE + "/tooltips/", wait_until="networkidle")
     abbr = page.locator("article abbr[title]").first
@@ -566,7 +566,7 @@ def test_abbr_tooltips_are_marked(page: Page):
     assert style["cursor"] == "help"
 
 
-def test_sortable_tables(page: Page):
+def test_sortable_tables(page: Page, local_deployment: str):
     """Clicking a header must reorder rows, and only PROSE tables attach.
 
     A pygments line-number gutter is a <table> too; sorting one would
@@ -596,7 +596,7 @@ def test_sortable_tables(page: Page):
     ), "a code block's line-number table was made sortable"
 
 
-def test_videos_prepared_for_viewport_autoplay(page: Page):
+def test_videos_prepared_for_viewport_autoplay(page: Page, local_deployment: str):
     """The theme must normalise videos so viewport autoplay is possible.
 
     Playback itself depends on the browser's autoplay policy, which differs

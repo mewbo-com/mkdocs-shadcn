@@ -4,7 +4,7 @@ name = "mkdocs-shadcn-mewbo"
 # (site_name-driven identity, alternate_style tabs, carousel feature, ms-shot/
 # ms-devices primitives, compact sidebar, table first-column fix). 1.2.1 tunes
 # the sidebar spacing/typography.
-version = "1.9.0"
+version = "1.9.1"
 description = "Mewbo's brand-fork of mkdocs-shadcn — same theme entrypoint, plus Ask AI panel, three-zone header, sidebar nav-icons, prefetch speculation, full SEO, and the cream/clay Mewbo palette as default."
 authors = [
     { name = "mewbo-com" },
@@ -32,9 +32,11 @@ dev = [
     "accessible-pygments>=0.0.4",
     "babel>=2.18.0",
     "beautifulsoup4>=4.14.3",
+    "mike>=2.2.0",
     "mkdocstrings[python]>=0.26.1",
     "mypy>=1.12.0",
     "pre-commit>=3.5.0; python_version >= '3.9'",
+    "properdocs>=1.6.7; python_version >= '3.9'",
     "pygithub>=2.9.1; python_version >= '3.9'",
     "pygments>=2.19.1",
     "pymdown-extensions>=10.14.2",
@@ -65,13 +67,7 @@ build-backend = "hatchling.build"
 [tool.hatch.build.targets.wheel]
 packages = ["shadcn"]
 
-[tool.ruff]
-target-version = "py38"
-line-length = 79
 
-[tool.ruff.format]
-docstring-code-format = true
-docstring-code-line-length = 79
-
-[tool.ty.environment]
-python-version = "3.8"
+[tool.pytest]
+log_cli = true
+log_cli_level = "INFO"
