@@ -46,8 +46,8 @@
 <meta property="og:image" content="{{ page.meta.image }}">
 {% endif %}
 
-{% if site_name %}
-<meta property="og:site_name" content="{{ site_name }}">
+{% if config.site_name %}
+<meta property="og:site_name" content="{{ config.site_name }}">
 {% endif %}
 
 <!-- Twitter Card -->
@@ -80,10 +80,10 @@
       "name": "{{ page.meta.author }}"
     },
     {% endif %}
-    {% if site_name %}
+    {% if config.site_name %}
     "publisher": {
       "@type": "Organization",
-      "name": "{{ site_name }}",
+      "name": "{{ config.site_name }}",
       {% if page.meta.image %}
       "logo": {
         "@type": "ImageObject",

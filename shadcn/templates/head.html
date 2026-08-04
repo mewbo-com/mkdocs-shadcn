@@ -4,7 +4,14 @@
    SEO and extra_css/extra_head hooks — with zero drift. -#}
 <head>
 <script>
-        const base_url = "{{ config.site_url }}"; /* for search plugin notably */
+        {# MkDocs' own `base_url` is the site root relative to THIS page, so it
+           resolves on whatever origin the page is actually served from. It used
+           to be `config.site_url`, the absolute production origin, which meant
+           the search Web Worker was constructed cross-origin on every preview,
+           staging and local build and threw a SecurityError — taking Search and
+           the Ask AI panel with it. Production happened to work, so it looked
+           fine exactly where anyone would check. #}
+        const base_url = "{{ base_url }}"; /* for search plugin notably */
     </script>
     {% include "templates/dark.html" %}
 
