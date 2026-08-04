@@ -1023,8 +1023,16 @@ article a:hover,
   counter-reset: ms-step;
   margin: 1rem 0 1.5rem;
 }
+/* The number and the step's name are one heading, so they share a row and the
+   links sit under both. Stacking the counter above the title cost a line of
+   height and read as a lone digit floating over a word. */
 .ms-step {
   position: relative;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  column-gap: 0.5rem;
+  row-gap: 0.35rem;
   padding: 1rem 1rem 0.9rem;
   border: 1px solid var(--border, rgba(0, 0, 0, 0.1));
   border-radius: 0.7rem;
@@ -1043,13 +1051,14 @@ article a:hover,
   color: var(--primary-foreground, #fff);
   font-size: 0.78rem;
   font-weight: 700;
-  margin-bottom: 0.4rem;
 }
 .ms-step__title {
   font-weight: 600;
-  margin: 0 0 0.25rem;
+  margin: 0;
 }
+/* Spans both columns so the links start under the number, not beside it. */
 .ms-step__links {
+  grid-column: 1 / -1;
   list-style: none;
   padding: 0;
   margin: 0;
