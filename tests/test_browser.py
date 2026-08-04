@@ -673,3 +673,25 @@ def test_keyboard_keys_and_header_chrome(page: Page, local_deployment: str):
         "the search pill is not filled, so it reads as an outline not a field"
     )
     assert planes["pillShadow"] != "none"
+
+
+def test_sidebar_renders_once(page: Page, local_deployment: str):
+    """The left sidebar must render exactly once.
+
+    An upstream sync left two `sidebar-content` blocks in main.html — the
+    fork's solid-divider version and upstream's older gradient one — each
+    including sidebar.html, so the whole nav rendered twice, one below the
+    other. Conflict resolution produced valid HTML and a clean build, so
+    nothing failed; only looking at the page showed it.
+    """
+    page.goto(BASE + "/", wait_until="networkidle")
+    counts = page.evaluate(
+        """() => ({
+             content: document.querySelectorAll('[data-sidebar="content"]').length,
+             slot: document.querySelectorAll('[data-slot="sidebar"]').length,
+           })"""
+    )
+    assert counts["content"] == 1, (
+        f"{counts['content']} sidebar content blocks — the nav is duplicated"
+    )
+    assert counts["slot"] == 1, f"{counts['slot']} sidebar slots"
