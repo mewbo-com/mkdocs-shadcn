@@ -1185,17 +1185,64 @@ article a:hover,
   color: var(--muted-foreground, currentColor);
 }
 
-/* Full-screen image viewer (GLightbox, theme `lightbox: true`). The library
-   ships its own dark chrome; these rules only add the affordance on the page
-   and pull the backdrop and caption onto theme tokens so the viewer does not
-   read as a different product. js/lightbox.js adds `.ms-zoomable` to every
-   image it will open, so the cursor never promises something that will not
-   happen. */
+/* Full-screen image viewer (GLightbox, theme `lightbox: true`).
+
+   The library does the viewing. These rules do three things it does not: put a
+   VISIBLE affordance on the page, keep the opened image off the viewport edges,
+   and bring the chrome onto theme tokens. Its stock close button is a thin
+   glyph on a transparent field, which reads as an artefact rather than a
+   control, and its stock sizing runs the image to the full viewport. */
+
+/* The affordance. A cursor change says nothing until you are already hovering
+   and nothing about what will happen, so an explicit button sits on the image.
+   js/lightbox.js positions ONE of these over whichever image is hovered. */
 .ms-zoomable {
   cursor: zoom-in;
 }
-.glightbox-container .gcontainer {
-  background: color-mix(in srgb, var(--background, #0b0b0b) 88%, #000);
+.ms-zoom-hint {
+  position: fixed;
+  z-index: 40;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 1px solid color-mix(in srgb, var(--border, #d4d4d8) 70%, transparent);
+  border-radius: 0.55rem;
+  background: color-mix(in srgb, var(--background, #fff) 78%, transparent);
+  backdrop-filter: blur(8px);
+  color: var(--foreground, #0a0a0a);
+  cursor: pointer;
+  box-shadow: 0 1px 2px -1px rgb(0 0 0 / 0.2), 0 4px 12px -4px rgb(0 0 0 / 0.25);
+  transition: background-color 0.15s ease, transform 0.1s ease, opacity 0.15s ease;
+}
+.ms-zoom-hint[hidden] { display: none; }
+.ms-zoom-hint svg { width: 16px; height: 16px; }
+.ms-zoom-hint:hover {
+  background: var(--background, #fff);
+  transform: translateY(-1px);
+}
+.ms-zoom-hint:focus-visible {
+  outline: 2px solid var(--primary, #c15f3c);
+  outline-offset: 2px;
+}
+
+/* The opened image keeps clear of every edge. Full screen was the ask; edge to
+   edge was not, and an image bleeding into the viewport corners has nowhere
+   for the chrome to sit either. 70% leaves 15% on each side. */
+.glightbox-container .gslide-image img {
+  max-width: 70vw;
+  max-height: 70vh;
+  border-radius: 0.6rem;
+  box-shadow: 0 24px 64px -24px rgb(0 0 0 / 0.6);
+}
+.glightbox-container .gslide-media {
+  box-shadow: none;
+}
+.glightbox-container .goverlay {
+  background: color-mix(in srgb, var(--background, #0b0b0b) 82%, #000);
+  backdrop-filter: blur(6px);
 }
 .glightbox-container .gslide-description {
   background: transparent;
@@ -1205,12 +1252,42 @@ article a:hover,
   font-size: 0.875rem;
   text-align: center;
 }
-.glightbox-container .gslide-image img {
-  border-radius: 0.6rem;
+
+/* Close and navigation. The stock controls are thin glyphs on a transparent
+   field; these are real buttons with a surface, so they read as controls and
+   stay visible over a light image as well as a dark one. */
+.glightbox-container .gclose,
+.glightbox-container .gprev,
+.glightbox-container .gnext {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  opacity: 1;
+  border: 1px solid color-mix(in srgb, #fff 22%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, #000 45%, transparent);
+  backdrop-filter: blur(10px);
+  transition: background-color 0.15s ease, transform 0.1s ease;
 }
-/* The library's default close and arrow buttons are its own; only the focus
-   ring is retoned, because a browser default ring on a dark backdrop is the
-   one piece of chrome that looks broken rather than merely different. */
+.glightbox-container .gclose:hover,
+.glightbox-container .gprev:hover,
+.glightbox-container .gnext:hover {
+  background: color-mix(in srgb, #000 70%, transparent);
+  transform: scale(1.05);
+}
+.glightbox-container .gclose svg,
+.glightbox-container .gprev svg,
+.glightbox-container .gnext svg {
+  width: 18px;
+  height: 18px;
+  fill: #fff;
+}
+.glightbox-container .gclose {
+  top: 1.25rem;
+  right: 1.25rem;
+}
 .glightbox-container .gclose:focus-visible,
 .glightbox-container .gprev:focus-visible,
 .glightbox-container .gnext:focus-visible {

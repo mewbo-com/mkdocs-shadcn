@@ -1,126 +1,254 @@
-// Full-screen image viewer for content images. GLightbox is loaded from the CDN
-// ahead of this file (emitted when theme `lightbox: true`); we poll briefly for
-// it, then bind. If it never loads the page is unchanged and images stay
-// ordinary images, which is the same failure mode the carousel has.
-//
-// Binding is by DELEGATION rather than by wrapping each image in an anchor,
-// which is what GLightbox's own docs suggest. Two reasons, both load bearing:
-//
-//   1. The carousel runs Swiper with `loop: true`, so Swiper CLONES slides.
-//      Wrapping every `img` would put the same picture in the gallery two or
-//      three times and the arrows would walk through duplicates.
-//   2. Wrapping mutates the document after the fact, so anything that arrives
-//      later (a clone, a lazily rendered block) is missed. A delegated click
-//      handler covers whatever is on the page when the click happens.
+// Full-screen image viewer for content images. GLightbox does the viewing; this
+// file decides WHAT is viewable, builds the gallery, and puts a visible
+// affordance on the page. The library is loaded from the CDN ahead of this file
+// (emitted when theme `lightbox: true`). If it never loads, images stay
+// ordinary images and no affordance is shown, which is the same failure mode
+// the carousel has.
 (() => {
   "use strict";
 
-  const OPT_OUT = ".no-lightbox, [data-lightbox='false']";
-  // An icon or a badge is not a picture worth a full screen. Below this on
-  // either axis, leave it alone.
-  const MIN_EDGE = 96;
+  /**
+   * One content image, and everything the viewer needs to know about it.
+   *
+   * State plus the rules over that state. Eligibility, source and caption are
+   * properties of the image, not of the binder, so they live here rather than
+   * as free functions the binder happens to call.
+   */
+  class ImageTarget {
+    static OPT_OUT = ".no-lightbox, [data-lightbox='false']";
+    // An icon or a badge is not a picture worth a full screen.
+    static MIN_EDGE = 96;
 
-  const eligible = (img) => {
-    if (!img || img.tagName !== "IMG") return false;
-    if (img.closest(OPT_OUT)) return false;
-    // An image that is already a link belongs to that link.
-    const link = img.closest("a");
-    if (link && !link.classList.contains("ms-shots__zoom")) return false;
-    if (!img.currentSrc && !img.src) return false;
-    const r = img.getBoundingClientRect();
-    return r.width >= MIN_EDGE && r.height >= MIN_EDGE;
-  };
+    constructor(el) {
+      this.el = el;
+    }
 
-  const src = (img) => img.currentSrc || img.src;
+    static from(node) {
+      const el = node && node.closest ? node.closest("img") : null;
+      return el ? new ImageTarget(el) : null;
+    }
 
-  // Every unique picture in the same carousel, in slide order, so the viewer's
-  // arrows walk the gallery rather than dead-ending on one slide. Swiper's
-  // duplicated slides are skipped by src, which also covers a carousel that
-  // legitimately shows the same shot twice.
-  const gallery = (img) => {
-    const shots = img.closest(".swiper");
-    if (!shots) return [img];
-    const seen = new Set();
-    const out = [];
-    shots.querySelectorAll(".swiper-slide img").forEach((candidate) => {
-      const key = src(candidate);
-      if (!key || seen.has(key)) return;
-      seen.add(key);
-      out.push(candidate);
-    });
-    return out.length ? out : [img];
-  };
+    get src() {
+      return this.el.currentSrc || this.el.src || "";
+    }
 
-  const caption = (img) => {
-    const fig = img.closest("figure");
-    const cap = fig && fig.querySelector("figcaption");
-    return (cap && cap.textContent.trim()) || img.getAttribute("alt") || "";
-  };
+    /** The figcaption if there is one, else the alt text. */
+    get caption() {
+      const fig = this.el.closest("figure");
+      const cap = fig && fig.querySelector("figcaption");
+      return (cap && cap.textContent.trim()) || this.el.getAttribute("alt") || "";
+    }
 
-  const open = (img) => {
-    const items = gallery(img);
-    const target = src(img);
-    let index = items.findIndex((candidate) => src(candidate) === target);
-    if (index < 0) index = 0;
-    const lb = window.GLightbox({
-      // No zoom. The ask is to see the picture at full size, nothing more.
-      zoomable: false,
-      draggable: items.length > 1,
-      loop: items.length > 1,
-      touchNavigation: items.length > 1,
-      openEffect: "fade",
-      closeEffect: "fade",
-      elements: items.map((candidate) => ({
-        href: src(candidate),
-        type: "image",
-        description: caption(candidate),
-      })),
-      startAt: index,
-    });
-    lb.open();
-    // Each open builds its own instance, so drop it once it closes rather than
-    // leaving a stack of detached modals behind.
-    lb.on("close", () => {
-      window.setTimeout(() => lb.destroy(), 0);
-    });
-  };
+    get rect() {
+      return this.el.getBoundingClientRect();
+    }
 
-  const onClick = (event) => {
-    const img = event.target.closest("img");
-    if (!eligible(img)) return;
-    // A carousel arrow or pagination dot sits above the slide; let it win.
-    if (event.target.closest(".swiper-button-prev, .swiper-button-next, .swiper-pagination")) return;
-    event.preventDefault();
-    open(img);
-  };
+    get isEligible() {
+      if (this.el.closest(ImageTarget.OPT_OUT)) return false;
+      // An image that is already a link belongs to that link.
+      if (this.el.closest("a")) return false;
+      if (!this.src) return false;
+      const r = this.rect;
+      return r.width >= ImageTarget.MIN_EDGE && r.height >= ImageTarget.MIN_EDGE;
+    }
 
-  const mark = (root) => {
-    root.querySelectorAll("img").forEach((img) => {
-      if (eligible(img)) img.classList.add("ms-zoomable");
-    });
-  };
+    /** The slide strip this image belongs to, or null when it stands alone. */
+    get carousel() {
+      return this.el.closest(".swiper");
+    }
 
-  const bind = () => {
-    const roots = document.querySelectorAll("article, .md-content");
-    if (!roots.length) return;
-    roots.forEach((root) => {
-      root.addEventListener("click", onClick);
-      mark(root);
-    });
-    // Swiper mounts after this file runs and images decode later still, so the
-    // affordance is re-applied once things settle. The click handler already
-    // works regardless; this only keeps the cursor honest.
-    window.setTimeout(() => roots.forEach(mark), 600);
-    window.addEventListener("load", () => roots.forEach(mark), { once: true });
-  };
+    toSlide() {
+      return { href: this.src, type: "image", description: this.caption };
+    }
+
+    /**
+     * Every distinct picture in the same carousel, in slide order, so the
+     * viewer's arrows walk the strip instead of dead-ending on one slide.
+     *
+     * Deduplicated BY SOURCE because Swiper runs with `loop: true` and clones
+     * slides. Wrapping each image in an anchor, which is what the library's
+     * own docs suggest, would list the same picture two or three times.
+     */
+    gallery() {
+      const strip = this.carousel;
+      if (!strip) return [this];
+      const seen = new Set();
+      const out = [];
+      strip.querySelectorAll(".swiper-slide img").forEach((node) => {
+        const target = new ImageTarget(node);
+        if (!target.src || seen.has(target.src)) return;
+        seen.add(target.src);
+        out.push(target);
+      });
+      return out.length ? out : [this];
+    }
+  }
+
+  /**
+   * The hover affordance. A single floating button reused across every image,
+   * rather than one injected per image.
+   *
+   * Injecting a wrapper per image would mutate slide markup Swiper owns, and a
+   * cursor change alone is not an affordance: it says nothing until you are
+   * already hovering and it says nothing about what will happen.
+   */
+  class ZoomHint {
+    static MARGIN = 10;
+
+    constructor() {
+      /** Set by the bootstrap once the viewers exist. */
+      this.onActivate = () => {};
+      this.target = null;
+      this.el = this.build();
+      this.track = this.track.bind(this);
+    }
+
+    build() {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "ms-zoom-hint";
+      btn.setAttribute("aria-label", "View image full screen");
+      btn.hidden = true;
+      btn.innerHTML =
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
+        'stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ' +
+        'aria-hidden="true"><path d="M15 3h6v6"/><path d="M9 21H3v-6"/>' +
+        '<path d="M21 3l-7 7"/><path d="M3 21l7-7"/></svg>';
+      btn.addEventListener("click", (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        if (this.target) this.onActivate(this.target);
+      });
+      document.body.appendChild(btn);
+      return btn;
+    }
+
+    show(target) {
+      this.target = target;
+      this.el.hidden = false;
+      this.place();
+      window.addEventListener("scroll", this.track, { passive: true });
+      window.addEventListener("resize", this.track, { passive: true });
+    }
+
+    place() {
+      if (!this.target) return;
+      const r = this.target.rect;
+      this.el.style.top = `${r.top + ZoomHint.MARGIN}px`;
+      this.el.style.left = `${r.right - this.el.offsetWidth - ZoomHint.MARGIN}px`;
+    }
+
+    track() {
+      if (!this.target) return this.hide();
+      const r = this.target.rect;
+      // Scrolled out of view entirely, so the button has nothing to sit on.
+      if (r.bottom < 0 || r.top > window.innerHeight) return this.hide();
+      this.place();
+    }
+
+    hide() {
+      this.el.hidden = true;
+      this.target = null;
+      window.removeEventListener("scroll", this.track);
+      window.removeEventListener("resize", this.track);
+    }
+
+    owns(node) {
+      return this.el.contains(node);
+    }
+  }
+
+  /**
+   * Binds one content root. Collaborators are injected rather than constructed
+   * here, so the viewer can be exercised without the library present.
+   */
+  class ImageViewer {
+    static CHROME = ".swiper-button-prev, .swiper-button-next, .swiper-pagination";
+
+    constructor(root, { factory, hint }) {
+      this.root = root;
+      this.factory = factory;
+      this.hint = hint;
+    }
+
+    bind() {
+      this.root.addEventListener("click", (event) => this.onClick(event));
+      this.root.addEventListener("mouseover", (event) => this.onHover(event));
+      this.root.addEventListener("mouseout", (event) => this.onLeave(event));
+      this.mark();
+      // Swiper mounts after this file runs and images decode later still, so
+      // the affordance is re-applied once things settle.
+      window.setTimeout(() => this.mark(), 600);
+      window.addEventListener("load", () => this.mark(), { once: true });
+    }
+
+    /** Only images the click handler will actually open get the cursor. */
+    mark() {
+      this.root.querySelectorAll("img").forEach((node) => {
+        const target = new ImageTarget(node);
+        node.classList.toggle("ms-zoomable", target.isEligible);
+      });
+    }
+
+    onClick(event) {
+      if (event.target.closest(ImageViewer.CHROME)) return;
+      const target = ImageTarget.from(event.target);
+      if (!target || !target.isEligible) return;
+      event.preventDefault();
+      this.open(target);
+    }
+
+    onHover(event) {
+      const target = ImageTarget.from(event.target);
+      if (!target || !target.isEligible) return;
+      this.hint.show(target);
+    }
+
+    onLeave(event) {
+      const next = event.relatedTarget;
+      if (next && (this.hint.owns(next) || ImageTarget.from(next))) return;
+      this.hint.hide();
+    }
+
+    open(target) {
+      this.hint.hide();
+      const slides = target.gallery();
+      const index = Math.max(0, slides.findIndex((s) => s.src === target.src));
+      const many = slides.length > 1;
+      const lb = this.factory({
+        // No zoom. The ask is to see the picture at full size, nothing more.
+        zoomable: false,
+        draggable: many,
+        loop: many,
+        touchNavigation: many,
+        openEffect: "fade",
+        closeEffect: "fade",
+        elements: slides.map((s) => s.toSlide()),
+        startAt: index,
+      });
+      lb.open();
+      // Each open builds its own instance, so drop it once it closes rather
+      // than leaving a stack of detached modals behind.
+      lb.on("close", () => window.setTimeout(() => lb.destroy(), 0));
+    }
+  }
 
   const start = (attempt = 0) => {
-    if (typeof window.GLightbox === "function") {
-      bind();
+    if (typeof window.GLightbox !== "function") {
+      if (attempt > 40) return; // ~4s, then give up quietly
+      window.setTimeout(() => start(attempt + 1), 100);
       return;
     }
-    if (attempt > 40) return; // ~4s, then give up quietly
-    window.setTimeout(() => start(attempt + 1), 100);
+    const roots = document.querySelectorAll("article, .md-content");
+    if (!roots.length) return;
+    const hint = new ZoomHint();
+    const viewers = [...roots].map(
+      (root) => new ImageViewer(root, { factory: window.GLightbox, hint })
+    );
+    // Wired after construction rather than passed in, because the hint is
+    // shared by every root and must not hold a reference to one of them.
+    hint.onActivate = (target) => viewers[0].open(target);
+    viewers.forEach((viewer) => viewer.bind());
   };
 
   if (document.readyState === "loading") {
