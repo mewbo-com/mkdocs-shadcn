@@ -248,9 +248,15 @@ article .ms-devices img,
   border: 0;
 }
 
-/* Sticky top nav: subtle bottom border so it's clear where the header ends and
-   the content column begins, matching the Mewbo console top-bar treatment. */
-header.sticky {
+/* Sticky top nav: one hairline marks where the header ends and the page
+   begins, matching the Mewbo console top-bar treatment.
+
+   Scoped away when a tab rail exists, because the rail then IS the bottom of
+   the nav block and draws that edge itself. Unscoped, this rule and the rail's
+   own border land on the same y and paint 2px where the design says 1. Two
+   other rules in this file also target that edge, which is why the doubling
+   survived a search for the obvious one. */
+body:not(.ms-has-header-tabs) header.sticky {
   border-bottom: 1px solid var(--border, rgba(120, 120, 120, 0.2));
 }
 
@@ -1185,83 +1191,60 @@ article a:hover,
   color: var(--muted-foreground, currentColor);
 }
 
-/* ── Surface elevation ─────────────────────────────────────────────────────
-   One scale for every large surface, so the page reads as a single stack
-   instead of a set of independently tinted panels.
+/* ── One canvas, separated by hairlines ────────────────────────────────────
+   Every large surface is `--background`. The top bar, the tab rail, both side
+   rails, the article and the footer are one continuous sheet, and what marks
+   the joins is a 1px `--border` hairline. Nothing is tinted and nothing is
+   elevated.
 
-   Vertically the chrome descends into the page: the top bar is the most
-   elevated, the sub navigation sits one step under it, and the content canvas
-   is the floor. Horizontally the rails sit BELOW the canvas, which is what
-   pulls the eye to the middle column where the reading happens.
+   This replaced a four-level fill scale that gave each region its own colour.
+   The scale was measurably off the palette in both modes rather than merely
+   strong: light painted the top bar `#ffffff`, the only cold neutral on a warm
+   cream page, and dark painted it `#2a2925`, LIGHTER than `--card` and so
+   above the top of the theme's own range. The palette already answers this —
+   `--sidebar` is declared identical to `--background` in both modes, which is
+   the theme stating that the rails are the canvas.
 
-       top nav      most elevated
-       sub nav      one step down
-       content      the canvas
-       rails        recessed
+   Two artefacts came from the fills rather than from any rule, which is why
+   neither is visible in the source:
 
-   Measured before this existed: in light the sub navigation was 0.8963
-   luminance against a 0.9473 top bar and a 0.9473 canvas, so it read as a dark
-   band across the page, and it sat within 0.017 of the search input's fill, so
-   the two competed. In dark it was 0.0098 against a 0.0075 top bar, which is
-   the flow running backwards. Both rails matched the canvas exactly, so
-   nothing drew the eye inward.
+   The rails ran the full page height while the article stopped where its text
+   stopped, so the rail colour filled the ~130px between the last paragraph and
+   the footer as a stripe across the full width. A region can only terminate
+   mid-page if it is painted; unpainted, there is nothing to terminate.
 
-   Elevation lightens in both modes. In dark that is the usual convention; in
-   light it keeps the reading surface off the very top of the scale without
-   ever darkening the text's own background. */
-:root {
-  --surface-nav: #ffffff;
-  --surface-subnav: #fbfaf7;
-  --surface-content: #faf9f6;
-  --surface-rail: #f2efe8;
-  /* An input is a WELL in the chrome, so it is recessed from the bar it sits
-     on rather than mixed from the page canvas. It was `color-mix(… var(
-     --background))`, which is the content level, so once the bar moved onto
-     its own surface the field's contrast against its real backdrop became
-     accidental. The border does the accessible work at 3:1, per WCAG 1.4.11
-     for a component boundary; the fill only has to read as recessed. */
-  --surface-input: #eae7dd;
-  --surface-input-border: #8f8b81;
-}
-.dark {
-  /* Dark needs BIGGER steps than light, not mirrored ones. Everything here
-     lives between 0.004 and 0.02 luminance, where the contrast ratio formula
-     compresses hard: a step that reads clearly at the light end computes to
-     1.04 down here and is invisible. Measured from real screenshot pixels
-     rather than computed styles, because a `color-mix()` in this theme
-     resolves to `oklab()` and a naive canvas parse of that reports nonsense. */
-  --surface-nav: #2a2925;
-  --surface-subnav: #201f1c;
-  --surface-content: #161513;
-  --surface-rail: #0e0d0c;
-  --surface-input: #0b0a09;
-  --surface-input-border: #78746a;
-}
+   Each rail met the article on a bare colour change with no line on it, which
+   reads as a smudge rather than an edge. A hairline is an edge or there is
+   nothing; a soft step between two large fills is neither.
 
-/* Every large surface reads from the scale below, so a future retune moves
-   one set of values rather than five unrelated rules. */
-.mewbo-header {
-  background: var(--surface-nav);
-}
+   The footer already worked this way and was the only chrome nobody
+   complained about: `background: var(--background)` and one `--border` rule.
+   The rest of the chrome now matches it.
 
-/* The rails are NOT painted. Neither fills its column: the sidebar stops short
-   of the viewport and the table of contents is shorter still, so painting them
-   drew two floating panels with light strips above and below. The recession
-   comes from the page instead. `body` carries the rail level and the content
-   column is lifted off it, which puts the SAME contrast between rail and
-   centre with no box edges anywhere, and covers the gutters too. */
-body,
-/* The app shell is a full width `bg-background` wrapper, so painting `body`
-   alone changed nothing: the shell covered it edge to edge and every rail
-   inherited the CONTENT colour. Measured by sweeping real pixels across the
-   page, which showed one flat value from x=2 to x=1420 and the body colour
-   only in the last few pixels outside the wrapper. The shell carries the rail
-   level now and the content column is lifted off it. */
-.bg-background.relative.z-10 {
-  background: var(--surface-rail);
-}
-article {
-  background: var(--surface-content);
+   Hierarchy is carried by the hairlines, by the content column's measure and
+   by the type scale. If a recessed rail is ever wanted back, it is one token
+   consumed in one place, not a scale of four. */
+
+/* The template already puts `bg-background` on the header, the shell and the
+   sidebar. There is deliberately no rule here painting them: overriding that
+   class is what put the chrome off-palette, and the correct value is the one
+   the template already asks for. */
+
+/* The rail divider spans the reading area, not the sidebar's own box.
+
+   It is absolutely positioned inside the sticky sidebar, which is
+   `100svh - 10rem` tall, so `bottom: 0` ended the line 160px above the fold at
+   EVERY scroll position — a hairline stopping in open space, which is the one
+   way to make a boundary read as a smudge rather than an edge. Measured at
+   x=287: `--border` from the header down to y=534, then nothing.
+
+   Height is taken from the viewport instead, less the header and the sidebar's
+   own 0.6rem offset, so the line reaches the bottom of the screen. It is
+   `bottom: auto` because a top and a bottom together resolve against the
+   parent again, which is the box being escaped. */
+.ms-rail-divider {
+  bottom: auto;
+  height: calc(100svh - var(--header-height) - 0.6rem);
 }
 
 
@@ -1691,8 +1674,16 @@ article .typography video,
      Declared here rather than at :root because it describes the header's own
      control scale, and both controls are descendants. */
   --mewbo-nav-control-h: 2rem;
-  border-bottom: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
   box-shadow: none;
+}
+
+/* Only the LAST element of the nav block draws the line that ends it. With a
+   tab rail the header's own bottom border sits at the same y as the rail's,
+   which paints 2px of hairline where the design calls for 1 — measurable as
+   two identical border rows rather than one. `ms-has-header-tabs` is on
+   `body` whenever tabs are configured, so each case names its own edge. */
+body:not(.ms-has-header-tabs) .mewbo-header {
+  border-bottom: 1px solid var(--border);
 }
 
 /* Brand cluster: glyph + wordmark optically aligned.
@@ -3250,21 +3241,33 @@ div:has(> #toc) {
 
 /* ── Search pill ─────────────────────────────────────────────────────── */
 
+/* `--input` is the palette's own fill for a field and it moves the right way
+   without being told which mode it is in: in light it sits below the page and
+   the field reads as a well, in dark it sits above and the field reads as a
+   lift. The previous pair of hand-picked hexes went darker in BOTH modes,
+   which is why dark rendered a near-black hole punched into the bar.
+
+   The border is `--border` at full strength and no more. It defines the field
+   without outlining it. Stated plainly: at rest that boundary does not reach
+   the 3:1 of WCAG 1.4.11 in light, because a border that does is a drawn box
+   on a seamless bar. The fill carries the boundary at rest and `:focus-within`
+   below raises a full `--ring`, which is the state where the contrast has to
+   be unambiguous. */
 .mewbo-nav-search-pill {
-  background: var(--surface-input);
-  border-color: var(--surface-input-border);
+  background: var(--input);
+  border-color: var(--border);
   /* Prompt text, not content: it sits back at --muted-foreground and warms to
      --foreground on hover (the rule below), the same as an unfocused field's
      placeholder anywhere else. Full --foreground here read as pure white in
      dark mode and pulled the eye away from the page. */
   color: var(--muted-foreground);
-  /* A hairline of inset light on top reads as a recessed field rather than a
-     raised button, which is the correct affordance for something you type in. */
-  box-shadow:
-    inset 0 1px 0 0 color-mix(in srgb, var(--background) 60%, transparent),
-    0 1px 2px -1px rgb(0 0 0 / 0.06);
   transition: background 0.15s ease, border-color 0.15s ease,
     box-shadow 0.15s ease;
+}
+
+.mewbo-nav-search-pill:focus-within {
+  border-color: var(--ring);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--ring) 30%, transparent);
 }
 
 .mewbo-nav-search-pill:hover {
@@ -3320,19 +3323,16 @@ div:has(> #toc) {
 
 /* ── Tab rail: its own plane between header and page ─────────────────── */
 
+/* Same canvas as the header above it and the page below it. Two hairlines
+   place it: one where the header ends, one where the page begins. Both are
+   plain `--border`, so the pair reads as one weight rather than as the
+   two different greys a 70%/90% mix produced. */
 .ms-header-tabs {
-  background: var(--surface-subnav);
-  border-top: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
-  border-bottom: 1px solid color-mix(in srgb, var(--border) 90%, transparent);
-  /* Bottom-only, short, and no blur spread sideways — depth against the page
-     beneath it without feathering onto the sidebar. */
-  box-shadow: 0 2px 4px -2px rgb(0 0 0 / 0.10);
+  background: var(--background);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
   position: relative;
   z-index: 1;
-}
-
-.dark .ms-header-tabs {
-  box-shadow: 0 2px 6px -2px rgb(0 0 0 / 0.45);
 }
 
 /* The active tab deliberately stays on `--primary` — the clay accent IS the
@@ -3341,69 +3341,18 @@ div:has(> #toc) {
    it removes the only colour cue distinguishing the active tab from its
    neighbours, leaving just the underline. */
 
-/* ─────────────────────────────────────────────────────────────────────────
-   Dark-mode header depth
+/* The nav block casts no shadow.
 
-   The filled search field and the tab rail were mixed too far toward
-   `--muted` in dark mode: against a #161513 header they read as noticeably
-   lighter panels sitting on top of the chrome rather than as part of it.
-   Light mode is unaffected — there the same mixes land correctly, because
-   `--muted` sits BELOW the page white rather than above the page black.
-
-   Pulled back toward the header so each surface is a step, not a slab. Both
-   stay measurably distinct from the header, which is what
-   `test_keyboard_keys_and_header_chrome` pins.
-
-   The shadow moves to the BOTTOM of the whole navigation block. Previously
-   the rail cast its own, which reads as two stacked planes; the header and
-   the rail are one piece of chrome and should cast one shadow onto the page
-   beneath them. Deeper and softer than the old one so it is visible against
-   the page while scrolling, and still spread-free so it cannot feather
-   sideways onto the sidebar.
-   ───────────────────────────────────────────────────────────────────────── */
-
-.dark .mewbo-nav-search-pill {
-  background: var(--surface-input);
-  border-color: var(--surface-input-border);
-  box-shadow:
-    inset 0 1px 0 0 rgb(255 255 255 / 0.02),
-    0 1px 2px -1px rgb(0 0 0 / 0.4);
-}
+   A two-layer shadow used to hang under it, which contradicted the rule
+   further up this file declaring the header flat with a hairline and no
+   elevation — both were live and the later one won. A shadow under a bar that
+   is the same colour as the page reads as a grey band, not as depth, and
+   measuring it found a 4px gradient running the full width beneath the tabs.
+   Where the chrome ends is stated once, by `.ms-header-tabs`'s bottom
+   hairline, or by the header's own when no tab rail exists. */
 
 .dark .mewbo-nav-search-pill:hover {
   background: color-mix(in srgb, var(--muted) 55%, var(--background));
-}
-
-/* One shadow for the whole nav block, cast onto the page.
-
-   Which element carries it depends on whether a tab rail exists: with tabs,
-   the rail is the bottom edge; without them, the header is. `body` gets
-   `ms-has-header-tabs` when tabs are configured, so both cases are covered
-   without either element ever painting two shadows. */
-.dark .ms-has-header-tabs .ms-header-tabs,
-.ms-has-header-tabs .ms-header-tabs {
-  box-shadow:
-    0 4px 6px -4px rgb(0 0 0 / 0.28),
-    0 10px 20px -12px rgb(0 0 0 / 0.22);
-}
-
-.dark .ms-has-header-tabs .ms-header-tabs {
-  box-shadow:
-    0 4px 8px -4px rgb(0 0 0 / 0.6),
-    0 12px 24px -12px rgb(0 0 0 / 0.5);
-}
-
-/* No tab rail: the header itself is the bottom edge of the chrome. */
-body:not(.ms-has-header-tabs) .mewbo-header {
-  box-shadow:
-    0 4px 6px -4px rgb(0 0 0 / 0.22),
-    0 10px 20px -12px rgb(0 0 0 / 0.18);
-}
-
-.dark body:not(.ms-has-header-tabs) .mewbo-header {
-  box-shadow:
-    0 4px 8px -4px rgb(0 0 0 / 0.55),
-    0 12px 24px -12px rgb(0 0 0 / 0.45);
 }
 
 /* Prose links take the text-tuned clay. `article a` resolves to `text-primary`

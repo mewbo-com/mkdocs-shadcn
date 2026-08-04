@@ -638,14 +638,22 @@ def test_videos_prepared_for_viewport_autoplay(page: Page, local_deployment: str
 
 
 def test_keyboard_keys_and_header_chrome(page: Page, local_deployment: str):
-    """Shortcuts render as <kbd>, and the header's three planes stay distinct.
+    """Shortcuts render as <kbd>, and the chrome is one canvas cut by hairlines.
 
     `tailwind/kbd.css` styled <kbd> long before anything emitted it, so
     authors wrote shortcuts as prose or inline code. `pymdownx.keys` is what
     produces the markup.
 
-    The header, the tab rail and the page previously shared one surface, so
-    they read as a single plane; the rail must sit on its own.
+    This used to assert the opposite — that the header, the tab rail and the
+    page each held a DIFFERENT surface. That design gave every region its own
+    fill and the fills landed off the palette in both modes, so the page read
+    as a set of tinted panels. The rail now shares the header's background and
+    a `--border` hairline marks each join, which is what the footer had been
+    doing correctly all along.
+
+    Asserting the shared background is the point: an equality here is the only
+    thing that catches a future rule re-tinting one bar, which is invisible in
+    a screenshot diff of a page whose chrome is nearly the same colour anyway.
     """
     page.goto(BASE + "/keyboard/", wait_until="networkidle")
 
@@ -665,22 +673,87 @@ def test_keyboard_keys_and_header_chrome(page: Page, local_deployment: str):
              const rail = document.querySelector('.ms-header-tabs');
              const pill = document.querySelector('.mewbo-nav-search-pill');
              if (!hdr || !rail || !pill) return null;
+             const page_ = document.querySelector('article');
              return {header: cs(hdr).backgroundColor,
                      rail: cs(rail).backgroundColor,
+                     page: cs(page_).backgroundColor,
                      railShadow: cs(rail).boxShadow,
-                     pill: cs(pill).backgroundColor,
-                     pillShadow: cs(pill).boxShadow};
+                     railTop: cs(rail).borderTopWidth,
+                     railBottom: cs(rail).borderBottomWidth,
+                     headerBottom: cs(hdr).borderBottomWidth,
+                     pill: cs(pill).backgroundColor};
            }"""
     )
     assert planes, "header, rail or search pill missing"
-    assert planes["rail"] != planes["header"], (
-        "the tab rail shares the header's surface, so the two read as one plane"
+    assert planes["rail"] == planes["header"], (
+        "the tab rail is tinted off the header, which is the panelled look "
+        "the one-canvas chrome replaced"
     )
-    assert planes["railShadow"] != "none", "the rail has no depth against the page"
+    assert planes["railShadow"] == "none", (
+        "the rail casts a shadow — under a bar the same colour as the page "
+        "that renders as a grey band, not as depth"
+    )
+    assert planes["railTop"] == "1px" and planes["railBottom"] == "1px", (
+        "the rail's joins are not hairlines, so nothing marks where the "
+        "chrome ends once the fills are gone"
+    )
+    # With a rail present the header must NOT also draw a bottom border: both
+    # land on the same y and paint 2px where the design says 1.
+    assert planes["headerBottom"] == "0px", (
+        "the header and the rail both draw the block's bottom edge"
+    )
     assert planes["pill"] != planes["header"], (
         "the search pill is not filled, so it reads as an outline not a field"
     )
-    assert planes["pillShadow"] != "none"
+
+
+def test_page_is_one_canvas_with_no_stranded_edges(page: Page, local_deployment: str):
+    """No region paints its own fill, and no hairline stops in open space.
+
+    Both defects this pins were invisible in the source and only showed up in
+    rendered pixels.
+
+    The shell, the article and the footer each used to carry a different fill.
+    Because the rails ran the page's full height while the article stopped
+    where its text stopped, the rail colour filled the gap between the last
+    paragraph and the footer as a stripe across the full width. Equal
+    backgrounds are what make that gap unpaintable.
+
+    The rail divider is absolutely positioned inside a sidebar box shorter than
+    the viewport, so `bottom: 0` ended it in mid-air at every scroll position.
+    It has to reach the fold.
+    """
+    page.goto(BASE + "/", wait_until="networkidle")
+    surfaces = page.evaluate(
+        """() => {
+             const bg = s => { const e = document.querySelector(s);
+                               return e ? getComputedStyle(e).backgroundColor : null; };
+             const divider = document.querySelector('.ms-rail-divider');
+             return {shell: bg('.bg-background.relative.z-10'),
+                     article: bg('article'),
+                     footer: bg('.mewbo-footer'),
+                     header: bg('.mewbo-header'),
+                     dividerHeight: divider ? divider.getBoundingClientRect().height : 0,
+                     viewport: window.innerHeight};
+           }"""
+    )
+    # The article must not paint at all — the shell shows through it. That is
+    # stricter than matching the shell, and it is the property that makes the
+    # content column impossible to tint by accident.
+    assert surfaces["article"] == "rgba(0, 0, 0, 0)", (
+        f"the article paints its own fill ({surfaces['article']}), which is "
+        "what stranded a stripe of rail colour between it and the footer"
+    )
+    fills = {k: surfaces[k] for k in ("shell", "footer", "header")}
+    assert len(set(fills.values())) == 1, (
+        f"the chrome is painted in more than one colour: {fills}"
+    )
+    # The divider starts below the header, so it can never equal the viewport.
+    # Anything materially short of it is a hairline ending in open space.
+    assert surfaces["dividerHeight"] >= surfaces["viewport"] - 120, (
+        f"the rail divider is {surfaces['dividerHeight']}px in a "
+        f"{surfaces['viewport']}px viewport, so it stops mid-page"
+    )
 
 
 def test_sidebar_renders_once(page: Page, local_deployment: str):
