@@ -168,9 +168,9 @@ both rather than picking one.
 
 ### Media
 
-- **Carousels** (, needs ) size their
-  box to **16:9** from v1.10.1. Do not override  in your own
-  ; a non-16:9 image is still protected by .
+- **Carousels** (`.swiper.ms-shots`, needs `theme.carousel: true`) size their
+  box to **16:9** from v1.10.1. Do not override `aspect-ratio` in your own
+  `extra_css`; a non-16:9 image is still protected by `object-fit: contain`.
 - **Images** get a matte frame automatically. Opt out with `{ .no-border }`
   (needs `attr_list`) for logos and badges that must bleed.
 - **Video** autoplays while on screen and pauses when scrolled away. Write a
