@@ -66,6 +66,104 @@ subclass, and the theme's templates call filters it registers (`iconify`,
 `scoped_nav`, `read_file`). Without it the build fails with
 `No filter named 'iconify'`.
 
+## Every page opens with a masthead
+
+**From v1.12.0 a page's `# H1` and its first `## H2` are one unit, and the H2 is
+the big one.** This inverts what the levels normally mean, so get it wrong and
+the page looks broken rather than merely plain.
+
+```markdown
+# Get Started
+
+## Introducing Mewbo
+
+Body copy starts here.
+```
+
+The H1 renders as a **small accent label** at ~0.85rem naming where the reader
+is. It is lifted out of the body into the page header, so it never appears
+twice. The first H2 renders as the **page's visual title** at a `clamp()` up to
+2.4rem, set 4px under the label so the pair reads as one block.
+
+### The rules, and why each one exists
+
+- **The subtitle H2 is a title, not a sentence. Never more than 4 words, and
+  aim for 2.** It is set at ~38px across the full content column, so a
+  descriptive phrase wraps to three lines and reads as prose at heading size.
+  A whole site was shipped with 9 word subtitles before anyone looked at a
+  rendered page. Write a noun phrase with no finite verb and no trailing
+  punctuation.
+- **It must not restate the H1.** `Skills` then `About skills` wastes the one
+  line that says what the page is.
+- **Every page needs one.** Without it the page still builds and still renders,
+  it just opens with a tiny accent label above ordinary body copy and no title
+  at all. There is no warning. Grep for pages whose first heading after the H1
+  is not an H2.
+- **Two pages must not share a subtitle.** Three `Get Started` pages once
+  converged on the same title and a reader could not tell them apart.
+- **Short titles collide on anchors far more easily than long ones**, and the
+  site builds `strict: true`. Check the page's existing `##`/`###` headings
+  before writing one. `Overview` is the usual offender.
+
+### The H1 must be the file's first block
+
+The theme only lifts a **leading** H1 out of the body. Put anything above it,
+including an HTML comment, and the heading stays in the body: the page then
+renders its own title twice, once as the label and once as body content. This
+bites generated pages hardest, because the generator's provenance comment is
+the obvious thing to put on line 1. Put the H1 first and the comment after it.
+
+### A `.ms-hero` page is the same masthead, elaborated
+
+A landing page using `<section class="ms-hero" markdown>` states its own title
+inside the hero, so the theme hides the generated H1 rather than showing both.
+Do not also write a subtitle H2 there.
+
+Inside the hero, **any** heading level is styled as the hero title, because
+Markdown cannot put a class on a heading. `.ms-hero__title` still works for a
+hero written as raw HTML.
+
+### The table of contents drops the title
+
+Whichever shape the masthead takes, the heading that names the page is omitted
+from the On This Page rail, because it is the page's name rather than one of
+its sections. Scroll spy reads its heading set off the rail, so the two stay in
+step. Nothing to configure.
+
+### If you are restyling the masthead
+
+Two traps, both of which produced shipped regressions:
+
+1. **The prose rules in `base.css` are unlayered and reach (0,1,2)** — for
+   example `article p:not(:first-child)` and `article .typography h2`. A bare
+   `.my-class { margin: 0 }` at (0,1,0) **loses silently**. Prefix with
+   `article` and match their reach. `mewbo.css` is linked after `base.css`, so
+   an equal specificity selector wins on source order.
+2. **The copy and pager cluster shares the label's row and is 38px tall against
+   a 19px label.** It is bottom aligned so it cannot hang past the label into
+   the title. Do not take it out of flow to "free up" the row: an out of flow
+   cluster overlaps whatever follows, which then forces both the label and the
+   title to reserve right padding, which wraps short titles early and reads as
+   a stray indent.
+
+## Prose spacing is one scale
+
+Do not reach for a Tailwind spacing utility to space a heading or a block. The
+theme declares four steps on `article`, and they are strictly increasing so a
+reader can feel how deep a break is:
+
+| token | value | used for |
+|---|---|---|
+| `--prose-flow` | 1.5rem | one block to the next inside a passage |
+| `--prose-topic-gap` | 2rem | before an H4 |
+| `--prose-subsection-gap` | 2.5rem | before an H3 |
+| `--prose-section-gap` | 3rem | before an H2 |
+| `--prose-heading-lead` | 1rem | after **any** heading, before whatever it introduces |
+
+Space after a heading is deliberately much tighter than space before it, so a
+heading binds to the content under it. Override the custom property, never the
+individual rules.
+
 ## Writing content
 
 ### Code blocks
@@ -248,6 +346,20 @@ measured 2.6-3.0:1 on the light page, under the 4.5:1 bar.
 If you add your own accent-coloured text in `extra_css`, reach for
 `var(--primary-text)`. Use `var(--primary)` only for something you fill.
 
+The page masthead's H1 label uses `--primary-text` for exactly this reason.
+
+**Header chrome sits back on purpose.** The brand wordmark, the search
+placeholder and the Ask AI label all use `--muted-foreground` rather than
+`--foreground`. They read as chrome, not as content, and pure white made them
+compete with the page. The Ask AI label alone is nudged one step darker,
+because it is the only one sitting on the button's accent tint rather than on
+the header background, where the shared grey measured 4.14:1 in light mode.
+
+**Measure a colour over its real backdrop.** Several surfaces here are
+`color-mix()` fills that compute to `oklab()`, which a naive rgb parse mangles
+into nonsense contrast figures. Composite onto a canvas and read the pixel
+back.
+
 ## How this fork differs from mkdocs-material
 
 Authors coming from Material reach for features that are **not here**, because
@@ -285,6 +397,15 @@ Expand viewer.
 | Code blocks unhighlighted AND no titles AND no line numbers, all at once | Pygments is not installed |
 | Build dies with `'NoneType' object has no attribute 'get'` | `arithmatex` enabled against a theme older than v1.10.0; set `theme.katex_options: {}` |
 | `++ctrl+k++` prints literally | `pymdownx.keys` is not enabled |
+| Page opens with a tiny accent label and no title | The page has no subtitle H2 under its H1 |
+| Page shows its own title twice | Something sits above the H1, so the theme did not lift it out of the body |
+| Title wraps to two or three lines | The subtitle is a sentence. Four words maximum, two is the target |
+| Title looks indented, or wraps early with space to spare | A restyle reserved right padding for the button cluster. Bottom align the cluster instead |
+| Heading floats between its neighbours | Something overrode `--prose-heading-lead`, or set a margin instead of the token |
+| A CSS override "did nothing" | It lost on specificity. The prose rules reach (0,1,2); prefix yours with `article` |
+
+**None of the masthead symptoms above fail the build, and none fail a test.**
+They are visual only. Look at a rendered page before calling the work done.
 
 ## House rules for writing the prose itself
 
