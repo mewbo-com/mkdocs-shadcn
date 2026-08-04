@@ -2552,3 +2552,36 @@ dialog.ms-diagram-viewer::backdrop {
     transition: none;
   }
 }
+/* ─────────────────────────────────────────────────────────────────────────
+   "On This Page" rail: stop over-reserving for the footer, and say that it
+   scrolls
+
+   The rail showed only a few entries and looked terminally cut. Two causes,
+   and the interesting part is which one it is NOT: `#toc` already carries
+   `overflow-y: auto`, and a flex item whose overflow is not `visible` has an
+   automatic minimum size of zero, so it was always free to shrink and scroll.
+   Adding `min-height: 0` changes nothing here — measured, not assumed.
+
+   1. The height budget. The rail is sized `100svh - header - footer`, and
+      this brand's footer token is 320px against upstream's ~96px, so nearly
+      a third of the viewport is reserved for a footer that is not on screen
+      while you are reading. On a 768px-tall window that left 248px of rail.
+      Reserving a fixed, comfortable gap instead — the same shape as the left
+      sidebar's own `100svh-10rem` — returns ~200px at every viewport size.
+
+   2. Nothing said it could scroll. `#toc` also carries `no-scrollbar`, so
+      the one affordance that would have shown more content below was hidden,
+      and the clipped last entry read as the end of the list. A fade at the
+      cut edge restores that cue, matching the left sidebar's scroll fade.
+   ───────────────────────────────────────────────────────────────────────── */
+
+div:has(> #toc) {
+  height: calc(100svh - var(--header-height) - 10rem);
+}
+
+#toc {
+  /* The rail's own trailing spacer means this sits over empty space when
+     the list is short, so a fully-visible list is not dimmed for no reason. */
+  -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 1.5rem), transparent 100%);
+  mask-image: linear-gradient(to bottom, #000 calc(100% - 1.5rem), transparent 100%);
+}
