@@ -1210,16 +1210,32 @@ article a:hover,
    light it keeps the reading surface off the very top of the scale without
    ever darkening the text's own background. */
 :root {
-  --surface-nav: #fdfcfa;
+  --surface-nav: #ffffff;
   --surface-subnav: #fbfaf7;
-  --surface-rail: #f5f3ee;
   --surface-content: #faf9f6;
+  --surface-rail: #f2efe8;
+  /* An input is a WELL in the chrome, so it is recessed from the bar it sits
+     on rather than mixed from the page canvas. It was `color-mix(… var(
+     --background))`, which is the content level, so once the bar moved onto
+     its own surface the field's contrast against its real backdrop became
+     accidental. The border does the accessible work at 3:1, per WCAG 1.4.11
+     for a component boundary; the fill only has to read as recessed. */
+  --surface-input: #eae7dd;
+  --surface-input-border: #8f8b81;
 }
 .dark {
-  --surface-nav: #1e1d1a;
-  --surface-subnav: #1a1917;
-  --surface-rail: #111110;
+  /* Dark needs BIGGER steps than light, not mirrored ones. Everything here
+     lives between 0.004 and 0.02 luminance, where the contrast ratio formula
+     compresses hard: a step that reads clearly at the light end computes to
+     1.04 down here and is invisible. Measured from real screenshot pixels
+     rather than computed styles, because a `color-mix()` in this theme
+     resolves to `oklab()` and a naive canvas parse of that reports nonsense. */
+  --surface-nav: #2a2925;
+  --surface-subnav: #201f1c;
   --surface-content: #161513;
+  --surface-rail: #0e0d0c;
+  --surface-input: #0b0a09;
+  --surface-input-border: #78746a;
 }
 
 /* Every large surface reads from the scale below, so a future retune moves
@@ -1234,7 +1250,14 @@ article a:hover,
    comes from the page instead. `body` carries the rail level and the content
    column is lifted off it, which puts the SAME contrast between rail and
    centre with no box edges anywhere, and covers the gutters too. */
-body {
+body,
+/* The app shell is a full width `bg-background` wrapper, so painting `body`
+   alone changed nothing: the shell covered it edge to edge and every rail
+   inherited the CONTENT colour. Measured by sweeping real pixels across the
+   page, which showed one flat value from x=2 to x=1420 and the body colour
+   only in the last few pixels outside the wrapper. The shell carries the rail
+   level now and the content column is lifted off it. */
+.bg-background.relative.z-10 {
   background: var(--surface-rail);
 }
 article {
@@ -3228,8 +3251,8 @@ div:has(> #toc) {
 /* ── Search pill ─────────────────────────────────────────────────────── */
 
 .mewbo-nav-search-pill {
-  background: color-mix(in srgb, var(--muted) 70%, var(--background));
-  border-color: color-mix(in srgb, var(--border) 100%, transparent);
+  background: var(--surface-input);
+  border-color: var(--surface-input-border);
   /* Prompt text, not content: it sits back at --muted-foreground and warms to
      --foreground on hover (the rule below), the same as an unfocused field's
      placeholder anywhere else. Full --foreground here read as pure white in
@@ -3340,8 +3363,8 @@ div:has(> #toc) {
    ───────────────────────────────────────────────────────────────────────── */
 
 .dark .mewbo-nav-search-pill {
-  background: color-mix(in srgb, var(--muted) 38%, var(--background));
-  border-color: color-mix(in srgb, var(--border) 85%, transparent);
+  background: var(--surface-input);
+  border-color: var(--surface-input-border);
   box-shadow:
     inset 0 1px 0 0 rgb(255 255 255 / 0.02),
     0 1px 2px -1px rgb(0 0 0 / 0.4);
