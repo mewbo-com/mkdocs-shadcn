@@ -53,11 +53,27 @@
   --primary: hsl(14.8 63.1% 59.6%);
   --primary-foreground: hsl(0 0% 100%);
 
+  /* The clay accent as TEXT, not as a fill.
+     `--primary` is identical in both themes, and it was tuned against the
+     dark carbon surface. Inherited unchanged by light it lands at 2.6-3.0:1
+     on the cream page, so every link, active ToC entry, active sidebar row,
+     focus ring and tab underline failed contrast in light while passing in
+     dark. One token cannot serve both roles: a fill, and legible text on
+     that fill, pull lightness in opposite directions.
+     Measured at 42%: 5.24:1 on the page and 4.60:1 on the active sidebar
+     chip, which is a 12% clay tint and therefore the lightest surface this
+     token ever sits on. That chip is what sets the value: 44% cleared the
+     page but measured 4.30:1 there. */
+  --primary-text: hsl(14.8 63.1% 42%);
+
   --secondary: hsl(48 25% 92.2%);
   --secondary-foreground: hsl(60 3% 21%);
 
   --muted: hsl(48 25% 92.2%);
-  --muted-foreground: hsl(45 3% 52%);
+  /* 52% measured 3.45:1 on the cream page, under the 4.5:1 body bar — and
+     this token carries inactive ToC entries and footer text, which are read
+     rather than glanced at. 44% measures 4.56:1. */
+  --muted-foreground: hsl(45 3% 44%);
 
   --accent: hsl(48 25% 92.2%);
   --accent-foreground: hsl(60 3% 21%);
@@ -70,7 +86,11 @@
      Devin keeps light-mode borders near-invisible (#eff1f5). */
   --border: hsl(48 16% 89%);
   --input: hsl(48 25% 92.2%);
-  --ring: hsl(14.8 63.1% 59.6%);
+  /* The focus indicator is a non-text UI component: WCAG 1.4.11 wants 3:1
+     against what surrounds it, and the shared clay measured 2.97:1 on the
+     cream page — under the bar by a hair, and a focus ring nobody can see is
+     the one indicator that has to be seen. Matches --primary-text. */
+  --ring: hsl(14.8 63.1% 42%);
 
   /* Clean white panel behind transparent-PNG media: brighter than the cream
      page, so framed images read as a raised surface. */
@@ -93,6 +113,11 @@
      separating, so contrast against the near-white foreground stays high. */
   --background: hsl(40 6% 8%);
   --foreground: hsl(60 14% 97%);
+
+  /* Dark's surfaces are what `--primary` was tuned against, so text and fill
+     are the same value here. The alias exists in both themes so a call site
+     never branches on which is active. */
+  --primary-text: var(--primary);
 
   /* Cards & code blocks lift a hair above the page so framed content reads
      as slightly raised — the only place we keep a shade step. */
@@ -1103,10 +1128,14 @@ article a,
 [data-sidebar="menu-button"][data-active="true"] {
   background-color: color-mix(in srgb, var(--primary) 12%, transparent) !important;
   border-color: transparent !important;
-  color: var(--primary) !important;
+  /* Text and glyph on the tint use --primary-text: on light's cream the fill
+     value measured 2.62:1 against this very chip. The BACKGROUND above stays
+     --primary, because a fill and legible text on it want opposite
+     lightness. */
+  color: var(--primary-text) !important;
 }
 [data-sidebar="menu-button"][data-active="true"] svg {
-  color: var(--primary);
+  color: var(--primary-text);
 }
 /* Idle leaf: muted icon glyphs (Devin pattern — icons recede until hovered).
    Opacity dials them ~25% softer than the muted text color, so the eye
@@ -1191,9 +1220,9 @@ article a,
 }
 .mewbo-toc__link:hover { color: var(--foreground); }
 .mewbo-toc__link[data-active="true"] {
-  color: var(--primary);
+  color: var(--primary-text);
   font-weight: 500;
-  box-shadow: inset 2px 0 0 var(--primary);
+  box-shadow: inset 2px 0 0 var(--primary-text);
 }
 /* H3s nest visually below their H2 parent: text indents further while the
    rail stays flush, so the parent/child relationship reads structurally. */
@@ -1368,7 +1397,7 @@ article a,
   flex-shrink: 0;
 }
 .ms-header-tabs__icon svg { width: 0.9375rem; height: 0.9375rem; }
-.ms-header-tabs__item[aria-current="page"] { color: var(--primary); }
+.ms-header-tabs__item[aria-current="page"] { color: var(--primary-text); }
 /* The underline hugs the rail's bottom edge (items stretch full height),
    inset to the item's padding box so it underlines icon + label only. */
 .ms-header-tabs__item[aria-current="page"]::after {
@@ -2838,4 +2867,13 @@ body:not(.ms-has-header-tabs) .mewbo-header {
   box-shadow:
     0 4px 8px -4px rgb(0 0 0 / 0.55),
     0 12px 24px -12px rgb(0 0 0 / 0.45);
+}
+
+/* Prose links take the text-tuned clay. `article a` resolves to `text-primary`
+   in tailwind/article.css, which is the FILL value; on light's cream page that
+   measured 2.69:1, well under the 4.5:1 a link has to clear. Dark is
+   unchanged, where --primary-text aliases --primary. */
+article a,
+.md-content a {
+  color: var(--primary-text);
 }

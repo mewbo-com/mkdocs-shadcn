@@ -220,8 +220,16 @@ def test_header_tabs_rail_renders(page: Page, local_deployment: str):
     Guards the optional second header row: the configured labels render in
     order, exactly one item carries aria-current="page" (the build-time
     Jinja resolution in templates/header_tabs.html), and the active item's
-    computed color equals the theme accent (--primary) — i.e. the .ms-*
-    kit in mewbo.css actually applies.
+    computed color equals the theme accent (--primary-text) — i.e. the .ms-*
+
+    This asserted `--primary` until light-mode contrast was measured: the fill
+    value lands at 2.97:1 on the cream rail, under the 3:1 floor for a
+    non-text indicator. The active tab is still the clay accent, now via the
+    text-tuned variant. In dark the two are the same value, so this assertion
+    is unchanged there.
+
+    The point of the check is that the .ms-* kit in mewbo.css actually
+    applies.
     """
     page.goto(BASE + "/", wait_until="networkidle")
 
@@ -242,7 +250,7 @@ def test_header_tabs_rail_renders(page: Page, local_deployment: str):
     got, expected = page.evaluate(
         """el => {
             const probe = document.createElement('div');
-            probe.style.color = 'var(--primary)';
+            probe.style.color = 'var(--primary-text)';
             document.body.appendChild(probe);
             const expected = getComputedStyle(probe).color;
             probe.remove();
@@ -251,7 +259,7 @@ def test_header_tabs_rail_renders(page: Page, local_deployment: str):
         active.element_handle(),
     )
     assert got == expected, (
-        f"active tab color {got!r} != resolved --primary {expected!r}"
+        f"active tab color {got!r} != resolved --primary-text {expected!r}"
     )
 
 

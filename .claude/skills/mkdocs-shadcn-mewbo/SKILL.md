@@ -231,6 +231,23 @@ Every key below sits under `theme:` in `mkdocs.yml`. Defaults shown.
 | `header_tabs` | `null` | Header tab rail; each entry takes `label`, `icon`, `url`, optional `section` and `match:` prefixes |
 | `code_refs` | `null` | Enables `repo:` / `endpoint:` badges |
 
+## Accent colour: fill vs text
+
+The theme carries two clay tokens, and the difference is load-bearing:
+
+- `--primary` is a **fill** — button backgrounds, tint washes, indicators.
+- `--primary-text` is the same hue **re-tuned to be read as text** on this
+  theme's surfaces, and is what links, active navigation entries, the focus
+  ring and the tab underline use.
+
+In dark they are the same value; in light `--primary-text` is materially
+darker. A single token cannot serve both, because a fill and legible text on
+that fill pull lightness in opposite directions — using `--primary` for text
+measured 2.6-3.0:1 on the light page, under the 4.5:1 bar.
+
+If you add your own accent-coloured text in `extra_css`, reach for
+`var(--primary-text)`. Use `var(--primary)` only for something you fill.
+
 ## How this fork differs from mkdocs-material
 
 Authors coming from Material reach for features that are **not here**, because
