@@ -26,7 +26,7 @@ class KatexMixin(Mixin):
         if "pymdownx.arithmatex" in config.markdown_extensions:
             self.katex_mixin_activated = True
             self.katex_mixin_use_links = (
-                config.theme.get("katex_options", {}).get(
+                (config.theme.get("katex_options") or {}).get(
                     "trust", None
                 )  # trust could be boolean or function
                 is not None

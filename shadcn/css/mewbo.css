@@ -2663,3 +2663,104 @@ div:has(> #toc) {
   -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 1.5rem), transparent 100%);
   mask-image: linear-gradient(to bottom, #000 calc(100% - 1.5rem), transparent 100%);
 }
+
+/* ─────────────────────────────────────────────────────────────────────────
+   Header chrome: give the controls a surface, and the tab rail its own plane
+
+   The search pill and the Ask AI button both sat on `--background` behind a
+   single hairline — the same colour as the header they are in, so they read
+   as outlines rather than as controls. Filling them one step off the header
+   is what makes them look pressable, and it is also what tells a reader the
+   search pill is a FIELD rather than a label.
+
+   The tab rail sits between the header and the page and previously shared a
+   surface with both, so the three planes read as one. It now takes a deeper
+   fill of its own plus a short shadow beneath it. The shadow is bottom-only
+   and the rail is not a stacking context above the page content, so it
+   cannot bleed sideways or over the sidebar the way the old header shadow
+   did (removed in v1.5.0 for exactly that reason).
+   ───────────────────────────────────────────────────────────────────────── */
+
+/* ── Search pill ─────────────────────────────────────────────────────── */
+
+.mewbo-nav-search-pill {
+  background: color-mix(in srgb, var(--muted) 70%, var(--background));
+  border-color: color-mix(in srgb, var(--border) 100%, transparent);
+  color: var(--foreground);
+  /* A hairline of inset light on top reads as a recessed field rather than a
+     raised button, which is the correct affordance for something you type in. */
+  box-shadow:
+    inset 0 1px 0 0 color-mix(in srgb, var(--background) 60%, transparent),
+    0 1px 2px -1px rgb(0 0 0 / 0.06);
+  transition: background 0.15s ease, border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.mewbo-nav-search-pill:hover {
+  background: color-mix(in srgb, var(--muted) 100%, transparent);
+  border-color: color-mix(in srgb, var(--muted-foreground) 40%, transparent);
+}
+
+.mewbo-nav-search-pill svg {
+  opacity: 0.8;
+}
+
+/* The shortcut hint is machine text on a filled field: lift it off the fill
+   so it stays legible now that the field itself is no longer transparent. */
+/* The shortcut hint is machine text on a filled field: lift it off the fill
+   so it stays legible now that the field itself is no longer transparent. */
+.mewbo-nav-search-pill .mewbo-kbd,
+.mewbo-nav-search-pill kbd {
+  background: color-mix(in srgb, var(--background) 88%, transparent);
+  border: 1px solid color-mix(in srgb, var(--border) 90%, transparent);
+  color: var(--muted-foreground);
+}
+
+/* ── Ask AI button ───────────────────────────────────────────────────── */
+
+.mewbo-nav-ask-ai-btn {
+  /* The primary action in the header, so it carries a tint of the accent
+     rather than another neutral outline. Kept low enough that it reads as
+     emphasis, not as a call to action competing with the page. */
+  background: color-mix(in srgb, var(--primary) 10%, var(--background));
+  border-color: color-mix(in srgb, var(--primary) 35%, var(--border));
+  color: var(--foreground);
+  box-shadow:
+    inset 0 1px 0 0 color-mix(in srgb, var(--background) 55%, transparent),
+    0 1px 2px -1px rgb(0 0 0 / 0.08);
+}
+
+.mewbo-nav-ask-ai-btn:hover {
+  background: color-mix(in srgb, var(--primary) 18%, var(--background));
+  border-color: color-mix(in srgb, var(--primary) 55%, var(--border));
+  color: var(--foreground);
+}
+
+.mewbo-nav-ask-ai-btn svg {
+  opacity: 1;
+  color: var(--primary);
+}
+
+/* ── Tab rail: its own plane between header and page ─────────────────── */
+
+.ms-header-tabs {
+  background: color-mix(in srgb, var(--muted) 55%, var(--background));
+  border-top: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 90%, transparent);
+  /* Bottom-only, short, and no blur spread sideways — depth against the page
+     beneath it without feathering onto the sidebar. */
+  box-shadow: 0 2px 4px -2px rgb(0 0 0 / 0.10);
+  position: relative;
+  z-index: 1;
+}
+
+.dark .ms-header-tabs {
+  background: color-mix(in srgb, var(--muted) 40%, var(--background));
+  box-shadow: 0 2px 6px -2px rgb(0 0 0 / 0.45);
+}
+
+/* The active tab deliberately stays on `--primary` — the clay accent IS the
+   active marker here, and `test_header_tabs_rail_renders` pins it. Raising it
+   to full foreground on the new deeper plane looked reasonable and was wrong:
+   it removes the only colour cue distinguishing the active tab from its
+   neighbours, leaving just the underline. */

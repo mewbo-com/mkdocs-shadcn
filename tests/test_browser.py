@@ -627,3 +627,49 @@ def test_videos_prepared_for_viewport_autoplay(page: Page, local_deployment: str
     assert opted and not opted[0]["muted"], (
         "data-no-autoplay must leave a clip entirely alone, including its audio"
     )
+
+
+def test_keyboard_keys_and_header_chrome(page: Page, local_deployment: str):
+    """Shortcuts render as <kbd>, and the header's three planes stay distinct.
+
+    `tailwind/kbd.css` styled <kbd> long before anything emitted it, so
+    authors wrote shortcuts as prose or inline code. `pymdownx.keys` is what
+    produces the markup.
+
+    The header, the tab rail and the page previously shared one surface, so
+    they read as a single plane; the rail must sit on its own.
+    """
+    page.goto(BASE + "/keyboard/", wait_until="networkidle")
+
+    keys = page.locator("article kbd")
+    assert keys.count() > 0, "no <kbd> — check pymdownx.keys is enabled"
+    assert page.locator("article kbd.key-command").count() > 0, (
+        "no macOS Command key — cross-platform modifiers must render"
+    )
+    assert page.locator("article kbd.key-windows").count() > 0, (
+        "no Windows key — cross-platform modifiers must render"
+    )
+
+    planes = page.evaluate(
+        """() => {
+             const cs = e => e ? getComputedStyle(e) : null;
+             const hdr = document.querySelector('.mewbo-header');
+             const rail = document.querySelector('.ms-header-tabs');
+             const pill = document.querySelector('.mewbo-nav-search-pill');
+             if (!hdr || !rail || !pill) return null;
+             return {header: cs(hdr).backgroundColor,
+                     rail: cs(rail).backgroundColor,
+                     railShadow: cs(rail).boxShadow,
+                     pill: cs(pill).backgroundColor,
+                     pillShadow: cs(pill).boxShadow};
+           }"""
+    )
+    assert planes, "header, rail or search pill missing"
+    assert planes["rail"] != planes["header"], (
+        "the tab rail shares the header's surface, so the two read as one plane"
+    )
+    assert planes["railShadow"] != "none", "the rail has no depth against the page"
+    assert planes["pill"] != planes["header"], (
+        "the search pill is not filled, so it reads as an outline not a field"
+    )
+    assert planes["pillShadow"] != "none"

@@ -1458,12 +1458,14 @@ wheels = [
 
 [[package]]
 name = "mkdocs-shadcn-mewbo"
-version = "1.9.1"
+version = "1.10.0"
 source = { editable = "." }
 dependencies = [
     { name = "bottle" },
     { name = "gitpython" },
     { name = "mkdocs" },
+    { name = "pygments", version = "2.19.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.9'" },
+    { name = "pygments", version = "2.20.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.9'" },
     { name = "pymdown-extensions", version = "10.15", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.9'" },
     { name = "pymdown-extensions", version = "10.21.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.9'" },
 ]
@@ -1517,6 +1519,7 @@ requires-dist = [
     { name = "gitpython", specifier = ">=3.1.45" },
     { name = "mkdocs", specifier = ">=1.6.1" },
     { name = "properdocs", marker = "python_full_version >= '3.9' and extra == 'properdocs'", specifier = ">=1.6.7" },
+    { name = "pygments", specifier = ">=2.18.0" },
     { name = "pymdown-extensions", specifier = ">=10.14.3" },
 ]
 provides-extras = ["properdocs"]

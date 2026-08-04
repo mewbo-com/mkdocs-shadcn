@@ -4,7 +4,7 @@ name = "mkdocs-shadcn-mewbo"
 # (site_name-driven identity, alternate_style tabs, carousel feature, ms-shot/
 # ms-devices primitives, compact sidebar, table first-column fix). 1.2.1 tunes
 # the sidebar spacing/typography.
-version = "1.9.1"
+version = "1.10.0"
 description = "Mewbo's brand-fork of mkdocs-shadcn — same theme entrypoint, plus Ask AI panel, three-zone header, sidebar nav-icons, prefetch speculation, full SEO, and the cream/clay Mewbo palette as default."
 authors = [
     { name = "mewbo-com" },
@@ -18,6 +18,11 @@ dependencies = [
     "mkdocs>=1.6.1",
     "bottle>=0.13.2",
     "pymdown-extensions>=10.14.3",
+    # Declared because the theme CONFIGURES `use_pygments: true` and ships
+    # per-style Pygments stylesheets. Without it a consumer's code blocks
+    # silently lose highlighting, fence titles and line numbers — pymdownx
+    # degrades rather than erroring, so nothing points at the missing package.
+    "pygments>=2.18.0",
     "gitpython>=3.1.45",
 ]
 
