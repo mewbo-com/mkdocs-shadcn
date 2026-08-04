@@ -614,34 +614,117 @@ dialog#search-dialog > div {
    themes inherit automatically.
    ───────────────────────────────────────────────────────────────────────── */
 
-/* Hero */
-.ms-hero {
+/* ── Page masthead ─────────────────────────────────────────────────────────
+   Every page opens as a pair. The H1 is a small accent label naming where you
+   are, and the first H2 is the large visual title saying what the page claims.
+   They are set tight against each other so the pair reads as one block.
+
+   Every selector in this section is prefixed with `article` on purpose. The
+   prose rules in tailwind/article.css are unlayered and reach (0,1,2), as in
+   `article p:not(:first-child)` and `article .typography h3`. A bare
+   `.ms-hero__lede { margin: 0 }` reaches only (0,1,0), so it loses and the
+   block silently inherits body copy rhythm and body copy heading sizes. That
+   is a defect with no symptom in the markup, the build or the tests. Matching
+   the prose rules' reach is the whole reason these rules apply at all.
+   ────────────────────────────────────────────────────────────────────────── */
+article #page-header h1 {
+  font-size: 0.85rem;
+  line-height: 1.4;
+  font-weight: 600;
+  letter-spacing: 0.005em;
+  color: var(--primary-text, var(--primary, #c46b48));
+  word-break: normal;
+}
+
+/* The copy and pager buttons sit in the same row as the H1 and are 38px tall.
+   Now that the H1 is a 19px label they, not the title, set the masthead's
+   height, which held the subtitle roughly 30px below its own label however far
+   the block above was pulled up. Taking the cluster out of flow puts the row's
+   height back under the label's control. The reserved padding keeps a long H1
+   from running under the buttons. */
+article #page-header {
+  position: relative;
+  align-items: center;
+}
+article #page-header > div:last-child {
+  position: absolute;
+  top: 0;
+  right: 0;
+}
+article #page-header h1 {
+  padding-right: 7rem;
+}
+
+/* The masthead is one unit, so the article's 2rem inter-block gap must not
+   land inside it. Cancelled only when a subtitle H2 actually opens the page,
+   which leaves every other page's spacing untouched. */
+article .typography:has(> h2:first-child) {
+  margin-top: -2.25rem;
+}
+article .typography > h2:first-child {
+  margin-top: 0;
+  font-size: clamp(1.9rem, 3.2vw, 2.4rem);
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  font-weight: 700;
+  /* The button cluster is out of flow and hangs past the label into this
+     heading's first line, so the title keeps clear of it. Only the subtitle
+     needs this. Every later H2 starts well below the cluster. */
+  padding-right: 7rem;
+}
+
+/* Hero. The elaborate variant of the same masthead, opted into by the class. */
+article .ms-hero {
   display: flex;
   flex-direction: column;
   gap: 1rem;
-  padding: 1.5rem 0 0.5rem;
+  padding: 0 0 0.5rem;
 }
+
+/* A hero states the page's own title, so the generated one duplicates it. The
+   button cluster beside it stays. */
+article:has(.ms-hero) #page-header h1 {
+  display: none;
+}
+
+/* One owner for the hero's vertical rhythm, and it is the flex gap above. */
+article .ms-hero > :is(p, div, section, ul, ol, h1, h2, h3, h4, h5, h6) {
+  margin: 0;
+}
+
 .ms-hero__eyebrow {
-  /* Primary-tinted breadcrumb-style label — matches the active-state treatment
+  /* Primary-tinted breadcrumb-style label, matching the active-state treatment
      used by the left sidebar and right TOC, tying the three rails together. */
-  font-size: 0.82rem;
-  font-weight: 500;
-  letter-spacing: -0.005em;
-  color: var(--primary, #c46b48);
-  margin: 0;
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.005em;
+  color: var(--primary-text, var(--primary, #c46b48));
 }
-.ms-hero__title {
-  font-size: clamp(1.8rem, 3.4vw, 2.4rem);
+
+/* Markdown cannot put a class on a heading, so any heading inside the hero is
+   the hero title. `.ms-hero__title` stays valid for heroes written as HTML. */
+article .ms-hero :is(h1, h2, h3, h4, h5, h6),
+article .ms-hero .ms-hero__title {
+  font-size: clamp(1.9rem, 3.2vw, 2.4rem);
   line-height: 1.15;
+  letter-spacing: -0.02em;
   font-weight: 700;
-  margin: 0;
 }
-.ms-hero__lede {
+
+article .ms-hero__lede {
   font-size: 1.05rem;
   color: var(--muted-foreground, currentColor);
   max-width: 60ch;
-  margin: 0;
 }
+
+/* Section heading weight. Geist is a variable face across 100 to 900, so the
+   intermediate steps below render as asked rather than snapping to 700. The
+   base scale set H2 lighter than H3, which left a section heading reading as
+   less structural than the subsection under it. Each level now sits one short
+   step above body copy and above the level below it. */
+article .typography h2 { font-weight: 600; }
+article .typography h3 { font-weight: 650; }
+article .typography h4 { font-weight: 650; }
 .ms-cta-row {
   display: flex;
   flex-wrap: wrap;
@@ -826,6 +909,17 @@ a.ms-card:hover {
 article a,
 .md-content a {
   text-decoration: underline dotted;
+  /* Accent the rule itself, softened against the link's own colour. At full
+     strength a paragraph carrying several links reads as a block of colour
+     rather than as text, and the underline competes with the word it marks. */
+  text-decoration-color: color-mix(in srgb, currentColor 45%, transparent);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.2em;
+}
+/* Hover is where the underline should assert itself, so it goes to full accent. */
+article a:hover,
+.md-content a:hover {
+  text-decoration-color: currentColor;
 }
 
 /* Lifecycle strip — numbered horizontal journey */
@@ -1240,6 +1334,10 @@ article a,
    alone. The old drop shadow (esp. the heavy 0.20 dark variant) feathered
    down over the left sidebar's top, reading as a smudge; it's gone. */
 .mewbo-header {
+  /* One height for the two labelled header controls (search pill, Ask AI).
+     Declared here rather than at :root because it describes the header's own
+     control scale, and both controls are descendants. */
+  --mewbo-nav-control-h: 2rem;
   border-bottom: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
   box-shadow: none;
 }
@@ -1252,11 +1350,15 @@ article a,
 .mewbo-brand {
   align-items: center; gap: 0.5rem;
   height: 2.25rem; padding: 0 0.25rem;
-  color: var(--foreground); text-decoration: none;
+  /* The wordmark sits back at --muted-foreground so the glyph carries the
+     brand and the header chrome stays quiet; full --foreground read as pure
+     white in dark mode. The glyph's SVG paints its own fills, not
+     currentColor, so it is unaffected. Warms to --foreground on hover. */
+  color: var(--muted-foreground); text-decoration: none;
   border-radius: 0.5rem;
-  transition: background 0.15s;
+  transition: background 0.15s, color 0.15s;
 }
-.mewbo-brand:hover { background: var(--accent); }
+.mewbo-brand:hover { background: var(--accent); color: var(--foreground); }
 .mewbo-brand__glyph {
   display: inline-flex; align-items: center; justify-content: center;
   width: 1.25rem; height: 1.25rem; flex-shrink: 0;
@@ -1316,11 +1418,13 @@ article a,
 .dark .mewbo-theme-toggle__sun  { transform: rotate(90deg) scale(0); opacity: 0; }
 .dark .mewbo-theme-toggle__moon { transform: rotate(0)      scale(1); opacity: 1; }
 
-/* Search pill (centered, lg+). Same h-9 token as every neighbor. */
+/* Search pill (centered, lg+). Shares --mewbo-nav-control-h with the Ask AI
+   button so the two read as one pair of controls; a touch shorter than the
+   h-9 icon buttons beside them, which are square and carry no label. */
 .mewbo-nav-search-pill {
   display: inline-flex; align-items: center; gap: 0.5rem;
   width: 100%; max-width: 22rem;
-  height: 2.25rem; padding: 0 0.75rem;
+  height: var(--mewbo-nav-control-h); padding: 0 0.75rem;
   border: 1px solid var(--border); border-radius: 0.5rem;
   background: var(--background); color: var(--muted-foreground);
   font-size: 0.875rem; cursor: pointer;
@@ -1352,7 +1456,7 @@ article a,
    foreground on hover. */
 .mewbo-nav-ask-ai-btn {
   display: inline-flex; align-items: center; gap: 0.4rem;
-  height: 2.25rem; padding: 0 0.85rem;
+  height: var(--mewbo-nav-control-h); padding: 0 0.85rem;
   border: 1px solid var(--border); border-radius: 0.5rem;
   background: var(--background); color: var(--muted-foreground);
   font-size: 0.875rem; font-weight: 500; white-space: nowrap; cursor: pointer;
@@ -1413,6 +1517,46 @@ article a,
    (it sizes itself with h-(--header-height), which now names the TOTAL). */
 body.ms-has-header-tabs { --header-height: calc(var(--spacing) * 14 + 2.5rem); }
 body.ms-has-header-tabs .mewbo-header__row { height: calc(var(--spacing) * 14); }
+
+/* ─── One left rail: brand · tab bar · sidebar nav ─────────────────────────
+   Three navigation surfaces stack down the left of the page and each drew its
+   gutter from a different owner, so their labels began at three different x
+   positions (28px / 34.4px / 64px at 1440w — the sidebar visibly outdented):
+
+     · the header row and the tab rail share a `.container-wrapper` padded
+       `px-6` (24px), then each widget adds its OWN inner padding — 0.25rem on
+       the brand, 0.65rem on a tab item;
+     · the page body sits in a SECOND `.container-wrapper` padded `px-2` (8px),
+       so the sidebar column starts 16px left of the header's content edge;
+     · the sidebar's content column is `mx-auto` around a fixed
+       `--sidebar-menu-width`, centring the rail inside a wider column and
+       adding ~32px that nothing else shares. That centring is what dominates
+       the misalignment, and it is the only offset here that is decorative.
+
+   The line is the header container's 24px gutter. Each widget cancels its OWN
+   declared padding against it, so the LABEL lands on the line and only the
+   hover/active background bleeds outward — the shadcn idiom. Every offset
+   below is the negation of a padding declared elsewhere in this file or in
+   the template, not a measured constant. */
+.mewbo-brand { margin-inline-start: -0.25rem; }          /* .mewbo-brand padding */
+.ms-header-tabs__rail { margin-inline-start: -0.65rem; } /* .ms-header-tabs__item padding */
+/* Below lg the brand is hidden and the menu trigger is what the rail lines up
+   against, so it takes the same treatment. */
+.mewbo-menu-btn { margin-inline-start: -0.5rem; }        /* .mewbo-menu-btn padding */
+
+/* Dropping the centring is enough on the sidebar side, because the column's
+   8px start plus the group's `p-2` plus the menu button's `p-2` already sums
+   to the same 24px. Desktop only: the mobile navigation dialog includes this
+   same markup and owns its own gutter. */
+@media (min-width: 1024px) {
+  [data-sidebar="content"] {
+    margin-inline: 0;
+    padding-inline: 0 0.5rem;
+  }
+  /* The menu button draws a 1px border (transparent until active) that neither
+     the brand nor a tab has; without this its label sits one pixel right. */
+  [data-sidebar="menu-button"] { margin-inline-start: -1px; }
+}
 
 /* ─── Full-bleed app slot (app.html) ───────────────────────────────────────
    `template: app.html` pages render their content into this single <main>:
@@ -2721,7 +2865,11 @@ div:has(> #toc) {
 .mewbo-nav-search-pill {
   background: color-mix(in srgb, var(--muted) 70%, var(--background));
   border-color: color-mix(in srgb, var(--border) 100%, transparent);
-  color: var(--foreground);
+  /* Prompt text, not content: it sits back at --muted-foreground and warms to
+     --foreground on hover (the rule below), the same as an unfocused field's
+     placeholder anywhere else. Full --foreground here read as pure white in
+     dark mode and pulled the eye away from the page. */
+  color: var(--muted-foreground);
   /* A hairline of inset light on top reads as a recessed field rather than a
      raised button, which is the correct affordance for something you type in. */
   box-shadow:
@@ -2759,7 +2907,13 @@ div:has(> #toc) {
      emphasis, not as a call to action competing with the page. */
   background: color-mix(in srgb, var(--primary) 10%, var(--background));
   border-color: color-mix(in srgb, var(--primary) 35%, var(--border));
-  color: var(--foreground);
+  /* The tinted fill and the primary-coloured sparkle already carry the
+     emphasis, so the label rides quiet with the brand and the search
+     placeholder, and warms to --foreground on hover. It is nudged a step
+     darker than they are because it alone sits on the accent tint above
+     rather than on the header, and --muted-foreground measures 4.14:1 there
+     in light mode. The blend reads as the same grey beside the other two. */
+  color: color-mix(in srgb, var(--muted-foreground) 85%, var(--foreground));
   box-shadow:
     inset 0 1px 0 0 color-mix(in srgb, var(--background) 55%, transparent),
     0 1px 2px -1px rgb(0 0 0 / 0.08);

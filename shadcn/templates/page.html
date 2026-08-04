@@ -78,8 +78,21 @@
   </div>
   {# TOC #}
   <script>
-    document.querySelectorAll('article h2, article h3').forEach((header) => {
-      toc.observer.observe(header);
+    // toc.html omits the heading that names the page itself — the masthead
+    // subtitle, or the hero's own heading. Observing a heading the rail has no
+    // link for would still make it the "topmost visible heading", and
+    // setActiveTocLink would find nothing to match and blank the rail. Reading
+    // the skip off the rail keeps this in step with whatever toc.html drops.
+    // Deferred because main.html emits the rail after this article, so #toc
+    // does not exist yet while this script is parsed.
+    document.addEventListener('DOMContentLoaded', () => {
+      const tocTargets = new Set(
+        [...document.querySelectorAll('#toc a')].map((a) => a.getAttribute('href')),
+      );
+      document.querySelectorAll('article h2, article h3').forEach((header) => {
+        if (!tocTargets.has('#' + header.id)) return;
+        toc.observer.observe(header);
+      });
     });
   </script>
 </article>

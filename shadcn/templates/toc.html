@@ -2,18 +2,33 @@
    (idle border, primary on the active heading) and proper two-level
    hierarchy. callbacks.js (`setActiveTocLink`) toggles data-active on
    links by matching `href` — class names are free, but `href` and the
-   `data-active` attribute must stay. #}
+   `data-active` attribute must stay.
+
+   The masthead makes a page's opening H2 its visual title (mewbo.css,
+   `article .typography > h2:first-child`), so that heading names the page
+   rather than a section of it and is dropped here. The test is the same one
+   the CSS applies — the rendered body opens with an H2 — so a page whose
+   first heading is a real section keeps it. Nothing is emitted at all when
+   no entries survive, rather than an "On This Page" heading over nothing.
+
+   A .ms-hero page is the same case in its other shape. It states its title as
+   a heading inside the hero at whatever level the author wrote, and that
+   heading is likewise the page's name rather than one of its sections. #}
+{% set roottoc = (page.toc | list) if page else [] %}
+{% set body = page.content.lstrip() if page and page.content else "" %}
+{% set has_subtitle = body.startswith('<h2') or '<section class="ms-hero"' in body %}
+{% set entries = ((roottoc[1:] if has_subtitle else roottoc)
+                  if roottoc | length > 1
+                  else (roottoc[0].children | list if roottoc else [])) %}
+{% if entries %}
 <div id="toc" view-transition-name="toc" class="no-scrollbar overflow-y-auto px-8">
     <div class="mewbo-toc">
         <p class="mewbo-toc__heading">
             <span class="mewbo-toc__heading-glyph">{{ "lucide:list" | iconify(height="14px") | safe }}</span>
             {{ _("On This Page") }}
         </p>
-        {% if page and page.toc %}
-        {% with roottoc = page.toc | list %}
-        {% with toc = roottoc if roottoc | length > 1 else roottoc[0].children %}
         <div class="mewbo-toc__list">
-            {% for h2 in toc %}
+            {% for h2 in entries %}
             <a href="{{ h2.url }}"
                 class="mewbo-toc__link"
                 data-active="false" data-depth="2"
@@ -32,9 +47,7 @@
             {% endif %}
             {% endfor %}
         </div>
-        {% endwith %}
-        {% endwith %}
-        {% endif %}
     </div>
     <div class="h-12"></div>
 </div>
+{% endif %}

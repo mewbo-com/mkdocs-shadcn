@@ -769,3 +769,64 @@ def test_diagram_fit_is_stable_across_opens(page: Page, local_deployment: str):
     assert abs(after_reset - first) < 0.01, (
         f"reset went to {after_reset}, not the fit {first}"
     )
+
+
+def test_page_masthead_pairs_label_and_title(page: Page, local_deployment: str):
+    """A page's H1 renders as a small accent label directly above its first H2.
+
+    This is the regression guard for a defect that was invisible to every
+    other check. Each `.ms-hero__*` rule was a single class selector at
+    specificity (0,1,0), sitting unlayered beside the theme's own prose rules
+    `article p:not(:first-child)` and `article .typography h3` at (0,1,2). The
+    prose rules won, so the block's `margin: 0` never applied and its heading
+    fell back to body copy sizing. The markup was valid, the build was clean
+    and the suite was green while the page rendered its title smaller than the
+    generic page header above it, separated by 40px of body copy spacing.
+
+    So the assertions below are all comparative rather than absolute. They
+    check the relationship the design depends on, not the values that happen
+    to implement it today.
+    """
+    page.goto(BASE + "/masthead/", wait_until="networkidle")
+
+    box = page.evaluate(
+        """() => {
+             const h1 = document.querySelector('#page-header h1');
+             const h2 = document.querySelector('.typography > h2:first-child');
+             const sec = [...document.querySelectorAll('.typography > h2')][1];
+             const px = e => parseFloat(getComputedStyle(e).fontSize);
+             return {
+               h1: px(h1),
+               h1Color: getComputedStyle(h1).color,
+               accent: getComputedStyle(document.documentElement)
+                         .getPropertyValue('--primary-text').trim(),
+               title: px(h2),
+               section: px(sec),
+               gap: h2.getBoundingClientRect().top
+                    - h1.getBoundingClientRect().bottom,
+               body: getComputedStyle(
+                       document.querySelector('.typography p')).color,
+             };
+           }"""
+    )
+
+    # The title has to outrank the label it sits under, and the label has to
+    # read as a label rather than as a heading.
+    assert box["title"] > box["h1"] * 2, (
+        f"title {box['title']}px is not decisively larger than the "
+        f"{box['h1']}px label — the prose rules are winning again"
+    )
+    # A later H2 is a section, not a title, so it must stay smaller.
+    assert box["section"] < box["title"], (
+        f"section H2 {box['section']}px is not smaller than the title "
+        f"{box['title']}px — the first-child rule is not scoped"
+    )
+    # The pair is one block. Body copy spacing between them is the defect.
+    assert box["gap"] < 12, (
+        f"{box['gap']}px between label and title — they are not being "
+        "rendered as one masthead"
+    )
+    # The label carries the accent, so it must not be the body text colour.
+    assert box["h1Color"] != box["body"], (
+        "the label is still rendering in the body text colour, not the accent"
+    )
