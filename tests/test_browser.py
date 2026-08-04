@@ -695,3 +695,69 @@ def test_sidebar_renders_once(page: Page, local_deployment: str):
         f"{counts['content']} sidebar content blocks — the nav is duplicated"
     )
     assert counts["slot"] == 1, f"{counts['slot']} sidebar slots"
+
+
+def test_diagram_fit_is_stable_across_opens(page: Page, local_deployment: str):
+    """Opening a diagram must always fit it the same way.
+
+    The fit divided the painted rect by `viewer.scale` to recover the natural
+    size. That assumes the transform on screen is the one that variable
+    names, and on open the wrapper still carried the PREVIOUS diagram's
+    scale — so the fit came out as `correct / previous` and COMPOUNDED:
+    measured 3.50, then 0.49, then clamped at the 6x ceiling, then 0.28.
+
+    Reset restores the stored fit, so once that value was wrong every reset
+    was wrong with it. Natural size now comes from the SVG's own declared
+    width and viewBox, which no transform can distort.
+    """
+    page.goto(BASE + "/mermaid/", wait_until="networkidle")
+    page.wait_for_timeout(2000)
+
+    def open_and_scale(index: int) -> float:
+        page.evaluate(
+            f"document.querySelectorAll('figure.ms-mermaid')[{index}].click()"
+        )
+        page.wait_for_timeout(600)
+        scale = page.evaluate(
+            """() => {
+                 const inner = document.querySelector(
+                   'dialog.ms-diagram-viewer .ms-diagram-viewer__inner');
+                 const m = /scale\\(([\\d.]+)\\)/.exec(inner.style.transform || '');
+                 return m ? parseFloat(m[1]) : 0;
+               }"""
+        )
+        page.keyboard.press("Escape")
+        page.wait_for_timeout(250)
+        return scale
+
+    first = open_and_scale(0)
+    assert first > 0, "diagram did not open, or no transform was applied"
+
+    # Alternating opens are what surfaced the compounding.
+    open_and_scale(1)
+    again = open_and_scale(0)
+    assert abs(again - first) < 0.01, (
+        f"same diagram fitted at {first} then {again} — the fit depends on "
+        "whatever was opened before it"
+    )
+
+    # Reset must return to that same fit, not to a drifted one.
+    page.evaluate("document.querySelectorAll('figure.ms-mermaid')[0].click()")
+    page.wait_for_timeout(600)
+    for _ in range(4):
+        page.evaluate("document.querySelector('[data-act=in]').click()")
+    page.wait_for_timeout(250)
+    page.evaluate("document.querySelector('[data-act=reset]').click()")
+    page.wait_for_timeout(350)
+    after_reset = page.evaluate(
+        """() => {
+             const inner = document.querySelector(
+               'dialog.ms-diagram-viewer .ms-diagram-viewer__inner');
+             const m = /scale\\(([\\d.]+)\\)/.exec(inner.style.transform || '');
+             return m ? parseFloat(m[1]) : 0;
+           }"""
+    )
+    page.keyboard.press("Escape")
+    assert abs(after_reset - first) < 0.01, (
+        f"reset went to {after_reset}, not the fit {first}"
+    )

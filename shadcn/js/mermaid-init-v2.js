@@ -219,6 +219,28 @@ const EXPAND_ICON =
 const LEGIBLE_SCALE = 0.35;
 
 /**
+ * The diagram's natural size in CSS pixels, independent of any transform.
+ *
+ * `useMaxWidth` makes mermaid write the natural width into `max-width`, and
+ * the viewBox carries the aspect ratio, so the size is knowable without
+ * measuring a painted box. That matters because the painted box sits inside a
+ * transformed, TRANSITIONED wrapper: measuring it means either dividing by a
+ * scale that may not be the one on screen, or switching the transform off and
+ * reading back before the transition has applied. Both were tried; both were
+ * wrong. One derivation, used by the inline card and by the viewer.
+ */
+const naturalSize = (svg) => {
+  const box = svg.viewBox && svg.viewBox.baseVal;
+  const declared = parseFloat(svg.style.maxWidth || "");
+  if (box && box.width > 0 && box.height > 0) {
+    const w = declared || box.width;
+    return { w, h: box.height * (w / box.width) };
+  }
+  const rect = svg.getBoundingClientRect();
+  return { w: declared || rect.width, h: rect.height };
+};
+
+/**
  * Tag a figure as too wide or too tall to show whole, so CSS can switch it
  * from "shrink to fit" to "scroll at a readable size" and reveal the expand
  * affordance permanently rather than only on hover.
@@ -229,11 +251,7 @@ const classifyOverflow = (figure) => {
   if (!stage || !svg) return;
 
   const available = stage.clientWidth;
-  // mermaid writes the natural width into `max-width` when useMaxWidth is on;
-  // the viewBox is the fallback for diagram types that do not.
-  const declared = parseFloat(svg.style.maxWidth || "");
-  const viewBox = svg.viewBox && svg.viewBox.baseVal;
-  const naturalW = declared || (viewBox && viewBox.width) || available;
+  const naturalW = naturalSize(svg).w || available;
   if (available > 0 && naturalW / available > 1 / LEGIBLE_SCALE) {
     figure.dataset.wide = "1";
     // `width: auto` cannot recover the natural size: mermaid ships the SVG
@@ -360,18 +378,25 @@ const setScale = (next) => {
 };
 
 /**
- * Scale the diagram so it fills the stage with a comfortable margin. Natural
- * size is measured by dividing the painted rect by the CURRENT scale, so the
- * arithmetic stays in untransformed units whatever the viewer was left at.
+ * Scale the diagram so it fills the stage with a comfortable margin.
+ *
+ * The natural size is measured with the transform switched OFF, rather than
+ * by dividing the painted rect by the current scale. That division looked
+ * equivalent and was not: it assumes the transform on screen matches
+ * `viewer.scale`, and on opening a diagram the wrapper still carries the
+ * PREVIOUS diagram's scale, so the measurement came back inflated by it and
+ * the fit came out as `correct / previous`. Opening two diagrams alternately
+ * compounded that every time — 3.50, then 0.49, then clamped at 6.
+ *
+ * Since this code owns the transform, the honest measurement is simply to
+ * take it off first. No arithmetic, and nothing to keep in sync.
  */
 const recomputeFit = () => {
   if (!viewer.stage || !viewer.inner) return;
   const svg = viewer.inner.querySelector("svg");
   if (!svg) return;
   const stageRect = viewer.stage.getBoundingClientRect();
-  const svgRect = svg.getBoundingClientRect();
-  const naturalW = svgRect.width / viewer.scale;
-  const naturalH = svgRect.height / viewer.scale;
+  const { w: naturalW, h: naturalH } = naturalSize(svg);
   if (naturalW <= 0 || naturalH <= 0) return;
   const fit = Math.min(
     (stageRect.width - FIT_MARGIN) / naturalW,
@@ -483,6 +508,14 @@ const openViewer = (figure) => {
 
   const paint = (svg) => {
     viewer.inner.innerHTML = svg;
+    // Pin the SVG to its natural width. Mermaid ships `width="100%"`, and the
+    // viewer clears `max-width`, so inside the shrink-to-fit wrapper the
+    // percentage has nothing to resolve against and collapses to a default a
+    // few hundred pixels wide. Painted size then disagrees with natural size
+    // and the fit is computed against a diagram that is not the one on
+    // screen. The inline card pins the width for the same reason.
+    const el = viewer.inner.querySelector("svg");
+    if (el) el.style.width = `${naturalSize(el).w}px`;
     // Fit after the browser has laid the SVG out, otherwise the measured
     // rect is zero and the diagram opens at an arbitrary scale.
     requestAnimationFrame(recomputeFit);
