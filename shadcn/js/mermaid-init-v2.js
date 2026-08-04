@@ -105,31 +105,36 @@ const mermaidConfig = () => {
     theme: "base",
     themeVariables: {
       darkMode: dark,
-      background: tokenColor("--background", dark ? "#161513" : "#ffffff"),
-      primaryColor: tokenColor("--card", dark ? "#1e1d1a" : "#ffffff"),
-      primaryTextColor: tokenColor("--foreground", dark ? "#f7f6f3" : "#0a0a0a"),
-      primaryBorderColor: tokenColor("--border", dark ? "#2e2c29" : "#e9e6dd"),
-      lineColor: tokenColor("--muted-foreground", dark ? "#a1a1aa" : "#71717a"),
+      // Every colour below comes from the `--diagram-*` family, NOT from the
+      // chrome tokens. Chrome is tuned to recede; a diagram has to be read.
+      // Pointing `primaryColor` at `--card` is what produced a node filled
+      // with the exact colour of the card behind it. See the "Diagram tokens"
+      // block in mewbo.css for the measured ratios.
+      background: tokenColor("--diagram-surface", dark ? "#121110" : "#f2f0ea"),
+      primaryColor: tokenColor("--diagram-node-bg", dark ? "#26241f" : "#ffffff"),
+      primaryTextColor: tokenColor("--diagram-label", dark ? "#f8f8f6" : "#0a0a0a"),
+      primaryBorderColor: tokenColor("--diagram-node-border", dark ? "#767269" : "#8c8880"),
+      lineColor: tokenColor("--diagram-line", dark ? "#8d8a80" : "#6f6c64"),
       // Left unstated, `base` derives these by rotating the primary hue, so
       // subgraphs and alternating rows come out in colours that appear
       // nowhere else on the site. Point them at real surface tokens instead.
-      secondaryColor: tokenColor("--muted", dark ? "#26241f" : "#f4f2ec"),
-      tertiaryColor: tokenColor("--background", dark ? "#161513" : "#ffffff"),
-      secondaryBorderColor: tokenColor("--border", dark ? "#2e2c29" : "#e9e6dd"),
-      tertiaryBorderColor: tokenColor("--border", dark ? "#2e2c29" : "#e9e6dd"),
-      secondaryTextColor: tokenColor("--foreground", dark ? "#f7f6f3" : "#0a0a0a"),
-      tertiaryTextColor: tokenColor("--foreground", dark ? "#f7f6f3" : "#0a0a0a"),
+      secondaryColor: tokenColor("--diagram-cluster", dark ? "#1c1b18" : "#e7e4db"),
+      tertiaryColor: tokenColor("--diagram-surface", dark ? "#121110" : "#f2f0ea"),
+      secondaryBorderColor: tokenColor("--diagram-node-border", dark ? "#767269" : "#8c8880"),
+      tertiaryBorderColor: tokenColor("--diagram-node-border", dark ? "#767269" : "#8c8880"),
+      secondaryTextColor: tokenColor("--diagram-label", dark ? "#f8f8f6" : "#0a0a0a"),
+      tertiaryTextColor: tokenColor("--diagram-label", dark ? "#f8f8f6" : "#0a0a0a"),
       // Mermaid derives the edge-label chip fill from its OWN palette rather
       // than from `background`, so leaving this unset renders a flowchart
       // branch's yes/no label as grey-on-grey against a dark diagram.
-      edgeLabelBackground: tokenColor("--background", dark ? "#161513" : "#ffffff"),
-      textColor: tokenColor("--foreground", dark ? "#f7f6f3" : "#0a0a0a"),
-      nodeTextColor: tokenColor("--foreground", dark ? "#f7f6f3" : "#0a0a0a"),
-      mainBkg: tokenColor("--card", dark ? "#1e1d1a" : "#ffffff"),
-      nodeBorder: tokenColor("--border", dark ? "#2e2c29" : "#e9e6dd"),
-      clusterBkg: tokenColor("--muted", dark ? "#26241f" : "#f4f2ec"),
-      clusterBorder: tokenColor("--border", dark ? "#2e2c29" : "#e9e6dd"),
-      titleColor: tokenColor("--foreground", dark ? "#f7f6f3" : "#0a0a0a"),
+      edgeLabelBackground: tokenColor("--diagram-surface", dark ? "#121110" : "#f2f0ea"),
+      textColor: tokenColor("--diagram-label", dark ? "#f8f8f6" : "#0a0a0a"),
+      nodeTextColor: tokenColor("--diagram-label", dark ? "#f8f8f6" : "#0a0a0a"),
+      mainBkg: tokenColor("--diagram-node-bg", dark ? "#26241f" : "#ffffff"),
+      nodeBorder: tokenColor("--diagram-node-border", dark ? "#767269" : "#8c8880"),
+      clusterBkg: tokenColor("--diagram-cluster", dark ? "#1c1b18" : "#e7e4db"),
+      clusterBorder: tokenColor("--diagram-node-border", dark ? "#767269" : "#8c8880"),
+      titleColor: tokenColor("--diagram-label", dark ? "#f8f8f6" : "#0a0a0a"),
       fontFamily,
     },
     flowchart: {

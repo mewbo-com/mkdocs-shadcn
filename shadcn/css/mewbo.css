@@ -2179,6 +2179,55 @@ body.theme-default { --footer-height: 320px; }
   --prose-body: color-mix(in oklab, var(--foreground) 82%, var(--muted-foreground));
 }
 
+/* ─────────────────────────────────────────────────────────────────────────
+   Diagram tokens
+
+   Diagrams are DATA, not chrome, and the two want opposite things from a
+   colour. Chrome tokens are tuned to recede: `--card` is the page's own
+   surface and `--border` is a whisper-subtle hairline sized for large
+   panels. Pointed at a diagram they produced a node filled with exactly the
+   colour of the card behind it (measured 1.00:1 in light mode — white on
+   white) outlined by a border at 1.25:1. WCAG 1.4.11 asks for 3:1 on the
+   boundary of a meaningful graphical object; a hairline for a 700px panel is
+   not the same instrument as the outline of a 90px box.
+
+   So diagrams get their own small family, with the contrast stated as the
+   reason each value exists. Measured against these values:
+
+     node fill vs surface     light 1.14   dark 1.22   (a visible step)
+     node border vs fill      light 3.53   dark 3.23   (>= 3, the real fix)
+     node border vs surface   light 3.10   dark 3.94
+     edge line vs surface     light 4.60   dark 5.46
+     label vs fill            light 19.8   dark 14.6   (>= 4.5)
+
+   `--diagram-surface` backs BOTH the inline figure and the expanded viewer's
+   stage. That is deliberate and load-bearing: a diagram that is legible in
+   the page cannot then be illegible when expanded, because it is being read
+   against the same colour in both places. Giving the two states separate
+   backdrops is what let expanded drift out of contrast unnoticed.
+
+   Hues are warm to sit in the brand's cream/carbon palette — a neutral grey
+   diagram reads as foreign on this page even when its contrast is correct.
+   ───────────────────────────────────────────────────────────────────────── */
+
+:root {
+  --diagram-surface: #f2f0ea;
+  --diagram-node-bg: #ffffff;
+  --diagram-node-border: #8c8880;
+  --diagram-line: #6f6c64;
+  --diagram-label: #0a0a0a;
+  --diagram-cluster: #e7e4db;
+}
+
+.dark {
+  --diagram-surface: #121110;
+  --diagram-node-bg: #26241f;
+  --diagram-node-border: #767269;
+  --diagram-line: #8d8a80;
+  --diagram-label: #f8f8f6;
+  --diagram-cluster: #1c1b18;
+}
+
 article,
 .md-content {
   color: var(--prose-body);
@@ -2247,7 +2296,9 @@ figure.ms-mermaid {
   margin: 1.75rem 0;
   padding: 1rem;
   box-sizing: border-box;
-  background: var(--image-backing, var(--card));
+  /* NOT --card: that is the colour mermaid fills nodes with, so a card
+     background made every node invisible against its own container. */
+  background: var(--diagram-surface);
   border: 1px solid var(--border, rgba(120, 120, 120, 0.2));
   border-radius: 0.5rem;
   overflow: hidden;
@@ -2367,6 +2418,29 @@ figure.ms-mermaid--error {
   color: var(--muted-foreground);
   background: var(--muted);
   border-radius: calc(var(--radius) - 2px);
+}
+
+/* Node outlines at 1px read thin even once the colour clears 3:1, because a
+   90px box's boundary is carrying more meaning than a panel hairline does.
+   A quarter-pixel is enough to make the shape read as drawn rather than
+   implied, without turning the diagram into a wireframe. Edge paths are left
+   at mermaid's own width — they are already the most visible thing on the
+   canvas and thickening them muddies arrowheads. */
+figure.ms-mermaid .node rect,
+figure.ms-mermaid .node polygon,
+figure.ms-mermaid .node circle,
+figure.ms-mermaid .node ellipse,
+figure.ms-mermaid .node path,
+.ms-diagram-viewer .node rect,
+.ms-diagram-viewer .node polygon,
+.ms-diagram-viewer .node circle,
+.ms-diagram-viewer .node ellipse,
+.ms-diagram-viewer .node path {
+  /* !important because mermaid writes stroke-width as an INLINE style
+     attribute on each shape, which a stylesheet rule cannot outrank. This is
+     the same narrow exception the theme reserves for beating inline and
+     `!`-utilities, not a general licence. */
+  stroke-width: 1.25px !important;
 }
 
 /* ── Diagram label text ─────────────────────────────────────────────────
@@ -2495,14 +2569,18 @@ dialog.ms-diagram-viewer::backdrop {
   touch-action: none;
   user-select: none;
   cursor: grab;
-  /* A dot grid reads as a canvas, which tells the reader the area is
-     manipulable before they try to drag it. */
+  /* The SAME surface the inline figure uses, so a diagram is read against
+     one colour whether it is on the page or expanded. */
+  background-color: var(--diagram-surface);
+  /* A dot grid says the area is manipulable before anyone tries to drag it,
+     but it is orientation, not content: at 35% it competed with the diagram
+     in front of it. Kept faint enough to register only in empty space. */
   background-image: radial-gradient(
     circle,
-    color-mix(in srgb, var(--muted-foreground) 35%, transparent) 1px,
+    color-mix(in srgb, var(--diagram-line) 22%, transparent) 1px,
     transparent 1px
   );
-  background-size: 20px 20px;
+  background-size: 22px 22px;
 }
 
 .ms-diagram-viewer__stage[data-dragging] {
