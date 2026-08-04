@@ -672,7 +672,7 @@ article .typography h6 { margin-top: var(--prose-topic-gap); }
 
 /* Every other top-level block sits on the flow step. `hr` is excluded on
    purpose: it owns a symmetric 2.5rem separator of its own, above. */
-article .typography > :is(p, ul, ol, dl, pre, blockquote, figure, table, details, section, div):not(:first-child) {
+article .typography > :is(p, ul, ol, dl, pre, blockquote, figure, table, details, section, div, video):not(:first-child) {
   margin-top: var(--prose-flow);
 }
 
@@ -1185,6 +1185,22 @@ article a:hover,
   color: var(--muted-foreground, currentColor);
 }
 
+/* Video. A player is as heavy as a carousel and had no rule in the theme at
+   all, so every consumer centred it and spaced it with an inline style. Those
+   all read `margin: 2rem auto 0`, which is 2rem above and nothing below, and
+   an inline style cannot be corrected from here. The theme owns the box now,
+   so a consumer writes `<video controls>` and deletes its inline margins. */
+article .typography video,
+.md-content video {
+  display: block;
+  width: 100%;
+  max-width: 960px;
+  height: auto;
+  margin-block: 1.5rem;
+  margin-inline: auto;
+  border-radius: 0.6rem;
+}
+
 /* Image carousel (Swiper). Enabled with theme `carousel: true`, which makes the
    theme emit the Swiper CDN + init (js/carousel.js); consumers only write the
    `.swiper.ms-shots` markup. Swiper is themed to shadcn tokens so light/dark
@@ -1194,9 +1210,25 @@ article a:hover,
   width: 100%;
   max-width: 100%;
   margin: 0.75rem 0 0.25rem;
+  /* The carousel is a heavy block and sat hard against whatever preceded it.
+     PADDING rather than margin: inside a `.ms-hero` every child's margin is
+     zeroed so the flex gap can own the rhythm, so a margin here is dropped
+     without trace. Padding survives both contexts. */
+  padding-top: 1rem;
   overflow: hidden;
   --swiper-theme-color: var(--primary, #c15f3c);
   --swiper-navigation-size: 20px;
+  /* Swiper hardcodes its inactive bullet to black at 0.2 alpha. That measures
+     19.95:1 on the light page and 1.15:1 on the dark one, so the indicator
+     simply vanished in dark mode. Both bullet colours now come from theme
+     tokens and track the mode.
+
+     The active bullet takes `--primary-text`, not `--primary`. It is a
+     non-text indicator, so it answers to the 3:1 floor, and the fill value
+     measures 2.97:1 on the light page. See the accent note above. */
+  --swiper-pagination-color: var(--primary-text, var(--primary, #c15f3c));
+  --swiper-pagination-bullet-inactive-color: var(--foreground, #0a0a0a);
+  --swiper-pagination-bullet-inactive-opacity: 0.5;
 }
 .ms-shots .swiper-slide {
   display: flex;
@@ -1219,15 +1251,18 @@ article a:hover,
   border: 1px solid var(--border, rgba(0, 0, 0, 0.1));
   border-radius: 0.6rem;
 }
+/* The caption and the dots below it are one footer under the image, so they
+   sit on equal gaps. 0.55rem and 0.6rem read as a mistake rather than as a
+   rhythm, because the caption's line box makes the smaller gap look larger. */
 .ms-shots figcaption {
-  margin-top: 0.55rem;
+  margin-top: 0.75rem;
   text-align: center;
   font-size: 0.875rem;
   color: var(--muted-foreground, currentColor);
 }
 .ms-shots .swiper-pagination {
   position: static;
-  margin-top: 0.6rem;
+  margin-top: 0.75rem;
 }
 .ms-shots .swiper-button-prev,
 .ms-shots .swiper-button-next {

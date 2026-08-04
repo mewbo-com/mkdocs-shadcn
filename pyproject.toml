@@ -4,7 +4,7 @@ name = "mkdocs-shadcn-mewbo"
 # (site_name-driven identity, alternate_style tabs, carousel feature, ms-shot/
 # ms-devices primitives, compact sidebar, table first-column fix). 1.2.1 tunes
 # the sidebar spacing/typography.
-version = "1.12.4"
+version = "1.12.5"
 description = "Mewbo's brand-fork of mkdocs-shadcn — same theme entrypoint, plus Ask AI panel, three-zone header, sidebar nav-icons, prefetch speculation, full SEO, and the cream/clay Mewbo palette as default."
 authors = [
     { name = "mewbo-com" },
