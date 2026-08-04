@@ -45,6 +45,9 @@
 {%- if config.theme.carousel %}
     <link href="https://cdn.jsdelivr.net/npm/swiper@12/swiper-bundle.min.css" rel="stylesheet"/>
 {%- endif %}
+{%- if config.theme.lightbox %}
+    <link href="https://cdn.jsdelivr.net/npm/glightbox@3.3.1/dist/css/glightbox.min.css" rel="stylesheet"/>
+{%- endif %}
 <link href="{{ 'css/mewbo.css' | url }}" rel="stylesheet"/>
 {%- if config.theme.code_refs is not none %}
 <link href="{{ 'css/code-refs.css' | url }}" rel="stylesheet"/>

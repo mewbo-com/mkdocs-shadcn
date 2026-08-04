@@ -9,6 +9,7 @@ theme:
   icon: null
   topbar_sections: false
   carousel: true
+  lightbox: true
   sortable_tables: true
   ai:
     deepwiki_repo: mewbo-com/mkdocs-shadcn

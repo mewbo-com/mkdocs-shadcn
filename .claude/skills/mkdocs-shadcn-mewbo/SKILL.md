@@ -149,12 +149,11 @@ A verb is usually what makes a title mean something, so use one when it helps.
 
 ### The rules, and why each one exists
 
-- **The subtitle H2 is a title, not a sentence. Never more than 4 words, and
-  aim for 2.** It is set at ~38px across the full content column, so a
-  descriptive phrase wraps to three lines and reads as prose at heading size.
-  A whole site was shipped with 9 word subtitles before anyone looked at a
-  rendered page. Write a noun phrase with no finite verb and no trailing
-  punctuation.
+- **The subtitle H2 is a title, not a sentence.** Written to the standard
+  above: a noun phrase, 3 to 6 words, at most 32 characters. A whole site
+  shipped with 9 word subtitles before anyone looked at a rendered page, and
+  the correction to 2 word labels was worse, because the words stopped meaning
+  anything. Both passes had to be redone.
 - **It must not restate the H1.** `Skills` then `About skills` wastes the one
   line that says what the page is.
 - **Every page needs one.** Without it the page still builds and still renders,
@@ -340,6 +339,18 @@ both rather than picking one.
   **Paths are relative to the built page**, not the source file — with
   directory URLs, a page at `guide.md` serves from `/guide/`, so an asset at
   `docs/assets/x.mp4` is `../assets/x.mp4`.
+  **The theme owns the video box from v1.12.5** — width, centring and the
+  space above and below. Do NOT set an inline `style` with margins on a
+  `<video>`. Every consumer had reached for `margin: 2rem auto 0`, which is
+  2rem above and nothing below, and an inline style cannot be corrected from
+  the stylesheet later.
+- **Full-screen image viewer** (`theme.lightbox: true`, from v1.13.0). Every
+  content image big enough to be a picture opens full screen on click, and the
+  cursor says so. Inside a carousel the whole strip becomes ONE gallery, so the
+  arrows walk it and a cloned slide does not appear twice. Zoom is deliberately
+  off. Opt a single image out with `{ .no-lightbox }` (needs `attr_list`) or
+  `data-lightbox="false"`. It is GLightbox from the CDN, so a site with the
+  flag off ships none of it.
 
 ### Tables
 

@@ -39,6 +39,10 @@
     <script src="https://cdn.jsdelivr.net/npm/swiper@12/swiper-bundle.min.js"></script>
 <script integrity="sha384-UF8bTJNuMpApPFPRYJMvsOYUkjMJ02+v0wzxdYWJ2kuakxvY7VzK8X0WKnTXvAJW" src="{{ 'js/carousel.js' | url }}"></script>
     {% endif %}
+    {% if config.theme.lightbox %}
+    <script src="https://cdn.jsdelivr.net/npm/glightbox@3.3.1/dist/js/glightbox.min.js"></script>
+<script integrity="sha384-G7p4gSrNj2d3GPDmZwiwDEexx8QSbW0JeydILvfCSvQcFoPF/aw1xVi2Z//uwZyl" src="{{ 'js/lightbox.js' | url }}"></script>
+    {% endif %}
     {% if config.theme.show_version_switcher %}
     <script integrity="sha384-1hsmgovd+8XvQC7c0UqXIF6e6O81K9j9a/gDatEwP5cWwsXGpBFgJf5mni7MpXAU" src="{{ 'js/version-switcher.js' | url }}"></script>
     {% endif %}

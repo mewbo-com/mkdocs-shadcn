@@ -118,6 +118,15 @@ show_build_info: false
 # sites that have no carousel. Styling lives in css/mewbo.css (.ms-shots).
 carousel: false
 
+# Full-screen image viewer. When true, the theme loads GLightbox (MIT, ~11KB
+# gzipped, no dependencies, from CDN) plus js/lightbox.js, and every content
+# image large enough to be a picture opens full screen on click. Inside a
+# carousel the whole strip becomes one gallery, so the arrows walk it.
+# Zoom is deliberately off: the ask is to SEE the image, not to inspect it.
+# Opt a single image out with `.no-lightbox` or `data-lightbox="false"`.
+# Off by default, so a site pays for nothing it does not use.
+lightbox: false
+
 # Sortable tables. When true the theme loads Tablesort (MIT, from CDN) plus
 # js/sortable-tables.js, and every prose table with a header and more than one
 # body row becomes click-to-sort. Off by default so a site that does not want

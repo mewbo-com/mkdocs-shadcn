@@ -830,3 +830,48 @@ def test_page_masthead_pairs_label_and_title(page: Page, local_deployment: str):
     assert box["h1Color"] != box["body"], (
         "the label is still rendering in the body text colour, not the accent"
     )
+
+
+def test_lightbox_opens_images_fullscreen(page: Page, local_deployment: str):
+    """theme.lightbox makes a content image open full screen, once.
+
+    Guards three things that are easy to get wrong and produce no error:
+    the affordance only appears on images the handler will actually open,
+    a carousel becomes ONE gallery rather than one entry per slide (Swiper
+    runs with `loop: true` and clones slides, so wrapping each `img` in an
+    anchor would list the same picture more than once), and zoom stays off
+    because the feature is "see it full screen", nothing more.
+    """
+    page.goto(BASE + "/mewbo_components/", wait_until="networkidle")
+    page.wait_for_timeout(1200)
+
+    assert page.evaluate("() => typeof window.GLightbox === 'function'"), (
+        "GLightbox did not load; theme.lightbox emits it from the CDN"
+    )
+
+    marked = page.evaluate("() => document.querySelectorAll('.ms-zoomable').length")
+    assert marked > 0, "no image carried the .ms-zoomable affordance"
+
+    opened = page.evaluate(
+        """async () => {
+             const wait = ms => new Promise(r => setTimeout(r, ms));
+             const img = [...document.querySelectorAll('.ms-shots .swiper-slide img')]
+               .find(i => i.getBoundingClientRect().width > 100);
+             if (!img) return {error: 'no carousel image'};
+             img.click();
+             await wait(800);
+             const m = document.querySelector('.glightbox-container');
+             if (!m) return {error: 'viewer did not open'};
+             const slides = m.querySelectorAll('.gslide').length;
+             const unique = new Set([...document.querySelectorAll(
+               '.ms-shots .swiper-slide img')].map(i => i.currentSrc || i.src)).size;
+             return {slides, unique, zoom: !!m.querySelector('.gzoom')};
+           }"""
+    )
+    assert "error" not in opened, opened.get("error")
+    # One gallery entry per DISTINCT picture, so a cloned slide adds nothing.
+    assert opened["slides"] == opened["unique"], (
+        f"gallery holds {opened['slides']} entries for {opened['unique']} "
+        "distinct images — slide clones are leaking in"
+    )
+    assert not opened["zoom"], "zoom should be off; the ask was full screen only"

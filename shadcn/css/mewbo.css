@@ -1185,6 +1185,39 @@ article a:hover,
   color: var(--muted-foreground, currentColor);
 }
 
+/* Full-screen image viewer (GLightbox, theme `lightbox: true`). The library
+   ships its own dark chrome; these rules only add the affordance on the page
+   and pull the backdrop and caption onto theme tokens so the viewer does not
+   read as a different product. js/lightbox.js adds `.ms-zoomable` to every
+   image it will open, so the cursor never promises something that will not
+   happen. */
+.ms-zoomable {
+  cursor: zoom-in;
+}
+.glightbox-container .gcontainer {
+  background: color-mix(in srgb, var(--background, #0b0b0b) 88%, #000);
+}
+.glightbox-container .gslide-description {
+  background: transparent;
+}
+.glightbox-container .gslide-desc {
+  color: var(--muted-foreground, #d4d4d8);
+  font-size: 0.875rem;
+  text-align: center;
+}
+.glightbox-container .gslide-image img {
+  border-radius: 0.6rem;
+}
+/* The library's default close and arrow buttons are its own; only the focus
+   ring is retoned, because a browser default ring on a dark backdrop is the
+   one piece of chrome that looks broken rather than merely different. */
+.glightbox-container .gclose:focus-visible,
+.glightbox-container .gprev:focus-visible,
+.glightbox-container .gnext:focus-visible {
+  outline: 2px solid var(--primary, #c15f3c);
+  outline-offset: 2px;
+}
+
 /* Video. A player is as heavy as a carousel and had no rule in the theme at
    all, so every consumer centred it and spaced it with an inline style. Those
    all read `margin: 2rem auto 0`, which is 2rem above and nothing below, and
