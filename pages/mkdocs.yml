@@ -54,7 +54,23 @@ plugins:
 
 markdown_extensions:
   admonition:
-  codehilite:
+  # The demo site deliberately mirrors what a real consumer enables. It used
+  # to run bare `codehilite:` while the docs site this theme was built for
+  # runs `pymdownx.highlight`, so the theme was being styled and tested
+  # against markup its main consumer had stopped emitting — fence titles,
+  # the line-number table and inline highlighting all render here now, which
+  # is the only way a test can see them.
+  #
+  # `css_class: codehilite` keeps the wrapper class the theme's CSS and
+  # copy-button.js already select on; pygments still names the line-number
+  # table `highlighttable` regardless, which is why that is styled separately.
+  pymdownx.highlight:
+    use_pygments: true
+    css_class: codehilite
+    anchor_linenums: true
+    line_spans: __span
+    pygments_lang_class: true
+  pymdownx.inlinehilite:
   fenced_code:
   footnotes:
   extra:

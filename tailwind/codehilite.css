@@ -1,21 +1,21 @@
-article .codehilite table.codehilitetable {
+article div.codehilite table.codehilitetable {
 	border-collapse: unset;
 	margin: 0;
 }
 
-article .codehilite .linenos {
+article div.codehilite .linenos {
 	@apply text-sm text-right sticky left-0 text-[var(--color-code-number)] pr-6;
 }
 
-article .codehilite .hll .linenos {
+article div.codehilite .hll .linenos {
 	@apply bg-transparent;
 }
 
-article .codehilite td.linenos {
+article div.codehilite td.linenos {
 	@apply pr-0;
 }
 
-article .codehilite:has(& > .codehilitetable) {
+article div.codehilite:has(& > .codehilitetable) {
 	@apply overflow-auto;
 }
 
@@ -32,14 +32,66 @@ article table.codehilitetable pre {
 	@apply px-0 m-0;
 }
 
-article .codehilite {
+/* `div.` is load-bearing. `pymdownx.inlinehilite` emits INLINE
+   `<code class="language-x codehilite">`, so a bare `.codehilite` selector
+   also matches inline code mid-sentence and hands it a block's top margin
+   and radius. Every block-level rule here is scoped to the div. */
+article div.codehilite {
 	@apply rounded-xl relative mt-4;
 }
 
-article .codehilite pre {
+article div.codehilite pre {
 	@apply mb-0 mt-0 overflow-auto;
 }
 
-article .codehilite code a {
+article div.codehilite code a {
 	@apply no-underline cursor-text;
+}
+
+
+/* ── Fence titles ────────────────────────────────────────────────────────
+   ```py title="app.py" emits `<span class="filename">` as the first child of
+   the block, before <pre>. It shipped completely unstyled, so a title
+   rendered as a bare run of text butted against the code. Presented as a
+   header strip: the block already has a border and clipped corners from
+   mewbo.css, so this only needs a base, a divider and the type treatment. */
+article div.codehilite > .filename {
+	@apply block px-4 py-2 text-xs font-mono text-muted-foreground bg-muted/60 border-b border-b-border;
+}
+
+/* The title occupies the top edge, so the copy button must clear it rather
+   than sit on top of the filename. */
+article div.codehilite:has(> .filename) > button {
+	@apply top-11;
+}
+
+/* ── Highlighted lines ───────────────────────────────────────────────────
+   hl_lines="2 3" marks lines with `.hll`. Only the line-number gutter case
+   was styled, so the highlight itself never showed. A tinted band keyed to
+   the brand accent, kept low enough that the syntax colours still read. */
+article div.codehilite .hll {
+	@apply bg-primary/10 -mx-4 px-4 block;
+}
+
+/* ── Line-number gutter ──────────────────────────────────────────────────
+   pygments nests a `.linenodiv` inside `td.linenos`; without a reset it
+   contributes its own margins and pushes the numbers out of alignment with
+   the code rows they label. */
+article div.codehilite .linenodiv pre {
+	@apply m-0 p-0 border-0 bg-transparent;
+}
+
+article div.codehilite td.linenos a {
+	@apply no-underline text-inherit;
+}
+
+/* ── Inline highlighting ─────────────────────────────────────────────────
+   `#!python expr` emits inline `<code class="language-x codehilite">`. It
+   should read as the same chip a plain inline `code` gets — the syntax
+   colours come from the pygments stylesheet on the spans inside it — so it
+   only needs the block affordances explicitly removed. */
+article p code.codehilite,
+article li code.codehilite,
+article td code.codehilite {
+	@apply mt-0 rounded-md inline;
 }

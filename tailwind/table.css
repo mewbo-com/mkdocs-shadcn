@@ -1,28 +1,28 @@
-article table {
+article table:not(.codehilitetable) {
 	@apply [&:not(:first-child)]:mt-6;
 }
 
-article table {
+article table:not(.codehilitetable) {
 	@apply w-full caption-bottom text-sm;
 }
 
-article table thead {
+article table:not(.codehilitetable) thead {
 	@apply [&_tr]:border-b;
 }
 
-article table tr {
+article table:not(.codehilitetable) tr {
 	@apply hover:bg-muted/50 data-[state=selected]:bg-muted border-b transition-colors;
 }
 
-article table thead tr th {
+article table:not(.codehilitetable) thead tr th {
 	@apply text-foreground h-10 px-2 text-left align-middle font-medium [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px];
 }
 
-article table tbody {
+article table:not(.codehilitetable) tbody {
 	@apply [&_tr:last-child]:border-0;
 }
 
-article table tbody tr td {
+article table:not(.codehilitetable) tbody tr td {
 	@apply p-2 align-middle [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px];
 }
 
@@ -44,8 +44,8 @@ article table tbody tr td {
  * never compute to `white-space: nowrap`, so a future upstream sync that
  * reintroduces nowrap fails CI instead of silently regressing.
  */
-article table thead tr th,
-article table tbody tr td {
+article table:not(.codehilitetable) thead tr th,
+article table:not(.codehilitetable) tbody tr td {
 	@apply break-words;
 }
 
@@ -62,7 +62,7 @@ article .table-wrapper {
  * `.table-wrapper` overflow-x fallback still catches genuinely narrow
  * viewports. The other columns absorb the change by wrapping a little more.
  */
-article table tr > :first-child {
+article table:not(.codehilitetable) tr > :first-child {
 	min-width: 12rem;
 }
 
@@ -70,7 +70,7 @@ article table tr > :first-child {
  * Opt-out: add class="nowrap" to a cell when single-line content with
  * horizontal scroll is actually wanted (e.g. a dense numeric data grid).
  */
-article table .nowrap {
+article table:not(.codehilitetable) .nowrap {
 	white-space: nowrap;
 }
 
@@ -78,6 +78,6 @@ article table .nowrap {
  * Back-compat opt-in helper. The previous `white-space: wrap` was an invalid
  * value (no-op); `normal` is the intended behaviour and now also the default.
  */
-article table .wrap {
+article table:not(.codehilitetable) .wrap {
 	white-space: normal;
 }

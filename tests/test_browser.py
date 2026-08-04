@@ -462,3 +462,71 @@ def test_tabs_beyond_eight_render(page: Page):
             "the positional enumeration in tailwind/tabs.css does not reach "
             "this tab"
         )
+
+
+def test_code_block_features(page: Page):
+    """The markup `pymdownx.highlight` emits must actually be styled.
+
+    The theme was styled for `codehilite`'s markup while the docs site it was
+    built for had moved to `pymdownx.highlight`, so several features rendered
+    bare: a fence title was a run of unstyled text, and the line-number table
+    was caught by the PROSE table rules (and by the table mixin's wrapper),
+    which gave it full width and pushed the code away from the left edge.
+
+    None of that raises an error, so only a rendered assertion catches it.
+    """
+    page.goto(BASE + "/code_blocks/", wait_until="networkidle")
+
+    # A fence title renders as a header strip, not bare text.
+    filename = page.locator("div.codehilite > .filename").first
+    assert filename.count() > 0, "no .filename — check pymdownx.highlight is on"
+    assert (
+        page.evaluate(
+            "el => getComputedStyle(el).display", filename.element_handle()
+        )
+        == "block"
+    ), "fence title is not styled as a block"
+
+    # The line-number table is pygments', not prose: it must NOT be wrapped by
+    # the table mixin, and must not stretch to the block's full width.
+    assert page.evaluate(
+        """() => !document.querySelector(
+             '.table-wrapper > table.codehilitetable')"""
+    ), "the code line-number table was wrapped as if it were a prose table"
+
+    geom = page.evaluate(
+        """() => {
+             const t = document.querySelector('table.codehilitetable');
+             if (!t) return null;
+             const block = t.closest('div.codehilite').getBoundingClientRect();
+             const code = t.querySelector('td.code').getBoundingClientRect();
+             return {table: t.getBoundingClientRect().width,
+                     block: block.width, codeLeft: code.left - block.left};
+           }"""
+    )
+    assert geom, "no line-number table — check linenums is exercised"
+    assert geom["table"] < geom["block"], (
+        f"line-number table stretched to the block width "
+        f"({geom['table']} vs {geom['block']}) — prose table CSS is leaking "
+        "into code blocks"
+    )
+    assert geom["codeLeft"] < 80, (
+        f"code starts {geom['codeLeft']}px from the block's left edge — the "
+        "gutter is being stretched"
+    )
+
+    # Inline highlighting must stay inline, not take a block's top margin.
+    inline = page.locator("p code.codehilite").first
+    assert inline.count() > 0, "no inline highlight — check pymdownx.inlinehilite"
+    style = page.evaluate(
+        """el => ({display: getComputedStyle(el).display,
+                  marginTop: getComputedStyle(el).marginTop})""",
+        inline.element_handle(),
+    )
+    assert style["display"] == "inline", (
+        "inline highlighted code is not inline — a bare `.codehilite` "
+        "selector is catching it with block rules"
+    )
+    assert style["marginTop"] == "0px", (
+        f"inline highlighted code has margin-top {style['marginTop']}"
+    )
