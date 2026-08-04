@@ -168,6 +168,9 @@ both rather than picking one.
 
 ### Media
 
+- **Carousels** (, needs ) size their
+  box to **16:9** from v1.10.1. Do not override  in your own
+  ; a non-16:9 image is still protected by .
 - **Images** get a matte frame automatically. Opt out with `{ .no-border }`
   (needs `attr_list`) for logos and badges that must bleed.
 - **Video** autoplays while on screen and pauses when scrolled away. Write a

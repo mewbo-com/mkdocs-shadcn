@@ -986,7 +986,13 @@ article a,
 .ms-shots img {
   display: block;
   width: 100%;
-  aspect-ratio: 4 / 3;
+  /* 16:9. Product screenshots and screen recordings are landscape — a 4:3 box
+     letterboxed every one of them into roughly a quarter of dead `--muted`
+     space above and below, a visible frame inside a frame. Consumers were
+     overriding this rule in their own extra_css; matching the box to the
+     content is the theme's job. `object-fit: contain` still protects a
+     genuinely non-16:9 image from being cropped. */
+  aspect-ratio: 16 / 9;
   object-fit: contain;
   background: var(--muted, hsl(48 25% 92.2%));
   border: 1px solid var(--border, rgba(0, 0, 0, 0.1));
