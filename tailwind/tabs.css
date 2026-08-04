@@ -31,8 +31,7 @@ article .tabbed-set input[type="radio"]:checked + label + div.tabbed-content {
    first, then a `.tabbed-labels` row, then `.tabbed-content` holding N
    `.tabbed-block` panels. The legacy rules never match it (there is no
    input+label adjacency), so without these the panels render permanently
-   hidden. We key the active label/panel off the checked radio positionally.
-   Capped at 8 tabs — extend the two nth-lists below if a group needs more. */
+   hidden. We key the active label/panel off the checked radio positionally. */
 article .tabbed-set.tabbed-alternate {
 	@apply flex flex-col flex-wrap;
 }
@@ -49,7 +48,24 @@ article .tabbed-alternate .tabbed-content > .tabbed-block {
 	@apply hidden;
 }
 
-/* Active label: checked radio N highlights label N */
+/* Active label / active panel.
+
+   `alternate_style` emits all radios first, then one `.tabbed-labels` row,
+   then one `.tabbed-content` holding every panel — so a radio is never
+   adjacent to its own label or panel and the pairing has to be positional.
+   There is no CSS that correlates "the Nth checked input" with "the Nth
+   label" without enumerating, which is why pymdownx's own reference CSS and
+   mkdocs-material both enumerate too (material generates it from a SASS
+   loop; we have no loop, so it is written out).
+
+   The cap is therefore real. It was 8, and a set of 9 selected NOTHING —
+   clicking the ninth tab showed a blank panel with no error anywhere, which
+   is the worst way for this to fail. Raised to 24, far past any honest
+   docs page, and `pages/docs/tabs_regression.md` holds a 10-tab set that
+   `test_tabs_beyond_eight_render` clicks through so a regression past the
+   old cap fails a test instead of shipping.
+
+   If a set ever needs more than 24, extend BOTH lists below together. */
 article .tabbed-set.tabbed-alternate > input:nth-of-type(1):checked ~ .tabbed-labels > label:nth-child(1),
 article .tabbed-set.tabbed-alternate > input:nth-of-type(2):checked ~ .tabbed-labels > label:nth-child(2),
 article .tabbed-set.tabbed-alternate > input:nth-of-type(3):checked ~ .tabbed-labels > label:nth-child(3),
@@ -57,11 +73,26 @@ article .tabbed-set.tabbed-alternate > input:nth-of-type(4):checked ~ .tabbed-la
 article .tabbed-set.tabbed-alternate > input:nth-of-type(5):checked ~ .tabbed-labels > label:nth-child(5),
 article .tabbed-set.tabbed-alternate > input:nth-of-type(6):checked ~ .tabbed-labels > label:nth-child(6),
 article .tabbed-set.tabbed-alternate > input:nth-of-type(7):checked ~ .tabbed-labels > label:nth-child(7),
-article .tabbed-set.tabbed-alternate > input:nth-of-type(8):checked ~ .tabbed-labels > label:nth-child(8) {
+article .tabbed-set.tabbed-alternate > input:nth-of-type(8):checked ~ .tabbed-labels > label:nth-child(8),
+article .tabbed-set.tabbed-alternate > input:nth-of-type(9):checked ~ .tabbed-labels > label:nth-child(9),
+article .tabbed-set.tabbed-alternate > input:nth-of-type(10):checked ~ .tabbed-labels > label:nth-child(10),
+article .tabbed-set.tabbed-alternate > input:nth-of-type(11):checked ~ .tabbed-labels > label:nth-child(11),
+article .tabbed-set.tabbed-alternate > input:nth-of-type(12):checked ~ .tabbed-labels > label:nth-child(12),
+article .tabbed-set.tabbed-alternate > input:nth-of-type(13):checked ~ .tabbed-labels > label:nth-child(13),
+article .tabbed-set.tabbed-alternate > input:nth-of-type(14):checked ~ .tabbed-labels > label:nth-child(14),
+article .tabbed-set.tabbed-alternate > input:nth-of-type(15):checked ~ .tabbed-labels > label:nth-child(15),
+article .tabbed-set.tabbed-alternate > input:nth-of-type(16):checked ~ .tabbed-labels > label:nth-child(16),
+article .tabbed-set.tabbed-alternate > input:nth-of-type(17):checked ~ .tabbed-labels > label:nth-child(17),
+article .tabbed-set.tabbed-alternate > input:nth-of-type(18):checked ~ .tabbed-labels > label:nth-child(18),
+article .tabbed-set.tabbed-alternate > input:nth-of-type(19):checked ~ .tabbed-labels > label:nth-child(19),
+article .tabbed-set.tabbed-alternate > input:nth-of-type(20):checked ~ .tabbed-labels > label:nth-child(20),
+article .tabbed-set.tabbed-alternate > input:nth-of-type(21):checked ~ .tabbed-labels > label:nth-child(21),
+article .tabbed-set.tabbed-alternate > input:nth-of-type(22):checked ~ .tabbed-labels > label:nth-child(22),
+article .tabbed-set.tabbed-alternate > input:nth-of-type(23):checked ~ .tabbed-labels > label:nth-child(23),
+article .tabbed-set.tabbed-alternate > input:nth-of-type(24):checked ~ .tabbed-labels > label:nth-child(24) {
 	@apply text-foreground border-b-primary;
 }
 
-/* Active panel: checked radio N shows block N */
 article .tabbed-set.tabbed-alternate > input:nth-of-type(1):checked ~ .tabbed-content > .tabbed-block:nth-child(1),
 article .tabbed-set.tabbed-alternate > input:nth-of-type(2):checked ~ .tabbed-content > .tabbed-block:nth-child(2),
 article .tabbed-set.tabbed-alternate > input:nth-of-type(3):checked ~ .tabbed-content > .tabbed-block:nth-child(3),
@@ -69,6 +100,22 @@ article .tabbed-set.tabbed-alternate > input:nth-of-type(4):checked ~ .tabbed-co
 article .tabbed-set.tabbed-alternate > input:nth-of-type(5):checked ~ .tabbed-content > .tabbed-block:nth-child(5),
 article .tabbed-set.tabbed-alternate > input:nth-of-type(6):checked ~ .tabbed-content > .tabbed-block:nth-child(6),
 article .tabbed-set.tabbed-alternate > input:nth-of-type(7):checked ~ .tabbed-content > .tabbed-block:nth-child(7),
-article .tabbed-set.tabbed-alternate > input:nth-of-type(8):checked ~ .tabbed-content > .tabbed-block:nth-child(8) {
+article .tabbed-set.tabbed-alternate > input:nth-of-type(8):checked ~ .tabbed-content > .tabbed-block:nth-child(8),
+article .tabbed-set.tabbed-alternate > input:nth-of-type(9):checked ~ .tabbed-content > .tabbed-block:nth-child(9),
+article .tabbed-set.tabbed-alternate > input:nth-of-type(10):checked ~ .tabbed-content > .tabbed-block:nth-child(10),
+article .tabbed-set.tabbed-alternate > input:nth-of-type(11):checked ~ .tabbed-content > .tabbed-block:nth-child(11),
+article .tabbed-set.tabbed-alternate > input:nth-of-type(12):checked ~ .tabbed-content > .tabbed-block:nth-child(12),
+article .tabbed-set.tabbed-alternate > input:nth-of-type(13):checked ~ .tabbed-content > .tabbed-block:nth-child(13),
+article .tabbed-set.tabbed-alternate > input:nth-of-type(14):checked ~ .tabbed-content > .tabbed-block:nth-child(14),
+article .tabbed-set.tabbed-alternate > input:nth-of-type(15):checked ~ .tabbed-content > .tabbed-block:nth-child(15),
+article .tabbed-set.tabbed-alternate > input:nth-of-type(16):checked ~ .tabbed-content > .tabbed-block:nth-child(16),
+article .tabbed-set.tabbed-alternate > input:nth-of-type(17):checked ~ .tabbed-content > .tabbed-block:nth-child(17),
+article .tabbed-set.tabbed-alternate > input:nth-of-type(18):checked ~ .tabbed-content > .tabbed-block:nth-child(18),
+article .tabbed-set.tabbed-alternate > input:nth-of-type(19):checked ~ .tabbed-content > .tabbed-block:nth-child(19),
+article .tabbed-set.tabbed-alternate > input:nth-of-type(20):checked ~ .tabbed-content > .tabbed-block:nth-child(20),
+article .tabbed-set.tabbed-alternate > input:nth-of-type(21):checked ~ .tabbed-content > .tabbed-block:nth-child(21),
+article .tabbed-set.tabbed-alternate > input:nth-of-type(22):checked ~ .tabbed-content > .tabbed-block:nth-child(22),
+article .tabbed-set.tabbed-alternate > input:nth-of-type(23):checked ~ .tabbed-content > .tabbed-block:nth-child(23),
+article .tabbed-set.tabbed-alternate > input:nth-of-type(24):checked ~ .tabbed-content > .tabbed-block:nth-child(24) {
 	@apply block;
 }

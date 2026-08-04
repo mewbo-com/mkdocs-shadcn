@@ -424,3 +424,41 @@ def test_footer_docs_shortlist(page: Page):
         'nav[aria-label="Documentation links"] li'
     ).all_inner_texts()
     assert [t.strip() for t in links] == ["Get started", "Guides", "Reference"], links
+
+
+def test_tabs_beyond_eight_render(page: Page):
+    """Regression test: a tab set larger than eight must still render.
+
+    `alternate_style` emits every radio first, then one label row, then one
+    content block, so a radio is never adjacent to its own label or panel and
+    the CSS has to pair them positionally by index. That pairing is written
+    out by hand, and the enumeration originally stopped at eight.
+
+    The failure mode is what makes this worth a test: a ninth tab matched no
+    rule at all, so clicking it selected NOTHING — a blank panel, no console
+    error, nothing in the build to point at it. Silent, and invisible to
+    every other check in this suite.
+
+    The fixture carries ten tabs. Each one must show exactly one panel.
+    """
+    page.goto(BASE + "/tabs_regression/", wait_until="networkidle")
+
+    labels = page.locator(".tabbed-set .tabbed-labels > label")
+    count = labels.count()
+    assert count >= 10, (
+        f"expected the 10-tab fixture, found {count} labels — check that "
+        "tabs_regression.md is built and served at /tabs_regression/"
+    )
+
+    for i in range(count):
+        labels.nth(i).click()
+        visible = page.evaluate(
+            """() => [...document.querySelectorAll(
+                 '.tabbed-set .tabbed-content > .tabbed-block')]
+                 .filter(b => getComputedStyle(b).display !== 'none').length"""
+        )
+        assert visible == 1, (
+            f"tab {i + 1} of {count} shows {visible} panels, expected 1 — "
+            "the positional enumeration in tailwind/tabs.css does not reach "
+            "this tab"
+        )
