@@ -73,3 +73,12 @@ markdown_extensions:
   shadcn.extensions.iconify:
   pymdownx.blocks.caption:
   shadcn.extensions.hover_card:
+  # Routes ```mermaid fences to <pre class="mermaid">, which is what
+  # js/mermaid-init-v2.js selects on. Without this a mermaid fence is
+  # highlighted as plain text and the renderer silently never runs, so the
+  # demo site keeps it configured to hold the mermaid page under test.
+  pymdownx.superfences:
+    custom_fences:
+      - name: mermaid
+        class: mermaid
+        format: !!python/name:pymdownx.superfences.fence_code_format

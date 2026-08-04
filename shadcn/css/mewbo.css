@@ -182,7 +182,11 @@ article td code {
   word-break: break-word;
 }
 
-/* Mermaid containers: keep the diagram within the column width. */
+/* Mermaid diagrams get the framed treatment images get, plus an expanded
+   viewer — see "Mermaid diagrams" near the end of this file. An unrendered
+   fence (mermaid failed to load, or superfences was never configured) still
+   needs the width guard so a wide source block cannot widen the column. */
+pre.mermaid,
 .mermaid,
 div.mermaid {
   max-width: 100%;
@@ -2154,4 +2158,397 @@ body.theme-default { --footer-height: 320px; }
     align-items: flex-start;
   }
   body.theme-default { --footer-height: 540px; }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   Prose colour: put body text on the token system
+
+   The upstream `article` rule paints prose with `text-neutral-800` /
+   `dark:text-neutral-300` — a COOL grey scale, while this brand's surfaces
+   are warm (cream in light, carbon in dark). The effect is subtle and
+   persistent: every paragraph sits a few degrees off the chrome around it.
+
+   The upstream INTENT is worth keeping — body text one step recessed from
+   headings gives the page a reading hierarchy. So rather than flattening
+   prose onto `--foreground`, mix the two tokens: the recession survives and
+   the hue now tracks the palette. Headings, in turn, are stated at full
+   strength so the contrast between them is deliberate rather than incidental.
+   ───────────────────────────────────────────────────────────────────────── */
+
+:root {
+  --prose-body: color-mix(in oklab, var(--foreground) 82%, var(--muted-foreground));
+}
+
+article,
+.md-content {
+  color: var(--prose-body);
+}
+
+article h1,
+article h2,
+article h3,
+article h4,
+article h5,
+article h6,
+.md-content h1,
+.md-content h2,
+.md-content h3,
+.md-content h4,
+.md-content h5,
+.md-content h6 {
+  color: var(--foreground);
+  text-wrap: balance;
+}
+
+/* Paragraphs and list items read better with the browser's newer wrapping
+   heuristic: it avoids short widow lines without changing any measurement. */
+article p,
+article li,
+.md-content p,
+.md-content li {
+  text-wrap: pretty;
+}
+
+/* Strong text inside recessed prose needs to come back to full strength, or
+   emphasis reads as merely "less grey". */
+article strong,
+.md-content strong {
+  color: var(--foreground);
+}
+
+/* Blockquotes ship as a bare left rule + italics, which disappears against a
+   busy page. A quiet surface tint plus the accent rule makes the aside read
+   as a distinct block without shouting; the text stays recessed. */
+article blockquote,
+.md-content blockquote {
+  color: var(--muted-foreground);
+  border-left-color: color-mix(in srgb, var(--primary) 45%, transparent);
+  background: color-mix(in srgb, var(--muted) 45%, transparent);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  padding: 0.75rem 1rem 0.75rem 1.25rem;
+  font-style: normal;
+}
+
+article blockquote > :first-child,
+.md-content blockquote > :first-child {
+  margin-top: 0;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   Mermaid diagrams
+
+   A diagram is a figure on the page, not a loose SVG: it gets the same matte
+   frame content images get a few hundred lines above, so media of every kind
+   reads as one family. The card is the click target for the expanded viewer.
+   ───────────────────────────────────────────────────────────────────────── */
+
+figure.ms-mermaid {
+  position: relative;
+  margin: 1.75rem 0;
+  padding: 1rem;
+  box-sizing: border-box;
+  background: var(--image-backing, var(--card));
+  border: 1px solid var(--border, rgba(120, 120, 120, 0.2));
+  border-radius: 0.5rem;
+  overflow: hidden;
+  cursor: zoom-in;
+  transition: border-color 0.15s ease;
+}
+
+figure.ms-mermaid:hover {
+  border-color: color-mix(in srgb, var(--muted-foreground) 45%, transparent);
+}
+
+.ms-mermaid__stage {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* A very tall diagram would otherwise push the surrounding prose apart.
+     Bound the inline card and let the expanded viewer carry the full size —
+     the card is a preview, the viewer is where a large diagram is read. */
+  max-height: 32rem;
+  overflow: hidden;
+}
+
+.ms-mermaid__stage svg {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Too wide to shrink and stay readable: show it at a legible size and let
+   the card scroll sideways. `justify-content` has to relax too, or a centred
+   flex child cannot be scrolled back to its own left edge. */
+figure.ms-mermaid[data-wide] .ms-mermaid__stage {
+  overflow-x: auto;
+  justify-content: flex-start;
+}
+
+figure.ms-mermaid[data-wide] .ms-mermaid__stage svg {
+  max-width: none;
+  /* Mermaid also sets width="100%" as an ATTRIBUTE, so lifting max-width on
+     its own still leaves the diagram filling the column. `width: auto` hands
+     sizing back to the viewBox, which is the natural size we want here. */
+  width: auto;
+  flex: none;
+}
+
+/* Too tall to show whole: fade the cut edge instead of ending abruptly, so
+   the crop reads as "there is more" rather than as a rendering fault. Mirrors
+   the scroll fade the left sidebar uses. */
+figure.ms-mermaid[data-tall] .ms-mermaid__stage {
+  -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 3rem), transparent 100%);
+  mask-image: linear-gradient(to bottom, #000 calc(100% - 3rem), transparent 100%);
+}
+
+/* When content is clipped the way to see the rest must be visible without
+   hovering — on touch there is no hover at all. */
+figure.ms-mermaid[data-wide] .ms-mermaid__expand,
+figure.ms-mermaid[data-tall] .ms-mermaid__expand {
+  opacity: 1;
+}
+
+/* The expand affordance stays quiet until the diagram is hovered or the
+   button itself is focused, so it never competes with the diagram. It is a
+   real button, so keyboard users reach the viewer without the card click. */
+.ms-mermaid__expand {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1;
+  color: var(--muted-foreground);
+  background: color-mix(in srgb, var(--background) 85%, transparent);
+  border: 1px solid var(--border, rgba(120, 120, 120, 0.2));
+  border-radius: calc(var(--radius) - 4px);
+  cursor: zoom-in;
+  opacity: 0;
+  transition: opacity 0.15s ease, color 0.15s ease;
+}
+
+figure.ms-mermaid:hover .ms-mermaid__expand,
+.ms-mermaid__expand:focus-visible {
+  opacity: 1;
+}
+
+.ms-mermaid__expand:hover {
+  color: var(--foreground);
+}
+
+.ms-mermaid__pending,
+.ms-mermaid__error {
+  margin: 0;
+  padding: 1.5rem 0;
+  text-align: center;
+  font-size: 0.875rem;
+  color: var(--muted-foreground);
+}
+
+.ms-mermaid__error {
+  color: var(--destructive);
+}
+
+/* A diagram that failed to render still shows its source — a reader can then
+   see what was meant, and an author can see what to fix. */
+figure.ms-mermaid--error {
+  cursor: default;
+}
+
+.ms-mermaid__source {
+  margin: 0;
+  padding: 0.75rem;
+  font-size: 0.8rem;
+  white-space: pre-wrap;
+  overflow-x: auto;
+  color: var(--muted-foreground);
+  background: var(--muted);
+  border-radius: calc(var(--radius) - 2px);
+}
+
+/* ── Diagram label text ─────────────────────────────────────────────────
+   Mermaid is configured with `htmlLabels: true`, so node labels are real
+   HTML inside a foreignObject and can be styled. Without these rules a
+   label that wraps onto several lines is set at the browser's default
+   leading, which is far too loose inside a node box and makes multi-line
+   nodes look broken next to single-line ones. */
+
+figure.ms-mermaid .nodeLabel,
+figure.ms-mermaid .edgeLabel,
+figure.ms-mermaid .label,
+.ms-diagram-viewer .nodeLabel,
+.ms-diagram-viewer .edgeLabel,
+.ms-diagram-viewer .label {
+  /* Leading only. Mermaid measures each label and writes its own
+     `white-space` inline, so overriding that here lets text re-wrap at a
+     width the node box was never sized for, and it spills out. Line height
+     is safe to restyle because it does not change the measured width. */
+  line-height: 1.35;
+  overflow-wrap: break-word;
+}
+
+figure.ms-mermaid .nodeLabel p,
+.ms-diagram-viewer .nodeLabel p {
+  margin: 0;
+  line-height: inherit;
+}
+
+/* foreignObject labels inherit the page's prose colour rules otherwise. */
+figure.ms-mermaid foreignObject div,
+.ms-diagram-viewer foreignObject div {
+  text-align: center;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   Expanded diagram viewer
+
+   A native <dialog>, same mechanism as the search modal, so Escape, focus
+   containment and the backdrop are the platform's job rather than ours.
+   ───────────────────────────────────────────────────────────────────────── */
+
+dialog.ms-diagram-viewer {
+  width: min(95vw, 1100px);
+  height: min(85vh, 820px);
+  max-width: none;
+  max-height: none;
+  padding: 0;
+  margin: auto;
+  display: none;
+  grid-template-rows: auto 1fr auto;
+  color: var(--foreground);
+  background: var(--card);
+  border: 1px solid var(--border, rgba(120, 120, 120, 0.2));
+  border-radius: calc(var(--radius) + 2px);
+  overflow: hidden;
+}
+
+dialog.ms-diagram-viewer[open] {
+  display: grid;
+}
+
+dialog.ms-diagram-viewer::backdrop {
+  background: rgb(0 0 0 / 0.55);
+  backdrop-filter: blur(2px);
+}
+
+.ms-diagram-viewer__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  height: 2.75rem;
+  padding: 0 0.5rem 0 0.9rem;
+  border-bottom: 1px solid var(--border, rgba(120, 120, 120, 0.2));
+}
+
+.ms-diagram-viewer__label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-width: 0;
+  font-size: 0.8rem;
+  color: var(--muted-foreground);
+}
+
+.ms-diagram-viewer__label > span {
+  font-family: var(--font-mono);
+  color: var(--foreground);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ms-diagram-viewer__actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.15rem;
+  flex: none;
+}
+
+.ms-diagram-viewer__actions button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.85rem;
+  height: 1.85rem;
+  font-size: 1rem;
+  line-height: 1;
+  color: var(--muted-foreground);
+  background: none;
+  border: 0;
+  border-radius: calc(var(--radius) - 4px);
+  cursor: pointer;
+  transition: color 0.12s ease, background-color 0.12s ease;
+}
+
+.ms-diagram-viewer__actions button:hover {
+  color: var(--foreground);
+  background: var(--muted);
+}
+
+.ms-diagram-viewer__stage {
+  position: relative;
+  overflow: hidden;
+  touch-action: none;
+  user-select: none;
+  cursor: grab;
+  /* A dot grid reads as a canvas, which tells the reader the area is
+     manipulable before they try to drag it. */
+  background-image: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--muted-foreground) 35%, transparent) 1px,
+    transparent 1px
+  );
+  background-size: 20px 20px;
+}
+
+.ms-diagram-viewer__stage[data-dragging] {
+  cursor: grabbing;
+}
+
+.ms-diagram-viewer__inner {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform-origin: center;
+  /* Suppressed inline while a drag is in flight so panning tracks the
+     pointer exactly; restored for button and wheel steps so those ease. */
+  transition: transform 80ms ease-out;
+}
+
+.ms-diagram-viewer__inner svg {
+  max-width: none;
+  height: auto;
+  display: block;
+}
+
+.ms-diagram-viewer__hint {
+  margin: 0;
+  padding: 0.4rem 0.9rem;
+  font-size: 0.7rem;
+  color: var(--muted-foreground);
+  border-top: 1px solid var(--border, rgba(120, 120, 120, 0.2));
+}
+
+@media (max-width: 640px) {
+  dialog.ms-diagram-viewer {
+    width: 100vw;
+    height: 100vh;
+    border-radius: 0;
+    border: 0;
+  }
+  /* Pointer-drag panning is the whole interaction on a phone, and the hint
+     costs a row of a small screen to say so. */
+  .ms-diagram-viewer__hint {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ms-diagram-viewer__inner {
+    transition: none;
+  }
 }
