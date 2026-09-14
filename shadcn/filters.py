@@ -1,45 +1,37 @@
 import urllib.parse
-import urllib.request
 from collections.abc import Mapping
-from functools import lru_cache
 from pathlib import Path
-from typing import Any, List, Union
-from urllib.error import URLError
+from typing import Any, List, Optional, Union
 
 from mkdocs.config.defaults import MkDocsConfig
 from mkdocs.plugins import get_plugin_logger
 from mkdocs.structure.nav import Navigation, Section
 from mkdocs.structure.pages import Page
 
+from shadcn.iconify import IconCache
+
 logger = get_plugin_logger("filters")
 
+#: The build's icon cache. Set by the plugin's `on_config` so resolution is
+#: batched and persisted per build; a default instance keeps the filter usable
+#: on its own (tests, or a template rendered outside a full build).
+_icons = IconCache()
 
-@lru_cache()
+
+def set_icon_cache(cache: Optional[IconCache]) -> None:
+    """Point the `iconify` filter at this build's cache."""
+    global _icons
+    _icons = cache if cache is not None else IconCache()
+
+
 def iconify(key: str, height: str = "20px", **kwargs) -> str:
-    base_url = "https://api.iconify.design"
-    icon = key.split(":")
-    if len(icon) != 2:
-        raise ValueError(
-            f"Invalid icon format: {key}. Expected format 'provider:name'."
-        )
-    # collapse icon
-    provider, name = icon
-    url = f"{base_url}/{provider}/{name}.svg?{urllib.parse.urlencode({'height': height, **kwargs})}"
+    """Inline SVG for an Iconify `provider:name`, resolved at build time.
 
-    # need to provide a user-agent to fix cloudlfare 403 error
-    req = urllib.request.Request(
-        url,
-        headers={"User-Agent": "mkdocs-shadcn"},
-    )
-    try:
-        with urllib.request.urlopen(req) as response:
-            return response.read().decode(
-                "utf-8"
-            )  # Convert to string if needed
-    except URLError as err:
-        logger.error(f"fail to call iconify api: {err} ({url})")
-
-    return "<svg></svg>"
+    Fetching is batched per provider and cached on disk by `IconCache`,
+    because the per-icon endpoint throttles a CI runner hard enough to abort a
+    strict build. See `shadcn/iconify.py` for why that matters.
+    """
+    return _icons.svg(key, height, **kwargs)
 
 
 def parse_author(site_author: str) -> Union[str, None]:
@@ -185,6 +177,7 @@ def is_http_url(path: str) -> bool:
         return False
     return True
 
+
 def read_file(path: str, config: MkDocsConfig) -> str:
     """Read raw text content from a file, resolved from docs_dir"""
     p: Path = Path(config.docs_dir) / path
@@ -193,6 +186,7 @@ def read_file(path: str, config: MkDocsConfig) -> str:
     except OSError as err:
         logger.error(f"failed to read file: {err} ({p})")
         return ""
+
 
 def is_svg(path: str) -> bool:
     """Check if a path points to an SVG file, based on extension"""

@@ -1,6 +1,7 @@
 import re
 from datetime import datetime, timezone
 from functools import partial
+from pathlib import Path
 
 from jinja2 import Environment
 from mkdocs.config.defaults import MkDocsConfig
@@ -20,8 +21,10 @@ from shadcn.filters import (
     parse_author,
     scoped_nav,
     read_file,
+    set_icon_cache,
     setattribute,
 )
+from shadcn.iconify import IconCache, theme_icon_names
 from shadcn.plugins.mixins.code_refs import CodeRefsMixin
 from shadcn.plugins.mixins.dev import DevServerMixin
 from shadcn.plugins.mixins.git import GitTimestampsMixin
@@ -55,6 +58,16 @@ class SearchPlugin(
     def on_config(self, config: MkDocsConfig):
         # we need to put "en" as default language for search
         self.config["lang"] = self.config.get("lang", None) or ["en"]
+        # One icon cache per build, persisted beside the site so a rebuild (or
+        # a CI run that restores the directory) makes no network calls at all.
+        self._icon_cache = IconCache(
+            Path(config.config_file_path).parent / ".cache" / "iconify"
+        )
+        set_icon_cache(self._icon_cache)
+        # Resolve every icon the site declares in ONE request per icon set,
+        # before any template asks for one. Fetching lazily per icon is what
+        # trips the API's rate limiter on a CI runner.
+        self._icon_cache.warm(theme_icon_names(config))
         return super().on_config(config)
 
     def on_env(
@@ -105,4 +118,5 @@ class SearchPlugin(
         return super().on_page_context(context, page, config=config, nav=nav)
 
     def on_post_build(self, config: MkDocsConfig):
+        self._icon_cache.flush()
         return super().on_post_build(config=config)

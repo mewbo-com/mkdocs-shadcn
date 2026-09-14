@@ -107,6 +107,30 @@ The wheel ships the `shadcn/` package only.
   `mkdocs.utils.get_relative_url`, so any nav depth works. Styling lives in
   `shadcn/css/code-refs.css`, `<link>`'d only when the feature is on (head.html
   gates it). No JS, so no SRI; no Tailwind, so no `base.css` rebuild.
+- **Icons resolve at BUILD time, so `api.iconify.design`'s rate limiter is a
+  build dependency** (`shadcn/iconify.py`). The per-icon `/{prefix}/{name}.svg`
+  endpoint throttles a shared egress IP hard, which is what a CI runner has: a
+  consumer with ~45 nav icons made ~50 sequential requests, got `429` for most
+  of them, and every 429 was an `ERROR` that aborted `--strict`. The cure is
+  the **batch** endpoint `/{prefix}.json?icons=a,b,c`, one request per icon
+  *set*; `IconCache.warm()` is called from `on_config` with the whole census so
+  nothing resolves lazily. **The two endpoints are metered separately** —
+  measured 2026-09-14, the `.svg` endpoint returned 429 while `.json` returned
+  200 from the same address in the same second — which is why batching fixes
+  this and retrying alone does not. Results also persist under the site's
+  `.cache/iconify/`, so a warm rebuild makes zero requests.
+  - **A name the API positively reports as absent stays a hard `ERROR`**, since
+    that is a typo in the consumer's own config and a warning would ship a
+    blank square. Throttling and outages degrade to an `<iconify-icon>` the
+    browser resolves instead, because the runtime script is always loaded.
+  - **Width is scaled by aspect ratio and rounded UP to 2dp** (`256x153` at
+    `16px` is `26.78px`, not `26.77`). `round()` is wrong and is invisible on a
+    square icon, which is nearly all of them.
+  - **The mirrors `api.simplesvg.com` / `api.unisvg.com` are NOT usable
+    fallbacks** — both answer `403 Cloudflare` to every request, browser
+    user-agent included. Do not add them as a retry target.
+  - `THEME_ICONS` lists the names the theme's own templates hardcode. A name
+    added to a template belongs there too, or it resolves one-at-a-time.
 - **Versioning.** This fork uses its own SemVer (`1.x`) independent of
   upstream's `0.10.x`. `pyproject.toml` is the source of truth; the
   `sync-version` hook copies it into `package.json`.
