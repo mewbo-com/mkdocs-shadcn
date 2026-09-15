@@ -53,6 +53,44 @@ def test_media_is_frameless_with_readable_caption_overlays(
     assert page.evaluate("document.documentElement.scrollWidth <= innerWidth")
 
 
+def test_caption_halo_surrounds_text_without_blurring_letters(
+    page: Page, local_deployment: str
+):
+    page.goto(
+        local_deployment + "/mewbo_components/", wait_until="networkidle"
+    )
+    for selector in [".ms-shot > figcaption", ".ms-shots figcaption"]:
+        halo = page.locator(selector).first.evaluate("""caption => {
+          const style = getComputedStyle(caption);
+          const layers = style.textShadow.split(/,(?![^()]*\\))/).map(layer => {
+            const color = layer.match(/rgba?\\(([^)]+)\\)/);
+            const rgba = color ? color[1].split(',').map(Number) : [];
+            const lengths = layer.replace(/rgba?\\([^)]+\\)/, '')
+              .match(/-?[\\d.]+px/g)?.map(parseFloat) || [];
+            return { x: lengths[0], y: lengths[1], blur: lengths[2],
+              dark: rgba.slice(0, 3).every(c => c === 0),
+              alpha: rgba.length === 4 ? rgba[3] : 1 };
+          });
+          return { layers, filter: style.filter };
+        }""")
+        tight = [
+            layer
+            for layer in halo["layers"]
+            if layer["dark"] and layer["alpha"] >= 0.9 and layer["blur"] <= 2
+        ]
+        assert any(layer["x"] < 0 for layer in tight), halo
+        assert any(layer["x"] > 0 for layer in tight), halo
+        assert any(layer["y"] < 0 for layer in tight), halo
+        assert any(layer["y"] > 0 for layer in tight), halo
+        assert any(
+            layer["dark"]
+            and layer["alpha"] >= 0.8
+            and 3 <= layer["blur"] <= 10
+            for layer in halo["layers"]
+        ), halo
+        assert halo["filter"] == "none", halo
+
+
 def test_carousel_uses_image_ratio_without_letterboxing(
     page: Page, local_deployment: str
 ):

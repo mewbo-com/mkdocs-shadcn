@@ -5,7 +5,7 @@ from playwright.sync_api import Page
 
 
 @pytest.mark.parametrize("width", [1024, 1280, 2560])
-def test_desktop_brand_has_a_large_name_and_docs_badge(
+def test_desktop_brand_keeps_logo_with_compact_label_and_badge(
     page: Page, local_deployment: str, width: int
 ):
     """Desktop branding stays prominent without taking space from search."""
@@ -36,12 +36,15 @@ def test_desktop_brand_has_a_large_name_and_docs_badge(
         glyph.evaluate("element => element.getBoundingClientRect().width")
         >= 28
     )
-    assert (
-        name.evaluate(
-            "element => parseFloat(getComputedStyle(element).fontSize)"
-        )
-        >= 21
-    )
+    assert name.evaluate(
+        "element => parseFloat(getComputedStyle(element).fontSize)"
+    ) == pytest.approx(16.5)
+    assert badge.evaluate(
+        "element => parseFloat(getComputedStyle(element).fontSize)"
+    ) == pytest.approx(8.4)
+    assert badge.evaluate(
+        "element => parseFloat(getComputedStyle(element).paddingLeft)"
+    ) == pytest.approx(5.4)
     assert badge.inner_text() == "Docs"
     assert (
         badge.evaluate("element => getComputedStyle(element).borderStyle")
