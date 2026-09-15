@@ -1747,9 +1747,9 @@ article .ms-shots img,
   --mewbo-nav-control-h: 2rem;
   /* A quiet satin sheen, derived entirely from the site's surface palette. */
   --mewbo-chrome-finish: linear-gradient(180deg,
-    color-mix(in srgb, var(--card) 65%, var(--background)) 0%,
-    color-mix(in srgb, var(--muted) 18%, var(--background)) 48%,
-    color-mix(in srgb, var(--muted) 38%, var(--background)) 100%);
+    color-mix(in srgb, var(--card) 32.5%, var(--background)) 0%,
+    color-mix(in srgb, var(--muted) 9%, var(--background)) 48%,
+    color-mix(in srgb, var(--muted) 19%, var(--background)) 100%);
   background-image: var(--mewbo-chrome-finish);
   z-index: 50;
   isolation: isolate;
