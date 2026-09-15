@@ -1867,29 +1867,37 @@ body:not(.ms-has-header-tabs) .mewbo-header {
 .mewbo-nav-search-pill svg { flex-shrink: 0; opacity: 0.6; }
 .mewbo-nav-search-pill span { flex: 1; text-align: left; }
 
-/* Libertinus draws key outlines and joins names such as Shift through liga.
-   Keep prose labels intact for accessibility; unsupported modifier names use
-   the same raised shell with the regular text face. */
+/* The font draws its own key outline. Its internal label is much smaller
+   than its em square, so enlarge the glyph rather than adding a second box. */
 kbd:not(:has(kbd)):not(.mewbo-kbd) {
   font-family: "Libertinus Keyboard", var(--font-sans);
-  font-size: calc(0.75rem + 1pt);
+  font-size: 1.85em;
   font-weight: 400;
   font-variant-ligatures: common-ligatures;
-  line-height: 1.5;
+  line-height: 1;
   height: auto;
-  min-height: 1.5rem;
+  min-height: 0;
+  min-width: 0;
   margin-inline: 0.15rem;
-  padding-inline: 0.2rem;
-  vertical-align: baseline;
+  padding: 0;
+  vertical-align: -0.12em;
   color: var(--foreground);
-  background: var(--muted);
-  border: 1px solid var(--border);
-  border-bottom-width: 2px;
-  border-radius: 0.3rem;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
 }
+/* These labels have no font ligature. Keep accessible text and draw exactly
+   one outline at the same optical scale as the keyboard glyphs. */
 kbd:is(.key-command, .key-option, .key-windows, [class*="key-arrow-"]):not(.mewbo-kbd) {
   font-family: var(--font-sans);
-  padding-inline: 0.35rem;
+  font-size: calc(1em + 1pt);
+  line-height: 1.25;
+  padding: 0.08em 0.3em;
+  vertical-align: baseline;
+  background: transparent;
+  border: 1px solid currentColor;
+  border-radius: 0.2rem;
 }
 .keys { white-space: nowrap; }
 .keys .key-separator { margin-inline: 0.1rem; }
