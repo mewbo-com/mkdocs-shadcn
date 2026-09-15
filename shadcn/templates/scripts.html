@@ -46,9 +46,9 @@
     {% if config.theme.show_version_switcher %}
     <script integrity="sha384-1hsmgovd+8XvQC7c0UqXIF6e6O81K9j9a/gDatEwP5cWwsXGpBFgJf5mni7MpXAU" src="{{ 'js/version-switcher.js' | url }}"></script>
     {% endif %}
-    <script integrity="sha384-TVMudAJ6PHLmxdMRthX+f4R0JBiuTZ5BzvdLvMe/XkVDPEDqhRO5arcz7HEZE7Su" src="{{ 'js/copy-page.js' | url }}"></script>
+    <script integrity="sha384-zAqtyqcm9kqs1xwYnmOGnwFvg95+uxLJn0Lbty5M9LQyB0ubaDoFJK16T2HHtBX8" src="{{ 'js/copy-page.js' | url }}"></script>
     {% if config.theme.show_build_info %}
-    <script integrity="sha384-DkxjftaVOhpl2QYQ/Usl5HQClKExwDdXlxndEvoihMGxcCSzZ8TlIs9+I394dVbz" src="{{ 'js/build-info.js' | url }}"></script>
+    <script data-build-info-url="{{ 'build-info.json' | url }}" integrity="sha384-oSnsvt4/kbT7CbsQctZ5JjW8EZoqf4w4OECHUnB+CGduNbfjRsCYN8BqjzuOQ5at" src="{{ 'js/build-info.js' | url }}"></script>
     {% endif %}
     <script integrity="sha384-TGiz4wIFd0aefgdd7YzFXtLJuYTwn2AWj1XU7sz5wTHdmXH+TfTAa37lgobFlnIa" src="{{ 'js/webmcp.js' | url }}"></script>
 <script src="https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js"></script>
