@@ -16,12 +16,13 @@
                 <span class="text-sm font-medium">{{ _("Menu") }}</span>
             </button>
 
-            {# LEFT — brand cluster: glyph + wordmark on a shared baseline. #}
+            {# LEFT — site-driven mark, name, and quiet section badge. #}
             <a class="mewbo-brand hidden lg:inline-flex" href="{{ config.site_url }}">
                 <span class="mewbo-brand__glyph">{% include "templates/icon.html" %}</span>
                 {% if config.theme.show_title %}
                 <span class="mewbo-brand__name">{{ config.site_name }}</span>
                 {% endif %}
+                <span class="mewbo-brand__docs">{{ _("Docs") }}</span>
             </a>
             {% if config.theme.topbar_sections %}
             {% include "templates/header_navigation.html" %}

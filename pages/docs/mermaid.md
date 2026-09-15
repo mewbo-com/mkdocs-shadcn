@@ -71,8 +71,9 @@ sequenceDiagram
 
 ## Wide diagrams
 
-A diagram wider than the column is scaled down to fit the figure. Expanding
-it restores full size, so nothing is lost to the column width.
+Diagrams fill the column without shrinking labels below a readable size.
+Wide previews crop at the right edge. Press **Expand** to fit the whole
+diagram to your screen and use zoom or pan to inspect it.
 
 ```mermaid
 flowchart LR

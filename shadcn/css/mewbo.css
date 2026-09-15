@@ -1686,18 +1686,15 @@ body:not(.ms-has-header-tabs) .mewbo-header {
   border-bottom: 1px solid var(--border);
 }
 
-/* Brand cluster: glyph + wordmark optically aligned.
-   No `display` declaration here — the template's `hidden lg:inline-flex`
-   Tailwind utilities own visibility. (Adding `display` from extra.css would
-   sit outside @layer utilities and beat every Tailwind rule regardless of
-   specificity, which is how CSS Cascade Layers work.) */
+/* Brand cluster: its mark is deliberately the header's largest visual cue;
+   the nearby Docs badge identifies this surface without competing for that
+   role. Visibility remains owned by the template's `hidden lg:inline-flex`.
+   The inner SVG, image, and Iconify custom element all inherit the same box. */
 .mewbo-brand {
-  align-items: center; gap: 0.5rem;
-  height: 2.25rem; padding: 0 0.25rem;
-  /* The wordmark sits back at --muted-foreground so the glyph carries the
-     brand and the header chrome stays quiet; full --foreground read as pure
-     white in dark mode. The glyph's SVG paints its own fills, not
-     currentColor, so it is unaffected. Warms to --foreground on hover. */
+  align-items: center; gap: 0.55rem;
+  min-width: 0; height: 2.75rem; padding: 0 0.25rem;
+  /* The name remains quieter than page content so the larger scale reads as
+     identity, rather than an extra navigation control. */
   color: var(--muted-foreground); text-decoration: none;
   border-radius: 0.5rem;
   transition: background 0.15s, color 0.15s;
@@ -1705,13 +1702,23 @@ body:not(.ms-has-header-tabs) .mewbo-header {
 .mewbo-brand:hover { background: var(--accent); color: var(--foreground); }
 .mewbo-brand__glyph {
   display: inline-flex; align-items: center; justify-content: center;
-  width: 1.25rem; height: 1.25rem; flex-shrink: 0;
+  width: 1.75rem; height: 1.75rem; flex: 0 0 1.75rem;
 }
 .mewbo-brand__glyph svg,
-.mewbo-brand__glyph img { width: 100%; height: 100%; }
+.mewbo-brand__glyph img,
+.mewbo-brand__glyph iconify-icon { width: 100%; height: 100%; }
 .mewbo-brand__name {
-  font-size: 0.875rem; font-weight: 600; letter-spacing: -0.01em;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  font-size: 1.375rem; font-weight: 600; letter-spacing: -0.025em;
 }
+.mewbo-brand__docs {
+  flex: 0 0 auto;
+  padding: 0.16rem 0.45rem;
+  border: 1px solid var(--border); border-radius: 0.375rem;
+  color: var(--muted-foreground);
+  font-size: 0.7rem; font-weight: 500; line-height: 1.15;
+}
+.mewbo-brand:hover .mewbo-brand__docs { border-color: var(--foreground); }
 
 /* Mobile menu trigger. Visibility owned by Tailwind `flex lg:hidden`. */
 .mewbo-menu-btn {
@@ -2870,8 +2877,8 @@ figure.ms-mermaid:hover {
 
 .ms-mermaid__stage {
   display: flex;
-  align-items: center;
-  justify-content: center;
+  align-items: flex-start;
+  justify-content: flex-start;
   /* A very tall diagram would otherwise push the surrounding prose apart.
      Bound the inline card and let the expanded viewer carry the full size —
      the card is a preview, the viewer is where a large diagram is read. */
@@ -2879,26 +2886,18 @@ figure.ms-mermaid:hover {
   overflow: hidden;
 }
 
-.ms-mermaid__stage svg {
+.ms-mermaid__stage > svg {
+  display: block;
+  flex: none;
   max-width: 100%;
   height: auto;
 }
 
-/* Too wide to shrink and stay readable: show it at a legible size and let
-   the card scroll sideways. `justify-content` has to relax too, or a centred
-   flex child cannot be scrolled back to its own left edge. */
+/* Crop rather than reducing labels to a miniature. Expand shows the whole
+   diagram; the fade makes the cut edge explicit without a second scrollbar. */
 figure.ms-mermaid[data-wide] .ms-mermaid__stage {
-  overflow-x: auto;
-  justify-content: flex-start;
-}
-
-figure.ms-mermaid[data-wide] .ms-mermaid__stage svg {
-  max-width: none;
-  /* Mermaid also sets width="100%" as an ATTRIBUTE, so lifting max-width on
-     its own still leaves the diagram filling the column. `width: auto` hands
-     sizing back to the viewBox, which is the natural size we want here. */
-  width: auto;
-  flex: none;
+  -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 3rem), transparent);
+  mask-image: linear-gradient(to right, #000 calc(100% - 3rem), transparent);
 }
 
 /* Too tall to show whole: fade the cut edge instead of ending abruptly, so
@@ -3042,8 +3041,8 @@ figure.ms-mermaid foreignObject div,
    ───────────────────────────────────────────────────────────────────────── */
 
 dialog.ms-diagram-viewer {
-  width: min(95vw, 1100px);
-  height: min(85vh, 820px);
+  width: 95vw;
+  height: 92dvh;
   max-width: none;
   max-height: none;
   padding: 0;

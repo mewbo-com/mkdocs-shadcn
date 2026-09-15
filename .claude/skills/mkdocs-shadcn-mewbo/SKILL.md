@@ -256,10 +256,10 @@ Two things worth knowing when authoring:
 - **Direction is yours, not the theme's.** `flowchart LR` vs `TD` is a token in
   your source and nothing in the theme can override it. Prefer `LR` for wide,
   shallow flows — it reads better in a documentation column.
-- The inline card **fits** the diagram to the column; it only falls back to
-  horizontal scrolling when a diagram is nearly three times the column width.
-  Expand is where a large diagram is meant to be read, so do not fight the
-  preview size.
+- The inline card fills the column and keeps labels at a readable scale.
+  Wide or tall diagrams are cropped with a faded edge and a visible **Expand**
+  control. Expand fits the whole diagram into a viewer that uses the screen.
+  A tiny diagram that leaves available space unused is a sizing bug.
 - Force a label break with `<br/>`; long labels wrap on their own.
 
 ### Content tabs
@@ -492,7 +492,7 @@ Expand viewer.
 | `og:site_name` absent / WebMCP tool named `search_docs` | Theme older than v1.9.1 |
 | Abbreviation shows no underline | Term does not exactly match the `*[TERM]:` definition, including case |
 | Video does not play | Path is relative to the built URL, not the source file |
-| Diagram is tiny | Expected — the card is a preview; use Expand |
+| Diagram is tiny with unused space | Check theme version and SVG sizing after theme changes or container resizing. Cropped previews are expected but unreadably small labels are not |
 | Code blocks unhighlighted AND no titles AND no line numbers, all at once | Pygments is not installed |
 | Build dies with `'NoneType' object has no attribute 'get'` | `arithmatex` enabled against a theme older than v1.10.0; set `theme.katex_options: {}` |
 | `++ctrl+k++` prints literally | `pymdownx.keys` is not enabled |
