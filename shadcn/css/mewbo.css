@@ -1165,8 +1165,8 @@ article a:hover,
   width: fit-content;
   max-width: calc(100% - 2rem);
   margin: 0 auto;
-  padding: 0.5rem 0.75rem;
-  border-radius: 0.375rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
   color: #fff;
   font-size: 0.875rem;
   line-height: 1.4;
@@ -1203,7 +1203,7 @@ article a:hover,
   .ms-shots figcaption {
     inset: auto 0.75rem 0.6rem;
     max-width: calc(100% - 1.5rem);
-    padding: 0.4rem 0.6rem;
+    padding: 0.2rem 0.4rem;
     font-size: 0.8rem;
   }
 }
@@ -1798,6 +1798,9 @@ body:not(.ms-has-header-tabs) .mewbo-header {
   line-height: 1;
 }
 .mewbo-brand__docs {
+  /* Center the smaller lettering optically, not its padded border box. */
+  position: relative;
+  top: -0.1875rem;
   flex: 0 0 auto;
   padding: 0.08rem 0.25rem;
   border: 1px solid var(--border); border-radius: 0.2rem;
@@ -1879,8 +1882,9 @@ body:not(.ms-has-header-tabs) .mewbo-header {
    than its em square, so enlarge the glyph rather than adding a second box. */
 kbd:not(:has(kbd)):not(.mewbo-kbd) {
   font-family: "Libertinus Keyboard", var(--font-sans);
-  font-size: 1.85em;
+  font-size: 1.5725em;
   font-weight: 400;
+  font-synthesis: none;
   font-variant-ligatures: common-ligatures;
   line-height: 1;
   height: auto;
@@ -1899,7 +1903,7 @@ kbd:not(:has(kbd)):not(.mewbo-kbd) {
    one outline at the same optical scale as the keyboard glyphs. */
 kbd:is(.key-command, .key-option, .key-windows, [class*="key-arrow-"]):not(.mewbo-kbd) {
   font-family: var(--font-sans);
-  font-size: calc(1em + 1pt);
+  font-size: calc(0.85em + 0.85pt);
   line-height: 1.25;
   padding: 0.08em 0.3em;
   vertical-align: baseline;

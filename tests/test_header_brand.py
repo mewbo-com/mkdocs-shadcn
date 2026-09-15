@@ -54,9 +54,10 @@ def test_desktop_brand_keeps_logo_with_compact_label_and_badge(
         marker.remove();
         return y;
       };
-      return Math.abs(baseline('.mewbo-brand__name') - baseline('.mewbo-brand__docs'));
+      return baseline('.mewbo-brand__name') - baseline('.mewbo-brand__docs');
     }""")
-    assert alignment < 1, alignment
+    # Smaller badge lettering needs a higher baseline for optical centering.
+    assert alignment == pytest.approx(3, abs=0.5), alignment
     assert badge.inner_text() == "Docs"
     assert (
         badge.evaluate("element => getComputedStyle(element).borderStyle")

@@ -25,7 +25,7 @@ def test_keycaps_have_font_size_and_spacing(
     }""")
     assert "Libertinus Keyboard" in metrics["font"]
     assert metrics["loaded"]
-    assert metrics["size"] >= metrics["peer"] * 1.6
+    assert metrics["size"] == pytest.approx(metrics["peer"] * 1.5725, abs=0.01)
     assert metrics["border"] == "0px"
     assert metrics["background"] == "rgba(0, 0, 0, 0)"
     assert metrics["padding"] == "0px"

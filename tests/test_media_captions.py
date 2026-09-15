@@ -38,6 +38,8 @@ def test_media_is_frameless_with_readable_caption_overlays(
             padding: getComputedStyle(image).paddingTop,
             background: getComputedStyle(caption).backgroundColor,
             color: getComputedStyle(caption).color,
+            captionPaddingY: parseFloat(getComputedStyle(caption).paddingTop),
+            captionPaddingX: parseFloat(getComputedStyle(caption).paddingLeft),
           };
         }""")
         assert metrics["border"] == "0px", metrics
@@ -49,6 +51,8 @@ def test_media_is_frameless_with_readable_caption_overlays(
         assert metrics["centered"] < 2, metrics
         assert metrics["background"] == "rgb(0, 0, 0)", metrics
         assert metrics["color"] == "rgb(255, 255, 255)", metrics
+        assert metrics["captionPaddingY"] <= 4, metrics
+        assert metrics["captionPaddingX"] <= 8, metrics
         expect(figure.locator("figcaption")).to_be_visible()
     assert page.evaluate("document.documentElement.scrollWidth <= innerWidth")
 
