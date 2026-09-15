@@ -218,25 +218,18 @@ div.mermaid {
   overflow-x: auto;
 }
 
-/* Inline & hero images in article content: subtle border + rounded corners so
-   screenshots and diagrams sit cleanly on the page, matching code blocks. A
-   contrasting backing (deeper than the page in dark, clean white in light)
-   shows through transparent PNGs and forms a thin matte frame, giving media a
-   sense of depth instead of dissolving into the surface. Opt out with
-   `.no-border` for images that must bleed (logos, badges). */
+/* Content images sit directly on the page without a matte or outer frame. */
 article img:not(.no-border),
 .md-content img:not(.no-border) {
   box-sizing: border-box;
-  padding: 0.5rem;
-  background: var(--image-backing, var(--card));
-  border: 1px solid var(--border, rgba(120, 120, 120, 0.2));
+  padding: 0;
+  background: transparent;
+  border: 0;
   border-radius: 0.5rem;
   max-width: 100%;
   height: auto;
 }
-/* The .ms-* media kit (screenshot figure, device mockups, carousel) carries
-   its own bespoke framing + backing token, so exempt those images from the
-   generic backing above to avoid double-framing. */
+/* Keep media-kit images frameless even when used outside article content. */
 article .ms-shot__frame img,
 article .ms-shots img,
 article .ms-devices img,
@@ -1140,31 +1133,68 @@ article a:hover,
    Consolidated from per-consumer stylesheets so docs sites get them without
    forking. All tokenised. */
 
-/* Captioned screenshot figure: bezel-framed image + caption strip. The frame
-   tint is a token so it can be retinted per use; it defaults dark so light UI
-   screenshots pop. Markup: <figure class="ms-shot"><div class="ms-shot__frame">
-   <img></div><figcaption class="ms-shot__body">…</figcaption></figure>. */
+/* Keep the existing screenshot markup, but share a frameless caption overlay
+   with carousel figures. The caption itself owns the scrim, so an uncaptioned
+   image has no dark wash. No extra wrappers or generated text are needed. */
 .ms-shot {
   margin: 1.25rem 0;
-  border: 1px solid var(--border, rgba(0, 0, 0, 0.1));
-  border-radius: 0.7rem;
+}
+.ms-shot,
+.ms-shots figure {
+  position: relative;
+  isolation: isolate;
+  border: 0;
+  border-radius: 0.5rem;
   overflow: hidden;
-  background: var(--card, transparent);
+  background: transparent;
 }
 .ms-shot__frame {
-  padding: 0.75rem;
-  background: var(--ms-shot-frame, #1f1d1a);
+  padding: 0;
+  background: transparent;
 }
 .ms-shot__frame img {
   display: block;
   width: 100%;
   height: auto;
-  border-radius: 0.4rem;
 }
-.ms-shot__body {
-  padding: 0.6rem 0.85rem;
-  font-size: 0.85rem;
-  color: var(--muted-foreground, currentColor);
+.ms-shot > figcaption,
+.ms-shots figcaption {
+  position: absolute;
+  inset: auto 0 0;
+  z-index: 1;
+  margin: 0;
+  padding: 2.5rem 1rem 0.75rem;
+  color: #fff;
+  font-size: 0.875rem;
+  line-height: 1.4;
+  text-align: center;
+  text-wrap: pretty;
+  overflow-wrap: anywhere;
+  background: linear-gradient(to top, rgb(0 0 0 / 0.82), rgb(0 0 0 / 0.55) 55%, transparent);
+  text-shadow: 0 1px 3px rgb(0 0 0 / 0.9), 0 0 12px rgb(0 0 0 / 0.6);
+  pointer-events: none;
+}
+.ms-shot > figcaption a,
+.ms-shots figcaption a {
+  color: inherit;
+  pointer-events: auto;
+}
+.ms-shot > figcaption p,
+.ms-shots figcaption p {
+  margin: 0;
+  color: inherit;
+}
+.ms-shot > figcaption code,
+.ms-shots figcaption code {
+  color: inherit;
+  background: rgb(0 0 0 / 0.25);
+}
+@media (max-width: 640px) {
+  .ms-shot > figcaption,
+  .ms-shots figcaption {
+    padding: 1.75rem 0.75rem 0.6rem;
+    font-size: 0.8rem;
+  }
 }
 
 /* Side-by-side device mockups (e.g. laptop + phone) at matched height that
@@ -1405,11 +1435,7 @@ article .typography video,
   width: 100%;
   max-width: 100%;
   margin: 0.75rem 0 0.25rem;
-  /* The carousel is a heavy block and sat hard against whatever preceded it.
-     PADDING rather than margin: inside a `.ms-hero` every child's margin is
-     zeroed so the flex gap can own the rhythm, so a margin here is dropped
-     without trace. Padding survives both contexts. */
-  padding-top: 1rem;
+  padding: 0;
   overflow: hidden;
   --swiper-theme-color: var(--primary, #c15f3c);
   --swiper-navigation-size: 20px;
@@ -1434,30 +1460,16 @@ article .typography video,
 .ms-shots img {
   display: block;
   width: 100%;
-  /* 16:9. Product screenshots and screen recordings are landscape — a 4:3 box
-     letterboxed every one of them into roughly a quarter of dead `--muted`
-     space above and below, a visible frame inside a frame. Consumers were
-     overriding this rule in their own extra_css; matching the box to the
-     content is the theme's job. `object-fit: contain` still protects a
-     genuinely non-16:9 image from being cropped. */
-  aspect-ratio: 16 / 9;
-  object-fit: contain;
-  background: var(--muted, hsl(48 25% 92.2%));
-  border: 1px solid var(--border, rgba(0, 0, 0, 0.1));
-  border-radius: 0.6rem;
-}
-/* The caption and the dots below it are one footer under the image, so they
-   sit on equal gaps. 0.55rem and 0.6rem read as a mistake rather than as a
-   rhythm, because the caption's line box makes the smaller gap look larger. */
-.ms-shots figcaption {
-  margin-top: 0.75rem;
-  text-align: center;
-  font-size: 0.875rem;
-  color: var(--muted-foreground, currentColor);
+  /* Preserve the actual image ratio instead of adding letterbox space. */
+  height: auto;
+  background: transparent;
+  border: 0;
+  border-radius: 0.5rem;
 }
 .ms-shots .swiper-pagination {
   position: static;
-  margin-top: 0.75rem;
+  margin-top: 0.35rem;
+  line-height: 1;
 }
 .ms-shots .swiper-button-prev,
 .ms-shots .swiper-button-next {
@@ -1665,16 +1677,23 @@ article .typography video,
    shell — reused for mobile-search, GitHub link, and theme toggle.
    ───────────────────────────────────────────────────────────────────────── */
 
-/* Flat edge, no elevation. A single subtle hairline marks where the header
-   ends — matching Devin/Mintlify, which separate the header with a border
-   alone. The old drop shadow (esp. the heavy 0.20 dark variant) feathered
-   down over the left sidebar's top, reading as a smudge; it's gone. */
+/* Elevate the whole sticky stack, not each row. The contact shadow marks
+   its lower edge; the broad downward shadow separates scrolling content.
+   Keep this on the header's foreground stacking context so it paints OVER
+   the article, with no overlay element intercepting links below the bar. */
 .mewbo-header {
   /* One height for the two labelled header controls (search pill, Ask AI).
      Declared here rather than at :root because it describes the header's own
      control scale, and both controls are descendants. */
   --mewbo-nav-control-h: 2rem;
-  box-shadow: none;
+  z-index: 50;
+  isolation: isolate;
+  box-shadow: 0 3px 6px -3px rgb(0 0 0 / 0.16),
+    0 16px 30px -10px rgb(0 0 0 / 0.18);
+}
+.dark .mewbo-header {
+  box-shadow: 0 3px 6px -3px rgb(0 0 0 / 0.5),
+    0 18px 36px -10px rgb(0 0 0 / 0.55);
 }
 
 /* Only the LAST element of the nav block draws the line that ends it. With a
@@ -3339,16 +3358,6 @@ div:has(> #toc) {
    to full foreground on the new deeper plane looked reasonable and was wrong:
    it removes the only colour cue distinguishing the active tab from its
    neighbours, leaving just the underline. */
-
-/* The nav block casts no shadow.
-
-   A two-layer shadow used to hang under it, which contradicted the rule
-   further up this file declaring the header flat with a hairline and no
-   elevation — both were live and the later one won. A shadow under a bar that
-   is the same colour as the page reads as a grey band, not as depth, and
-   measuring it found a 4px gradient running the full width beneath the tabs.
-   Where the chrome ends is stated once, by `.ms-header-tabs`'s bottom
-   hairline, or by the header's own when no tab rail exists. */
 
 .dark .mewbo-nav-search-pill:hover {
   background: color-mix(in srgb, var(--muted) 55%, var(--background));

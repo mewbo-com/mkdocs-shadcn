@@ -40,7 +40,7 @@ The wheel ships the `shadcn/` package only.
   `<div class="table-wrapper">` via `on_page_content`.
 - `shadcn/js/*.js` — theme + Mewbo enhancement scripts.
 - Brand content components live in `mewbo.css` as the `.ms-*` kit: the landing
-  hero/cards plus `.ms-shot` (captioned screenshot, tint via `--ms-shot-frame`),
+  hero/cards plus `.ms-shot` (frameless screenshot with a bottom caption overlay),
   `.ms-devices` (matched-height mockup pair, ratios via `--ms-devices-*`), and
   `.ms-shots` (Swiper carousel). The carousel is gated by `theme.carousel`,
   which makes `main.html` emit the Swiper CDN + `js/carousel.js`; a consumer

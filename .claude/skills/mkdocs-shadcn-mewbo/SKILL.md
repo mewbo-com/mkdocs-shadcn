@@ -327,11 +327,13 @@ both rather than picking one.
 
 ### Media
 
-- **Carousels** (`.swiper.ms-shots`, needs `theme.carousel: true`) size their
-  box to **16:9** from v1.10.1. Do not override `aspect-ratio` in your own
-  `extra_css`; a non-16:9 image is still protected by `object-fit: contain`.
-- **Images** get a matte frame automatically. Opt out with `{ .no-border }`
-  (needs `attr_list`) for logos and badges that must bleed.
+- **Carousels** (`.swiper.ms-shots`, needs `theme.carousel: true`) keep image
+  proportions and adapt to the active slide height. Include a `figcaption` in
+  every slide. It stays visible over the bottom of the image, centered on a
+  fading shadow, just like `.ms-shot` captions. Keep captions concise.
+- **Images** are frameless with no matte padding. Existing `.ms-shot__frame`
+  wrappers still work but add no bezel. Screenshots and carousels share the
+  caption overlay styling without extra configuration.
 - **Video** autoplays while on screen and pauses when scrolled away. Write a
   plain `<video src="…" width="…"></video>`; the theme mutes it, makes it
   inline and loops it. Add `data-no-autoplay controls` for a clip with

@@ -28,7 +28,9 @@ accessible markup). The theme styles both this and the legacy markup.
 ## Image carousel
 
 A `.swiper.ms-shots` block. The theme loads Swiper (CDN) and mounts it when
-`theme.carousel` is true; the markup below is all a consumer writes.
+`theme.carousel` is true. Include a `figcaption` in each slide. Captions remain
+visible over the image and share the screenshot treatment. Images keep their
+original proportions and the carousel follows the active slide height.
 
 <div class="swiper ms-shots">
   <div class="swiper-wrapper">
@@ -58,8 +60,9 @@ A `.swiper.ms-shots` block. The theme loads Swiper (CDN) and mounts it when
 
 ## Screenshot figure
 
-A bezel-framed, captioned screenshot (`.ms-shot`). The frame tint is the
-`--ms-shot-frame` token.
+A frameless screenshot (`.ms-shot`) with its caption centered over the bottom
+of the image. An upward fade and soft text shadow keep it readable. The existing
+`.ms-shot__frame` wrapper remains supported without adding a frame.
 
 <figure class="ms-shot">
   <div class="ms-shot__frame">
