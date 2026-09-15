@@ -1785,16 +1785,24 @@ body:not(.ms-has-header-tabs) .mewbo-header {
 .mewbo-brand__glyph svg,
 .mewbo-brand__glyph img,
 .mewbo-brand__glyph iconify-icon { width: 100%; height: 100%; }
+/* Align the two text baselines as one cluster, then center it on the mark. */
+.mewbo-brand__text {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.4rem;
+  min-width: 0;
+}
 .mewbo-brand__name {
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   font-size: 1.03125rem; font-weight: 600; letter-spacing: -0.025em;
+  line-height: 1;
 }
 .mewbo-brand__docs {
   flex: 0 0 auto;
-  padding: 0.12rem 0.3375rem;
-  border: 1px solid var(--border); border-radius: 0.28125rem;
+  padding: 0.08rem 0.25rem;
+  border: 1px solid var(--border); border-radius: 0.2rem;
   color: var(--muted-foreground);
-  font-size: 0.525rem; font-weight: 500; line-height: 1.15;
+  font-size: 0.525rem; font-weight: 500; line-height: 1;
 }
 .mewbo-brand:hover .mewbo-brand__docs { border-color: var(--foreground); }
 

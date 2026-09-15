@@ -44,7 +44,19 @@ def test_desktop_brand_keeps_logo_with_compact_label_and_badge(
     ) == pytest.approx(8.4)
     assert badge.evaluate(
         "element => parseFloat(getComputedStyle(element).paddingLeft)"
-    ) == pytest.approx(5.4)
+    ) == pytest.approx(4)
+    alignment = brand.evaluate("""brand => {
+      const baseline = selector => {
+        const marker = document.createElement('span');
+        marker.style.cssText = 'display:inline-block;width:0;height:0;padding:0;vertical-align:baseline';
+        brand.querySelector(selector).append(marker);
+        const y = marker.getBoundingClientRect().top;
+        marker.remove();
+        return y;
+      };
+      return Math.abs(baseline('.mewbo-brand__name') - baseline('.mewbo-brand__docs'));
+    }""")
+    assert alignment < 1, alignment
     assert badge.inner_text() == "Docs"
     assert (
         badge.evaluate("element => getComputedStyle(element).borderStyle")

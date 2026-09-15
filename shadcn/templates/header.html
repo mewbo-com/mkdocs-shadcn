@@ -19,10 +19,12 @@
             {# LEFT — site-driven mark, name, and quiet section badge. #}
             <a class="mewbo-brand hidden lg:inline-flex" href="{{ config.site_url }}">
                 <span class="mewbo-brand__glyph">{% include "templates/icon.html" %}</span>
-                {% if config.theme.show_title %}
-                <span class="mewbo-brand__name">{{ config.site_name }}</span>
-                {% endif %}
-                <span class="mewbo-brand__docs">{{ _("Docs") }}</span>
+                <span class="mewbo-brand__text">
+                    {% if config.theme.show_title %}
+                    <span class="mewbo-brand__name">{{ config.site_name }}</span>
+                    {% endif %}
+                    <span class="mewbo-brand__docs">{{ _("Docs") }}</span>
+                </span>
             </a>
             {% if config.theme.topbar_sections %}
             {% include "templates/header_navigation.html" %}
