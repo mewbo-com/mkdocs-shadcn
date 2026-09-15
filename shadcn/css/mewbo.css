@@ -1745,6 +1745,12 @@ article .ms-shots img,
      Declared here rather than at :root because it describes the header's own
      control scale, and both controls are descendants. */
   --mewbo-nav-control-h: 2rem;
+  /* A quiet satin sheen, derived entirely from the site's surface palette. */
+  --mewbo-chrome-finish: linear-gradient(180deg,
+    color-mix(in srgb, var(--card) 65%, var(--background)) 0%,
+    color-mix(in srgb, var(--muted) 18%, var(--background)) 48%,
+    color-mix(in srgb, var(--muted) 38%, var(--background)) 100%);
+  background-image: var(--mewbo-chrome-finish);
   z-index: 50;
   isolation: isolate;
   box-shadow: 0 3px 6px -3px rgb(0 0 0 / 0.16),
@@ -3447,12 +3453,11 @@ div:has(> #toc) {
 
 /* ── Tab rail: its own plane between header and page ─────────────────── */
 
-/* Same canvas as the header above it and the page below it. Two hairlines
-   place it: one where the header ends, one where the page begins. Both are
-   plain `--border`, so the pair reads as one weight rather than as the
-   two different greys a 70%/90% mix produced. */
+/* Share the header's token-derived finish and retain the single hairlines
+   between navigation rows and at the lower edge of the stack. */
 .ms-header-tabs {
   background: var(--background);
+  background-image: var(--mewbo-chrome-finish);
   border-top: 1px solid var(--border);
   border-bottom: 1px solid var(--border);
   position: relative;

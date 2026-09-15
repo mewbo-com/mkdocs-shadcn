@@ -15,6 +15,7 @@ def test_header_shadow_overlays_content(
     page.goto(
         local_deployment + "/mewbo_components/", wait_until="networkidle"
     )
+    page.wait_for_function("document.querySelector('.ms-shots').swiper")
     page.evaluate(
         """({tabs, dark}) => {
       document.documentElement.classList.toggle('dark', dark);
@@ -33,9 +34,15 @@ def test_header_shadow_overlays_content(
       const r = header.getBoundingClientRect();
       return {top: r.top, bottom: r.bottom, width: r.width,
         shadow: getComputedStyle(header).boxShadow,
+        finish: getComputedStyle(header).backgroundImage,
+        railFinish: header.querySelector('.ms-header-tabs')
+          ? getComputedStyle(header.querySelector('.ms-header-tabs')).backgroundImage : null,
         onTop: header.contains(document.elementFromPoint(700, r.bottom - 8))};
     }""")
     assert geometry["shadow"] != "none"
+    assert "linear-gradient" in geometry["finish"]
+    if tabs:
+        assert geometry["railFinish"] == geometry["finish"]
     assert geometry["top"] == 0
     assert geometry["onTop"]
     # Painted pixels prove the shadow survives stacking and extends beyond
