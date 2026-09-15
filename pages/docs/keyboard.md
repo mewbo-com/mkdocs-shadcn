@@ -1,7 +1,10 @@
 # Keyboard shortcuts
 
 Write shortcuts as `++key+key++` and they render as real `<kbd>` elements
-rather than prose or inline code.
+rather than prose or inline code. Keycaps use the locally bundled Libertinus
+Keyboard font, raised edges, and spacing around each key. Modifier names not
+supported by its ligatures retain readable text in the same keycap shell.
+No external font service is required.
 
 | Shortcut | Written as |
 |---|---|

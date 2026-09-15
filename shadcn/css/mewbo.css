@@ -1160,17 +1160,21 @@ article a:hover,
 .ms-shot > figcaption,
 .ms-shots figcaption {
   position: absolute;
-  inset: auto 0 0;
+  inset: auto 1rem 0.75rem;
   z-index: 1;
-  margin: 0;
-  padding: 2.5rem 1rem 0.75rem;
+  width: fit-content;
+  max-width: calc(100% - 2rem);
+  margin: 0 auto;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.375rem;
   color: #fff;
   font-size: 0.875rem;
   line-height: 1.4;
   text-align: center;
   text-wrap: pretty;
   overflow-wrap: anywhere;
-  background: linear-gradient(to top, rgb(0 0 0 / 0.82), rgb(0 0 0 / 0.55) 55%, transparent);
+  /* Opaque black keeps the image from competing with the caption text. */
+  background: #000;
   /* Tight shadows outline every edge; small blur radii soften only the halo,
      not the glyphs or the image behind them. No composited backdrop filter. */
   text-shadow:
@@ -1197,7 +1201,9 @@ article a:hover,
 @media (max-width: 640px) {
   .ms-shot > figcaption,
   .ms-shots figcaption {
-    padding: 1.75rem 0.75rem 0.6rem;
+    inset: auto 0.75rem 0.6rem;
+    max-width: calc(100% - 1.5rem);
+    padding: 0.4rem 0.6rem;
     font-size: 0.8rem;
   }
 }
@@ -1343,20 +1349,19 @@ article a:hover,
    viewport. The image stays uncropped and clear of the close control. */
 .glightbox-container .gslide-image img {
   max-width: calc(100vw - 144px);
-  max-height: calc(100dvh - 176px);
+  max-height: calc(100dvh - 200px);
+  min-width: 0;
   border-radius: 0.6rem;
   box-shadow: 0 24px 64px -24px rgb(0 0 0 / 0.6);
 }
 .glightbox-container .gslide-media {
   box-shadow: none;
 }
-/* NO backdrop-filter here. A blur on a full viewport overlay makes the browser
-   snapshot and re-rasterize the whole page behind it, and the library fades
-   this element in over 500ms with `transition: all`, so the page visibly tore
-   itself apart for the length of the animation and again on close. A solid
-   wash costs one paint and looks the same once it has settled. */
+/* A small, static blur separates the viewer without animating its radius. */
 .glightbox-container .goverlay {
-  background: color-mix(in srgb, var(--background, #0b0b0b) 14%, #000);
+  background: rgb(0 0 0 / 0.8);
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
 }
 /* The library sets `transition: all` on its overlay, which animates every
    property it is given, including ones it never meant to. */
@@ -1507,12 +1512,15 @@ article .typography video,
   justify-content: center;
   box-sizing: border-box;
 }
-.ms-shots figure { margin: 0; width: 100%; }
+.ms-shots figure { margin: 0; width: 100%; aspect-ratio: 16 / 9; }
+article .ms-shots img,
+.md-content .ms-shots img,
 .ms-shots img {
   display: block;
   width: 100%;
-  /* Preserve the actual image ratio instead of adding letterbox space. */
-  height: auto;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
   background: transparent;
   border: 0;
   border-radius: 0.5rem;
@@ -1858,6 +1866,33 @@ body:not(.ms-has-header-tabs) .mewbo-header {
 }
 .mewbo-nav-search-pill svg { flex-shrink: 0; opacity: 0.6; }
 .mewbo-nav-search-pill span { flex: 1; text-align: left; }
+
+/* Libertinus draws key outlines and joins names such as Shift through liga.
+   Keep prose labels intact for accessibility; unsupported modifier names use
+   the same raised shell with the regular text face. */
+kbd:not(:has(kbd)):not(.mewbo-kbd) {
+  font-family: "Libertinus Keyboard", var(--font-sans);
+  font-size: calc(0.75rem + 1pt);
+  font-weight: 400;
+  font-variant-ligatures: common-ligatures;
+  line-height: 1.5;
+  height: auto;
+  min-height: 1.5rem;
+  margin-inline: 0.15rem;
+  padding-inline: 0.2rem;
+  vertical-align: baseline;
+  color: var(--foreground);
+  background: var(--muted);
+  border: 1px solid var(--border);
+  border-bottom-width: 2px;
+  border-radius: 0.3rem;
+}
+kbd:is(.key-command, .key-option, .key-windows, [class*="key-arrow-"]):not(.mewbo-kbd) {
+  font-family: var(--font-sans);
+  padding-inline: 0.35rem;
+}
+.keys { white-space: nowrap; }
+.keys .key-separator { margin-inline: 0.1rem; }
 
 .mewbo-kbd {
   margin-left: auto;

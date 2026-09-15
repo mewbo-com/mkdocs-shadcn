@@ -327,10 +327,11 @@ both rather than picking one.
 
 ### Media
 
-- **Carousels** (`.swiper.ms-shots`, needs `theme.carousel: true`) keep image
-  proportions and adapt to the active slide height. Include a `figcaption` in
-  every slide. It stays visible over the bottom of the image, centered on a
-  fading shadow, just like `.ms-shot` captions. Keep captions concise.
+- **Carousels** (`.swiper.ms-shots`, needs `theme.carousel: true`) use a fixed
+  16:9 frame and center-crop images to fill it. Include a `figcaption` in every
+  slide. It stays visible at the bottom on an opaque black highlight, just like
+  `.ms-shot` captions. Fullscreen fits the uncropped image to the viewport.
+  Keep captions concise.
 - **Images** are frameless with no matte padding. Existing `.ms-shot__frame`
   wrappers still work but add no bezel. Screenshots and carousels share the
   caption overlay styling without extra configuration.

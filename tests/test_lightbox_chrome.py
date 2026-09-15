@@ -12,6 +12,7 @@ def test_lightbox_controls_and_caption(
     page.goto(
         local_deployment + "/mewbo_components/", wait_until="networkidle"
     )
+    page.wait_for_function("document.querySelector('.ms-shots').swiper")
     page.evaluate("document.querySelector('.ms-shots').swiper.autoplay.stop()")
     page.locator(".ms-shots .swiper-slide-active img").click()
     viewer = page.locator(".glightbox-container")
@@ -34,9 +35,28 @@ def test_lightbox_controls_and_caption(
     )
     image = viewer.locator(".gslide.current .gslide-image img")
     expect(image).to_be_visible()
+    page.wait_for_function("""() => {
+      const image = document.querySelector('.gslide.current .gslide-image img');
+      if (!image) return false;
+      const r = image.getBoundingClientRect();
+      const maxW = innerWidth - (innerWidth <= 640 ? 24 : 144);
+      const maxH = innerHeight - 200;
+      const expected = Math.min(maxW / image.naturalWidth, maxH / image.naturalHeight);
+      return Math.abs(r.width - image.naturalWidth * expected) < 3
+        && Math.abs(r.height - image.naturalHeight * expected) < 3;
+    }""")
+    assert "blur(" in viewer.locator(".goverlay").evaluate(
+        "el => getComputedStyle(el).backdropFilter || getComputedStyle(el).webkitBackdropFilter"
+    )
     rect = image.bounding_box()
     assert rect["x"] >= 0 and rect["x"] + rect["width"] <= width + 1
     assert close.bounding_box()["y"] + 44 <= rect["y"] + 1
+    page.set_viewport_size({"width": 900, "height": 400})
+    page.wait_for_function("""() => {
+      const image = document.querySelector('.gslide.current .gslide-image img');
+      const r = image.getBoundingClientRect();
+      return r.height <= 201 && r.top >= 0 && r.bottom <= innerHeight;
+    }""")
     page.keyboard.press("ArrowRight")
     expect(viewer.locator(".gslide.current .gslide-desc")).to_have_text(
         "Second slide"
