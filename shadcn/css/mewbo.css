@@ -2710,6 +2710,96 @@ body.theme-default { --footer-height: 320px; }
   margin-top: 4rem;
   border-top: 1px solid var(--border);
   background: var(--background);
+  position: relative;
+  isolation: isolate;
+}
+
+/* ── Dot-lattice texture ─────────────────────────────────────────────────
+   A 65px tile carrying a 5x5 lattice on a 13px pitch, 20 of its 25 cells
+   filled — so the eye reads a scatter rather than a grid, and the five gaps
+   are what keep it from looking like graph paper. Reproduced as gradients
+   rather than shipped as an SVG: at this tile size a 2K viewport draws well
+   over a thousand copies, and the file would be re-decoded per tile, on a
+   region that is pure decoration.
+
+   Colour comes from tokens, not from opacity. The source art was four
+   arbitrary web colours (yellow/red/cyan/violet) on a slate square, which
+   belong to no palette here. Dropping them to 10% alpha would only mean
+   four muddied hues instead of four loud ones — still off-palette, and
+   still shifting with whatever sits behind them. Instead each group is
+   mixed from a token toward the footer's own background, so the texture is
+   a tint OF the surface: it cannot clash, it inverts correctly between
+   light and dark on its own, and a brand fork that changes `--primary`
+   gets a matching footer for free.
+
+   The four groups are kept distinct because the pattern's charm is the
+   colour scatter; flattening them to one value gives an evenly-speckled
+   field. They are deliberately close together — the contrast between dots
+   is much smaller than the contrast to the background, so the scatter reads
+   as texture up close and as a flat surface from a normal viewing distance.
+   ────────────────────────────────────────────────────────────────────── */
+
+.mewbo-footer {
+  /* 2.5-4.5%. Tuned by eye against dark, which is the harder case: the clay
+     is a saturated hue on a near-black surface, so it reads as colour well
+     below the strength at which a neutral reads as anything at all. At the
+     7% this started from the dots were legible as dots — a polka field
+     behind the columns rather than a texture under them. These are the
+     values where the footer still looks like one surface at a normal
+     viewing distance and only resolves into a lattice up close. */
+  --ms-footer-dot-1: color-mix(in oklab, var(--primary) 4.5%, transparent);
+  --ms-footer-dot-2: color-mix(in oklab, var(--foreground) 3%, transparent);
+  --ms-footer-dot-3: color-mix(in oklab, var(--primary) 2.5%, transparent);
+  --ms-footer-dot-4: color-mix(in oklab, var(--muted-foreground) 3.5%, transparent);
+  --ms-footer-dot-size: 65px;
+}
+
+/* A pseudo-element, not a second background layer on `.mewbo-footer`: the
+   footer's own `background` is a single token today, but a fork that gives
+   it a gradient would otherwise have to restate all twenty stops to keep
+   the texture. `z-index: -1` with the `isolation` above puts it behind the
+   content without creating a stacking context the columns can fall into. */
+.mewbo-footer::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image:
+    radial-gradient(circle 6px at 10% 10%, var(--ms-footer-dot-4) 72%, transparent 100%),
+    radial-gradient(circle 6px at 30% 10%, var(--ms-footer-dot-1) 72%, transparent 100%),
+    radial-gradient(circle 6px at 50% 10%, var(--ms-footer-dot-3) 72%, transparent 100%),
+    radial-gradient(circle 6px at 90% 10%, var(--ms-footer-dot-2) 72%, transparent 100%),
+    radial-gradient(circle 6px at 30% 30%, var(--ms-footer-dot-4) 72%, transparent 100%),
+    radial-gradient(circle 6px at 50% 30%, var(--ms-footer-dot-3) 72%, transparent 100%),
+    radial-gradient(circle 6px at 70% 30%, var(--ms-footer-dot-2) 72%, transparent 100%),
+    radial-gradient(circle 6px at 90% 30%, var(--ms-footer-dot-1) 72%, transparent 100%),
+    radial-gradient(circle 6px at 10% 50%, var(--ms-footer-dot-4) 72%, transparent 100%),
+    radial-gradient(circle 6px at 30% 50%, var(--ms-footer-dot-1) 72%, transparent 100%),
+    radial-gradient(circle 6px at 70% 50%, var(--ms-footer-dot-3) 72%, transparent 100%),
+    radial-gradient(circle 6px at 90% 50%, var(--ms-footer-dot-1) 72%, transparent 100%),
+    radial-gradient(circle 6px at 10% 70%, var(--ms-footer-dot-3) 72%, transparent 100%),
+    radial-gradient(circle 6px at 50% 70%, var(--ms-footer-dot-4) 72%, transparent 100%),
+    radial-gradient(circle 6px at 70% 70%, var(--ms-footer-dot-2) 72%, transparent 100%),
+    radial-gradient(circle 6px at 90% 70%, var(--ms-footer-dot-2) 72%, transparent 100%),
+    radial-gradient(circle 6px at 10% 90%, var(--ms-footer-dot-3) 72%, transparent 100%),
+    radial-gradient(circle 6px at 30% 90%, var(--ms-footer-dot-2) 72%, transparent 100%),
+    radial-gradient(circle 6px at 50% 90%, var(--ms-footer-dot-1) 72%, transparent 100%),
+    radial-gradient(circle 6px at 70% 90%, var(--ms-footer-dot-4) 72%, transparent 100%);
+  background-size: var(--ms-footer-dot-size) var(--ms-footer-dot-size);
+  /* The tile is a scatter, so its edges do not align; repeating it plainly
+     would print a seam every 65px. The mask fades the field out toward the
+     baseline strip, which both hides the seams at the bottom edge and keeps
+     the texture from competing with the copyright line. */
+  -webkit-mask-image: linear-gradient(to bottom, black 0%, black 55%, transparent 100%);
+  mask-image: linear-gradient(to bottom, black 0%, black 55%, transparent 100%);
+}
+
+/* Decoration only. Anyone who has asked for less motion or a plain surface
+   is asking about the content, not about ornament — but a texture behind
+   text is exactly what high-contrast mode exists to remove. */
+@media (prefers-contrast: more) {
+  .mewbo-footer::before { display: none; }
 }
 
 /* ── Container: horizontal grid of columns ──────────────────────────── */
