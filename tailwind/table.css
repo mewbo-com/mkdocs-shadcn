@@ -48,9 +48,21 @@ article table:not(.codehilitetable) tbody tr td {
  * never compute to `white-space: nowrap`, so a future upstream sync that
  * reintroduces nowrap fails CI instead of silently regressing.
  */
+/*
+ * Leading, for the cells the rule above just taught to wrap. A cell that wraps
+ * is a small paragraph, so it needs paragraph leading: at the inherited 1.43
+ * the wrapped lines of a long cell sat tighter than any body copy on the page,
+ * and a cell carrying inline `code` was worse still — a code chip's own
+ * vertical padding eats into the gap, so consecutive lines of chips very
+ * nearly touched. `leading-relaxed` is what `article p` already uses, which is
+ * the point: a table is prose set in columns, not a data grid.
+ *
+ * Applied to the cell rather than the table so nested content that sets its
+ * own leading (a code block, a list) is unaffected.
+ */
 article table:not(.codehilitetable) thead tr th,
 article table:not(.codehilitetable) tbody tr td {
-	@apply break-words;
+	@apply break-words leading-relaxed;
 }
 
 article .table-wrapper {
