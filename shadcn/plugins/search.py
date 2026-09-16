@@ -18,6 +18,7 @@ from shadcn.filters import (
     iconify,
     is_http_url,
     is_svg,
+    page_source_url,
     parse_author,
     scoped_nav,
     read_file,
@@ -90,6 +91,9 @@ class SearchPlugin(
         env.globals["current_year"] = datetime.now(tz=timezone.utc).year
         env.filters["read_file"] = partial(read_file, config=config)
         env.filters["is_svg"] = is_svg
+        env.filters["page_source_url"] = partial(
+            page_source_url, config=config
+        )
         return super().on_env(env, config=config, files=files)
 
     def on_page_markdown(

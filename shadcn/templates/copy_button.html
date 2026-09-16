@@ -1,14 +1,93 @@
-<button
-    data-copy-markdown="{{ page.markdown | forceescape }}"
-    data-copy-label="{{ _('Copy Page') }}" data-copied-label="{{ _('Copied') }}"
-    data-copy-failed-label="{{ _('Copy failed') }}" aria-label="{{ _('Copy Page') }}"
-    data-slot="button" class="secondary cursor-pointer">
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-        stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="tabler-icon tabler-icon-copy ">
-        <path
-            d="M7 7m0 2.667a2.667 2.667 0 0 1 2.667 -2.667h8.666a2.667 2.667 0 0 1 2.667 2.667v8.666a2.667 2.667 0 0 1 -2.667 2.667h-8.666a2.667 2.667 0 0 1 -2.667 -2.667z">
-        </path>
-        <path d="M4.012 16.737a2.005 2.005 0 0 1 -1.012 -1.737v-10c0 -1.1 .9 -2 2 -2h10c.75 0 1.158 .385 1.5 1"></path>
-    </svg>
-    <span class="max-md:hidden">{{ _("Copy Page") }}</span>
-</button>
+{# Page actions — a split button: "Copy page" plus a chevron opening a menu.
+
+   The menu's three extra items all need a public URL for the page's Markdown
+   SOURCE, which only exists when the site sets `repo_url`. Without one the
+   whole disclosure half is omitted and this renders as the plain copy button
+   it has always been, so a site with no repo loses nothing and gains no dead
+   controls.
+
+   `page_source_url` builds that URL from mkdocs' own `page.edit_url`, so
+   Gitea/GitLab hosting and a custom `docs_dir` are already handled — see
+   shadcn/filters.py.
+
+   The assistant links hand over ONE line naming that URL. Deliberately not
+   the page's text: a prompt carrying a whole document is a fragile URL (the
+   forge's own length limits, and every assistant's) and goes stale the moment
+   the page changes, whereas a URL is re-fetched at the moment the reader
+   asks. Both targets accept a prefilled prompt as a query parameter —
+   ChatGPT as `?prompt=`, Claude as `/new?q=` — and `urlencode` is what keeps
+   a URL containing `&` or `#` from truncating it.
+#}
+{% set _source_url = page | page_source_url %}
+{% set _ai_prompt = _("Read %(url)s so I can ask questions about it.") % {"url": _source_url} %}
+
+<div class="mewbo-page-actions" data-mewbo-page-actions>
+  <button
+      data-copy-markdown="{{ page.markdown | forceescape }}"
+      data-copy-label="{{ _('Copy page') }}" data-copied-label="{{ _('Copied') }}"
+      data-copy-failed-label="{{ _('Copy failed') }}" aria-label="{{ _('Copy page') }}"
+      data-slot="button" class="secondary cursor-pointer mewbo-page-actions__main">
+    {{ "lucide:copy" | iconify(height="16px") }}
+    <span class="max-md:hidden">{{ _("Copy page") }}</span>
+  </button>
+
+  {% if _source_url %}
+  <button type="button" class="mewbo-page-actions__toggle" data-mewbo-page-actions-toggle
+          aria-expanded="false" aria-haspopup="menu"
+          aria-label="{{ _('More page actions') }}">
+    {{ "lucide:chevron-down" | iconify(height="14px") }}
+  </button>
+
+  <div class="mewbo-page-actions__menu" data-mewbo-page-actions-menu role="menu" hidden>
+    {# Repeats the main button's action. The reference does the same, and it
+       is what makes the menu self-describing: a reader who opens it to find
+       out what "Copy page" copies gets an answer instead of an absence. #}
+    <button type="button" role="menuitem" class="mewbo-page-action"
+            data-mewbo-copy-proxy>
+      <span class="mewbo-page-action__icon">{{ "lucide:copy" | iconify(height="16px") }}</span>
+      <span class="mewbo-page-action__text">
+        <span class="mewbo-page-action__label">{{ _("Copy page") }}</span>
+        <span class="mewbo-page-action__hint">{{ _("Copy page as Markdown for LLMs") }}</span>
+      </span>
+    </button>
+
+    <a role="menuitem" class="mewbo-page-action" href="{{ _source_url }}"
+       target="_blank" rel="noopener noreferrer">
+      <span class="mewbo-page-action__icon">{{ "simple-icons:markdown" | iconify(height="16px") }}</span>
+      <span class="mewbo-page-action__text">
+        <span class="mewbo-page-action__label">
+          {{ _("View as Markdown") }}
+          <span class="mewbo-page-action__external" aria-hidden="true">{{ "lucide:arrow-up-right" | iconify(height="12px") }}</span>
+        </span>
+        <span class="mewbo-page-action__hint">{{ _("View this page as plain text") }}</span>
+      </span>
+    </a>
+
+    <a role="menuitem" class="mewbo-page-action"
+       href="https://chatgpt.com/?prompt={{ _ai_prompt | urlencode }}"
+       target="_blank" rel="noopener noreferrer">
+      <span class="mewbo-page-action__icon">{{ "simple-icons:openai" | iconify(height="16px") }}</span>
+      <span class="mewbo-page-action__text">
+        <span class="mewbo-page-action__label">
+          {{ _("Open in ChatGPT") }}
+          <span class="mewbo-page-action__external" aria-hidden="true">{{ "lucide:arrow-up-right" | iconify(height="12px") }}</span>
+        </span>
+        <span class="mewbo-page-action__hint">{{ _("Ask questions about this page") }}</span>
+      </span>
+    </a>
+
+    <a role="menuitem" class="mewbo-page-action"
+       href="https://claude.ai/new?q={{ _ai_prompt | urlencode }}"
+       target="_blank" rel="noopener noreferrer">
+      <span class="mewbo-page-action__icon">{{ "simple-icons:claude" | iconify(height="16px") }}</span>
+      <span class="mewbo-page-action__text">
+        <span class="mewbo-page-action__label">
+          {{ _("Open in Claude") }}
+          <span class="mewbo-page-action__external" aria-hidden="true">{{ "lucide:arrow-up-right" | iconify(height="12px") }}</span>
+        </span>
+        <span class="mewbo-page-action__hint">{{ _("Ask questions about this page") }}</span>
+      </span>
+    </a>
+  </div>
+  {% endif %}
+</div>

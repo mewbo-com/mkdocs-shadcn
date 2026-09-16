@@ -2852,6 +2852,194 @@ body.ms-has-header-tabs .mewbo-header__row { height: calc(var(--spacing) * 14); 
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
+   Page actions — split button + disclosure menu
+
+   "Copy page" is still one click; the chevron beside it opens the rest
+   (view the source, hand the page to an assistant). A split button rather
+   than a dropdown containing the copy action, because copying is by far the
+   common case and burying it behind a menu would cost every reader a click
+   to save the occasional one.
+
+   The two halves share one border and read as a single control: the seam
+   between them is a border-left on the toggle, not a gap, so they cannot
+   drift apart as the label changes to "Copied" and back.
+   ───────────────────────────────────────────────────────────────────────── */
+
+.mewbo-page-actions {
+  position: relative;
+  display: inline-flex;
+  align-items: stretch;
+}
+
+/* Squares off the inner corners of both halves so the pair forms one pill.
+   Scoped to `:has()` on the toggle: with no repo_url the menu is not emitted
+   and the copy button must keep its own full radius. */
+.mewbo-page-actions:has(.mewbo-page-actions__toggle) .mewbo-page-actions__main {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+/* `article button:where(:not(.secondary, …))` in tailwind/input.css claims
+   every unclassed button in the article as the PRIMARY variant, which painted
+   this toggle in full clay beside its own quiet grey other half. Matching that
+   rule's reach (0,2,1) rather than adding `.secondary` to the markup, because
+   the toggle is not a secondary button either — it is the other half of one
+   control, and it has to track `.mewbo-page-actions__main` exactly. */
+article .mewbo-page-actions .mewbo-page-actions__toggle,
+.mewbo-page-actions__toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding-inline: 0.45rem;
+  border: 1px solid transparent;
+  border-left-color: color-mix(in oklab, var(--foreground) 12%, transparent);
+  border-top-right-radius: 0.375rem;
+  border-bottom-right-radius: 0.375rem;
+  background: var(--secondary);
+  color: var(--secondary-foreground);
+  cursor: pointer;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+/* The primary variant's own hover is `article button:where(…):hover` at
+   (0,3,1) — one higher than the rule above — so the resting state was quiet
+   and the toggle flashed full clay under the pointer. Stated at the same
+   reach with `:hover` included so it is settled by source order. */
+article .mewbo-page-actions .mewbo-page-actions__toggle:hover,
+.mewbo-page-actions__toggle:hover {
+  background: color-mix(in oklab, var(--secondary) 80%, var(--foreground) 6%);
+  color: var(--secondary-foreground);
+}
+.mewbo-page-actions__toggle:hover {
+  background: color-mix(in oklab, var(--secondary) 80%, var(--foreground) 6%);
+}
+.mewbo-page-actions__toggle:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+/* The chevron points at the menu: down when it will open, up when it will
+   close. Reads as state rather than as a static ornament. */
+.mewbo-page-actions__toggle svg {
+  transition: transform 0.15s ease;
+}
+.mewbo-page-actions[data-open] .mewbo-page-actions__toggle svg {
+  transform: rotate(180deg);
+}
+
+.mewbo-page-actions__menu {
+  position: absolute;
+  top: calc(100% + 0.4rem);
+  right: 0;
+  z-index: 50;
+  min-width: 17rem;
+  padding: 0.35rem;
+  border: 1px solid var(--border);
+  border-radius: 0.6rem;
+  background: var(--popover);
+  color: var(--popover-foreground);
+  box-shadow: 0 12px 28px -12px rgb(0 0 0 / 0.35), 0 2px 6px -2px rgb(0 0 0 / 0.2);
+}
+.mewbo-page-actions__menu[hidden] { display: none; }
+
+/* Two rules in the Tailwind layer have to be undone here, and both are the
+   reason the menu looked wrong rather than matters of taste:
+
+   `article button { height: calc(var(--spacing)*8) }` clamps any button in the
+   article to 2rem. The "Copy page" row is a <button> while the other three are
+   <a>, so it alone rendered 32px tall against their 55px and its hint text
+   spilled onto the row below. `height: auto` is the fix; the selector reach
+   (0,2,1) is what makes it win.
+
+   `article a` underlines every prose link and paints it clay. These are menu
+   rows, not prose. */
+article .mewbo-page-actions__menu a.mewbo-page-action,
+article .mewbo-page-actions__menu button.mewbo-page-action,
+.mewbo-page-action {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  width: 100%;
+  height: auto;
+  min-height: 0;
+  padding: 0.5rem 0.55rem;
+  border: 0;
+  border-radius: 0.4rem;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-weight: 400;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.1s ease;
+}
+.mewbo-page-action:hover,
+.mewbo-page-action:focus-visible {
+  background: var(--accent);
+  outline: none;
+}
+
+/* The icon sits in its own bordered tile, as in the reference. It keeps a
+   brand mark (OpenAI, Claude) from reading as part of the label, and gives
+   marks of different weights a shared footprint. */
+.mewbo-page-action__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 1.85rem;
+  height: 1.85rem;
+  border: 1px solid var(--border);
+  border-radius: 0.45rem;
+  color: var(--muted-foreground);
+}
+
+.mewbo-page-action__text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+/* `margin: 0` is load-bearing: these are spans, but `.typography > span` and
+   the article's own flow rules still reach some of them, and any inherited
+   block margin here collapses the two-line row unevenly — which is exactly
+   how the second item ended up cramped against the first. */
+article .mewbo-page-action__label,
+.mewbo-page-action__label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin: 0;
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: var(--leading-tight);
+  color: var(--foreground);
+}
+article .mewbo-page-action__hint,
+.mewbo-page-action__hint {
+  margin: 0;
+  font-size: 0.78rem;
+  line-height: var(--leading-ui);
+  color: var(--muted-foreground);
+}
+/* Marks the items that navigate away, so a reader can tell them from the one
+   that acts in place (Copy page). */
+.mewbo-page-action__external {
+  display: inline-flex;
+  color: var(--muted-foreground);
+}
+
+@media (max-width: 639px) {
+  /* The menu is wider than a phone's remaining gutter when right-aligned to a
+     button that is itself near the edge. Pin it to the viewport instead. */
+  .mewbo-page-actions__menu {
+    position: fixed;
+    left: 0.75rem;
+    right: 0.75rem;
+    min-width: 0;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
    Brand footer — THREE HORIZONTAL COLUMNS, side by side.
 
    Layout, left → right:

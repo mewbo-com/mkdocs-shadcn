@@ -6,13 +6,25 @@ import pytest
 from jinja2 import Environment, FileSystemLoader
 from playwright.sync_api import Page, expect
 
+from shadcn.filters import iconify, page_source_url
+
 ROOT = Path(__file__).parent.parent
 MARKDOWN = '# TUI\n\n"quoted" & <tag>\n```python\nprint(1)\n```\n'
 
 
 def copy_markup():
+    """The copy control, rendered standalone.
+
+    The filters have to be registered the way the plugin's `on_env` does it,
+    or the template raises `No filter named …` at parse time. `page` is a
+    plain dict with no `file`, so `page_source_url` returns "" and the
+    disclosure half is omitted — which is deliberately the shape under test
+    here: the copy button must work on a site with no `repo_url`.
+    """
     env = Environment(loader=FileSystemLoader(ROOT / "shadcn"))
     env.globals["_"] = lambda text: text
+    env.filters["iconify"] = iconify
+    env.filters["page_source_url"] = page_source_url
     return (
         '<div id="page-header">'
         + env.get_template("templates/copy_button.html").render(

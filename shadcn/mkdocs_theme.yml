@@ -57,6 +57,22 @@ nav_icons: {}
 # from the domain root.
 versions_root: null
 
+# Git ref the page-actions menu links to for a page's Markdown SOURCE
+# ("View as Markdown", and the URL handed to ChatGPT / Claude).
+#
+# Left null the theme uses the branch of the checkout it builds from, then
+# falls back to `main`. Set this when the branch you BUILD from is not the
+# branch your repo PUBLISHES — a private working branch mirrored to a public
+# repo under another name, for instance — because the local branch name is
+# then not a ref the public URL can use, and the links would 404.
+#
+#     source_ref: current
+#
+# An `edit_uri` you set yourself takes precedence over this (it is mkdocs'
+# native way to say the same thing); mkdocs' own invented `edit/master/docs/`
+# default does not, since it pins a branch nobody chose.
+source_ref: null
+
 # Brand footer (replaces the upstream "shadcn provided by @asiffer" line).
 # All sub-keys are optional; the footer auto-derives sensible defaults
 # from `nav`, `repo_url`, `site_description`, and `site_name`.

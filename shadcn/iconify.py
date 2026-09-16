@@ -294,7 +294,10 @@ class IconCache:
 #: request burst -- exactly what the warm pass exists to avoid. Kept beside the
 #: templates that use them; a name added to a template belongs here too.
 THEME_ICONS = (
+    "lucide:arrow-up-right",
+    "lucide:chevron-down",
     "lucide:chevron-right",
+    "lucide:copy",
     "lucide:list",
     "lucide:menu",
     "lucide:moon",
@@ -303,7 +306,10 @@ THEME_ICONS = (
     "lucide:sparkles",
     "lucide:sun",
     "lucide:x",
+    "simple-icons:claude",
     "simple-icons:github",
+    "simple-icons:markdown",
+    "simple-icons:openai",
 )
 
 
