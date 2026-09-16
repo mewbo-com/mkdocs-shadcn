@@ -203,7 +203,9 @@ const renderToSvg = async (source) => {
 const EXPAND_ICON =
   '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h6v6"/><path d="M9 21H3v-6"/><path d="M21 3l-7 7"/><path d="M3 21l7-7"/></svg>';
 
-// Keep 16px diagram labels at least 12px in a cropped preview.
+// Keep 16px diagram labels at least 12px in a cropped preview. The stylesheet
+// owns the floor (`--ms-diagram-natural` * 0.75 in mewbo.css); the viewer
+// below reuses this constant for its own minimum zoom.
 const LEGIBLE_SCALE = 0.75;
 
 // The viewBox is stable across paints and resizes. Inline max-width is not:
@@ -218,28 +220,51 @@ const naturalSize = (svg) => {
   return { w: declared || rect.width, h: rect.height };
 };
 
-const classifyOverflow = (figure) => {
+/**
+ * Hand the stylesheet the one number it cannot read for itself.
+ *
+ * The SVG's intrinsic width lives in its viewBox, which CSS cannot reach, so
+ * it is published as `--ms-diagram-natural` and mewbo.css derives the whole
+ * layout from it — fill the column, never below the legibility floor. Mermaid
+ * also writes a `max-width` onto its own root; clearing it here means the
+ * stylesheet's `width: 100%` is not fighting an inline declaration.
+ *
+ * This runs once per render. Nothing re-measures on resize, because a
+ * percentage and a `calc()` already respond to one, which is the point: the
+ * previous version recomputed pixel widths from a ResizeObserver, and any
+ * delivery it missed left the diagram at its intrinsic size in the corner.
+ */
+const publishNaturalSize = (figure) => {
   const stage = figure.querySelector(".ms-mermaid__stage");
   const svg = stage && stage.querySelector("svg");
-  if (!stage || !svg || !stage.clientWidth) return;
-
-  const { w, h } = naturalSize(svg);
-  if (w <= 0 || h <= 0) return;
-  const width = Math.max(stage.clientWidth, w * LEGIBLE_SCALE);
-  svg.style.maxWidth = "none";
-  svg.style.width = `${width}px`;
-  svg.style.height = `${h * width / w}px`;
-  figure.toggleAttribute("data-wide", width > stage.clientWidth + 1);
-  figure.toggleAttribute("data-tall", h * width / w > stage.clientHeight + 1);
+  if (!stage || !svg) return;
+  const { w } = naturalSize(svg);
+  if (w > 0) stage.style.setProperty("--ms-diagram-natural", `${w}px`);
+  svg.style.removeProperty("max-width");
 };
 
-// Tabs, sidebar toggles and display changes can all change the available
-// width without a window resize. Refit after reveal as well as initial paint.
+/**
+ * Flag the two crop states so the stage can fade the cut edge and pin the
+ * expand control open. Purely cosmetic: the layout above is already correct
+ * without this, so a missed observer delivery now costs a fade rather than
+ * stranding the diagram at the wrong size.
+ */
+const flagCropping = (figure) => {
+  const stage = figure && figure.querySelector(".ms-mermaid__stage");
+  const svg = stage && stage.querySelector("svg");
+  if (!stage || !svg || !stage.clientWidth) return;
+  const box = svg.getBoundingClientRect();
+  figure.toggleAttribute("data-wide", box.width > stage.clientWidth + 1);
+  figure.toggleAttribute("data-tall", box.height > stage.clientHeight + 1);
+};
+
+// Tabs, sidebar toggles and display changes all change the available width
+// without a window resize, so the crop flags are re-evaluated on reveal too.
 const cardResizeObserver = new ResizeObserver((entries) => {
-  // The SVG height also determines the stage height. Defer writes until the
-  // next frame so WebKit does not report an observer delivery loop.
+  // Defer reads until the next frame so WebKit does not report an observer
+  // delivery loop when a flag changes the stage's own mask.
   requestAnimationFrame(() => {
-    for (const { target } of entries) classifyOverflow(target.parentElement);
+    for (const { target } of entries) flagCropping(target.parentElement);
   });
 });
 
@@ -262,6 +287,7 @@ const buildCard = (source, svg, index) => {
 
   figure.append(stage, expand);
 
+  publishNaturalSize(figure);
   cardResizeObserver.observe(stage);
 
   const open = () => openViewer(figure);
@@ -518,7 +544,10 @@ const rerenderAll = () => {
       .then((svg) => {
         if (isDarkMode() !== theme) return;
         stage.innerHTML = svg;
-        classifyOverflow(figure);
+        // A re-render replaces the SVG, so republish its size and re-read the
+        // crop state against the new one.
+        publishNaturalSize(figure);
+        flagCropping(figure);
       })
       .catch(() => {
         /* keep the diagram that is already on screen */

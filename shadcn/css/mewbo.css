@@ -3823,8 +3823,11 @@ figure.ms-mermaid:hover {
 
 .ms-mermaid__stage {
   display: flex;
+  justify-content: center;
+  /* Cross-axis must stay `flex-start`: the default `stretch` would pull the
+     SVG to the stage's own height and squash a diagram out of proportion once
+     the max-height below clamps it. */
   align-items: flex-start;
-  justify-content: flex-start;
   /* A very tall diagram would otherwise push the surrounding prose apart.
      Bound the inline card and let the expanded viewer carry the full size —
      the card is a preview, the viewer is where a large diagram is read. */
@@ -3832,18 +3835,38 @@ figure.ms-mermaid:hover {
   overflow: hidden;
 }
 
+/* Sizing lives HERE, not in JavaScript. The card used to be laid out by a
+   ResizeObserver that measured the stage and wrote width/height back onto the
+   SVG; any time that pass did not land the CSS underneath pinned the diagram
+   to the top-left at its intrinsic width, which on a wide display is a small
+   diagram marooned in the corner of a much wider card.
+
+   `width: 100%` overrides the `max-width` mermaid writes inline on its own
+   root (`useMaxWidth`), so the diagram grows into the column instead of
+   stopping at the size its text happened to need. `min-width` is the
+   legibility floor: below ~0.75 the 16px labels stop being readable, so a
+   diagram wider than the column keeps that scale and is cropped — the fade
+   and the expand control below say so — rather than shrinking to a thumbnail.
+   `height: auto` against the viewBox keeps it proportional. */
 .ms-mermaid__stage > svg {
   display: block;
   flex: none;
-  max-width: 100%;
+  width: 100%;
+  min-width: calc(var(--ms-diagram-natural, 0px) * 0.75);
+  max-width: none;
   height: auto;
 }
 
 /* Crop rather than reducing labels to a miniature. Expand shows the whole
-   diagram; the fade makes the cut edge explicit without a second scrollbar. */
+   diagram; the fade makes the cut edge explicit without a second scrollbar.
+   Faded on BOTH sides because the stage centres its diagram: an over-wide one
+   is cut at each edge, and fading only the right would present the left cut as
+   a hard, accidental-looking slice. */
 figure.ms-mermaid[data-wide] .ms-mermaid__stage {
-  -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 3rem), transparent);
-  mask-image: linear-gradient(to right, #000 calc(100% - 3rem), transparent);
+  -webkit-mask-image: linear-gradient(
+    to right, transparent, #000 3rem, #000 calc(100% - 3rem), transparent);
+  mask-image: linear-gradient(
+    to right, transparent, #000 3rem, #000 calc(100% - 3rem), transparent);
 }
 
 /* Too tall to show whole: fade the cut edge instead of ending abruptly, so
