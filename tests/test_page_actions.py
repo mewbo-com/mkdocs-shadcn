@@ -61,11 +61,12 @@ def test_menu_items_point_at_the_page_source(
 
     source, chatgpt, claude = links["hrefs"]
 
-    # Raw, not blob: an assistant handed a /blob/ URL fetches forge chrome.
-    assert "/raw/" in source and source.endswith(".md"), source
-    assert "/blob/" not in source, source
+    assert source.startswith("https://raw.githubusercontent.com/"), source
+    assert "/refs/heads/" in source and source.endswith(".md"), source
     # The ref must not be mkdocs' invented default, which is the 404 case.
-    assert "/raw/master/" not in source or "master" in _repo_branch(page), (
+    assert "/refs/heads/master/" not in source or "master" in _repo_branch(
+        page
+    ), (
         f"source URL pins the branch to master ({source}) — that is mkdocs' "
         "hardcoded edit_uri default, not a branch anyone chose"
     )
@@ -78,14 +79,30 @@ def test_menu_items_point_at_the_page_source(
     ):
         assert target.startswith(prefix), target
         prompt = unquote(target[len(prefix) :])
-        assert source in prompt, (
-            f"the prompt does not name the source URL: {prompt!r}"
-        )
+        assert prompt == f"Read {source} so I can ask questions about it."
         # Encoding is what stops a URL containing & or # from truncating the
         # prompt, so the raw href must not carry the separators literally.
         assert " " not in target[len(prefix) :], (
             f"the prompt is not URL-encoded: {target}"
         )
+
+
+@pytest.mark.parametrize("width", [390, 1440])
+def test_menu_icons_and_labels_share_left_alignment(
+    page: Page, local_deployment: str, width: int
+):
+    page.set_viewport_size({"width": width, "height": 900})
+    page.goto(local_deployment + "/get_started/", wait_until="networkidle")
+    page.locator(TOGGLE).click()
+    rows = page.locator(MENU + " [role=menuitem]").evaluate_all("""rows =>
+      rows.map(row => ({
+        icon:row.querySelector('.mewbo-page-action__icon').getBoundingClientRect().left,
+        label:row.querySelector('.mewbo-page-action__label').getBoundingClientRect().left
+      }))""")
+    assert len(rows) == 4
+    for column in ("icon", "label"):
+        positions = [row[column] for row in rows]
+        assert max(positions) - min(positions) < 1, (column, positions)
 
 
 def _repo_branch(page: Page) -> str:

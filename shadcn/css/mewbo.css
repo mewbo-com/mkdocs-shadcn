@@ -2946,6 +2946,8 @@ article .mewbo-page-actions__menu button.mewbo-page-action,
 .mewbo-page-action {
   display: flex;
   align-items: flex-start;
+  /* The article button default centres the copy row, unlike its link peers. */
+  justify-content: flex-start;
   gap: 0.6rem;
   width: 100%;
   height: auto;

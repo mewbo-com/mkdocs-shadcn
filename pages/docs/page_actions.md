@@ -24,7 +24,7 @@ copy-paste the whole thing into a chat window.
 One sentence naming the page's source URL — never the page's text:
 
 ```text
-Read https://github.com/acme/widgets/raw/main/docs/install.md so I can ask questions about it.
+Read https://raw.githubusercontent.com/acme/widgets/refs/heads/main/docs/install.md so I can ask questions about it.
 ```
 
 A prompt carrying a whole document makes a fragile URL, and it goes stale the

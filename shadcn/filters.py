@@ -90,32 +90,36 @@ _MKDOCS_EDIT_URI_DEFAULTS = frozenset(
 )
 
 
+def _canonical_source_url(url: str) -> str:
+    """Use GitHub's content host directly instead of its raw redirect route."""
+    parsed = urllib.parse.urlsplit(url)
+    parts = parsed.path.strip("/").split("/", 3)
+    if (
+        parsed.hostname == "github.com"
+        and len(parts) == 4
+        and parts[2] == "raw"
+    ):
+        owner, repo, _, source = parts
+        repo = repo[:-4] if repo.endswith(".git") else repo
+        if not source.startswith("refs/"):
+            source = "refs/heads/" + source
+        parsed = parsed._replace(
+            scheme="https",
+            netloc="raw.githubusercontent.com",
+            path=f"/{owner}/{repo}/{source}",
+        )
+    return urllib.parse.urlunsplit(
+        parsed._replace(path=urllib.parse.quote(parsed.path, safe="/%"))
+    )
+
+
 def page_source_url(page: Any, config: Any = None) -> str:
-    """Public URL of a page's Markdown source, or ``""`` if it has none.
+    """Return the page's source URL, or an empty string without a repository.
 
-    Deliberately NOT derived from ``page.edit_url``. When a site sets only
-    ``repo_url``, mkdocs fills ``edit_uri`` from a hardcoded
-    ``edit/master/docs/`` — so every repo whose published branch is not
-    ``master`` gets a URL that 404s. Verified 2026-09-16 against both
-    consumers of this theme, neither of which publishes a ``master``.
-
-    The ref is resolved in four steps, most explicit first:
-
-    1. ``theme.source_ref``. The only one that is always right, because the
-       published branch is not always discoverable from the checkout: Grove's
-       working copy is on ``main`` while its public mirror carries only
-       ``current``, so a URL built from the local branch 404s. A site whose
-       docs repo differs from its publish target needs to say so.
-    2. An ``edit_uri`` the consumer set themselves — mkdocs' native way to
-       express this, so it is honoured. mkdocs' own invented defaults are
-       recognised and skipped.
-    3. The checkout's branch, which is right for the common case where a repo
-       is published from the branch you are standing on.
-    4. ``main``, not ``master``: the default for new repos on every major
-       forge, and the thing mkdocs' default gets wrong.
-
-    Returns ``""`` when the site sets no ``repo_url``, which is what the
-    template tests to decide whether the repo-backed menu items exist at all.
+    An explicit edit URI takes precedence over source_ref, then the checkout
+    branch and finally main. Ignore MkDocs' invented edit/master/docs/ default
+    because the published branch may differ. GitHub sources use its raw
+    content host directly for both source viewing and assistant prompts.
     """
     repo_url = _config_get(config, "repo_url")
     src_uri = getattr(getattr(page, "file", None), "src_uri", None)
@@ -132,7 +136,7 @@ def page_source_url(page: Any, config: Any = None) -> str:
             repo_url.rstrip("/") + "/", explicit.lstrip("/")
         )
         base = base.replace("/edit/", "/raw/", 1).replace("/blob/", "/raw/", 1)
-        return base.rstrip("/") + "/" + src_uri
+        return _canonical_source_url(base.rstrip("/") + "/" + src_uri)
 
     theme = _config_get(config, "theme")
     ref = _config_get(theme, "source_ref")
@@ -140,7 +144,9 @@ def page_source_url(page: Any, config: Any = None) -> str:
         config_path = _config_get(config, "config_file_path")
         root = Path(config_path).resolve().parent if config_path else None
         ref = _git_branch(root) or "main"
-    return f"{repo_url.rstrip('/')}/raw/{ref}/{_docs_prefix(config)}{src_uri}"
+    return _canonical_source_url(
+        f"{repo_url.rstrip('/')}/raw/{ref}/{_docs_prefix(config)}{src_uri}"
+    )
 
 
 def _docs_prefix(config: Any) -> str:

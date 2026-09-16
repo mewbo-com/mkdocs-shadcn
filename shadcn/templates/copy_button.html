@@ -6,9 +6,9 @@
    it has always been, so a site with no repo loses nothing and gains no dead
    controls.
 
-   `page_source_url` builds that URL from mkdocs' own `page.edit_url`, so
-   Gitea/GitLab hosting and a custom `docs_dir` are already handled — see
-   shadcn/filters.py.
+   `page_source_url` resolves the source path and configured branch. GitHub
+   URLs use raw.githubusercontent.com directly so assistant fetches do not
+   depend on a redirect through the GitHub interface.
 
    The assistant links hand over ONE line naming that URL. Deliberately not
    the page's text: a prompt carrying a whole document is a fragile URL (the
