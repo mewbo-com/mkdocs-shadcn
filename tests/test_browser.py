@@ -908,18 +908,17 @@ def test_page_masthead_pairs_label_and_title(page: Page, local_deployment: str):
 def test_lightbox_opens_images_fullscreen(page: Page, local_deployment: str):
     """theme.lightbox makes a content image open full screen, once.
 
-    Guards three things that are easy to get wrong and produce no error:
-    the affordance only appears on images the handler will actually open,
-    a carousel becomes ONE gallery rather than one entry per slide (Swiper
-    runs with `loop: true` and clones slides, so wrapping each `img` in an
-    anchor would list the same picture more than once), and zoom stays off
-    because the feature is "see it full screen", nothing more.
+    Guards two things that are easy to get wrong and produce no error: the
+    affordance only appears on images the handler will actually open, and a
+    carousel becomes ONE gallery rather than one entry per slide (Swiper runs
+    with `loop: true` and may clone slides, so listing every `img` verbatim
+    would show the same picture more than once).
     """
     page.goto(BASE + "/mewbo_components/", wait_until="networkidle")
     page.wait_for_timeout(1200)
 
-    assert page.evaluate("() => typeof window.GLightbox === 'function'"), (
-        "GLightbox did not load; theme.lightbox emits it from the CDN"
+    assert page.evaluate("() => typeof window.Viewer === 'function'"), (
+        "Viewer.js did not load; theme.lightbox emits it from the CDN"
     )
 
     marked = page.evaluate("() => document.querySelectorAll('.ms-zoomable').length")
@@ -932,13 +931,15 @@ def test_lightbox_opens_images_fullscreen(page: Page, local_deployment: str):
                .find(i => i.getBoundingClientRect().width > 100);
              if (!img) return {error: 'no carousel image'};
              img.click();
-             await wait(800);
-             const m = document.querySelector('.glightbox-container');
+             await wait(900);
+             const m = document.querySelector('.viewer-container.viewer-in');
              if (!m) return {error: 'viewer did not open'};
-             const slides = m.querySelectorAll('.gslide').length;
+             // The gallery the viewer walks is the list we built for it.
+             const slides = document.querySelectorAll(
+               '.ms-viewer-source li').length;
              const unique = new Set([...document.querySelectorAll(
                '.ms-shots .swiper-slide img')].map(i => i.currentSrc || i.src)).size;
-             return {slides, unique, zoom: !!m.querySelector('.gzoom')};
+             return {slides, unique};
            }"""
     )
     assert "error" not in opened, opened.get("error")
@@ -947,7 +948,6 @@ def test_lightbox_opens_images_fullscreen(page: Page, local_deployment: str):
         f"gallery holds {opened['slides']} entries for {opened['unique']} "
         "distinct images — slide clones are leaking in"
     )
-    assert not opened["zoom"], "zoom should be off; the ask was full screen only"
 
 
 def test_search_index_is_written(page: Page, local_deployment: str):

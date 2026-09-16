@@ -45,12 +45,43 @@ The wheel ships the `shadcn/` package only.
   `.ms-shots` (Swiper carousel). The carousel is gated by `theme.carousel`,
   which makes `main.html` emit the Swiper CDN + `js/carousel.js`; a consumer
   writes only `.swiper.ms-shots` markup. These were consolidated from consumer
-  repos so docs sites get them without forking.
+  repos so docs sites get them without forking. `theme.lightbox` is the
+  parallel gate for the fullscreen viewer (Viewer.js CDN + `js/lightbox.js`,
+  styled by the `.ms-viewer` block in `mewbo.css`); it needs no markup at all,
+  since the script picks up every eligible content image.
 - `pages/` — the demo/docs site (`pages/mkdocs.yml`); `tests/` — Playwright.
 - `internal/` + `manage.py` — dev tooling (not shipped in the wheel).
 
 ## Conventions & gotchas (learned the hard way)
 
+- **The carousel must not drop clicks (`shadcn/js/carousel.js`).** Swiper's
+  `loopPreventsSliding` defaults to **true**, which silently discards any
+  `slideNext`/`slidePrev`/`slideToLoop` issued while a transition is running.
+  With `loop: true` and a 300ms transition that means a reader clicking an
+  arrow or a dot at a normal pace loses most of their clicks and the carousel
+  reads as *stuck* — measured 4 of 12 rapid clicks landing, 12 of 12 with the
+  option off. It is set `false` deliberately; do not let a re-sync restore the
+  default. Autoplay is `disableOnInteraction: true` for the same reason: it
+  must retire once the reader takes over instead of moving the slide under
+  them between clicks. `tests/test_carousel_navigation.py` clicks at 120ms and
+  fails if a single click is swallowed or a dot disagrees with the slide.
+- **The fullscreen viewer is Viewer.js, and its footer must measure ZERO
+  (`shadcn/js/lightbox.js`).** Viewer.js sizes the image against
+  `container.height - footer.offsetHeight`, reading that `offsetHeight` off
+  the element **directly** — so `position: absolute` on `.viewer-footer` is
+  NOT enough to stop it reserving that strip, and the picture is held short by
+  exactly the footer's height (65px; an 844x390 landscape phone was capped at
+  78% of the size it could show). The cure is the zero-height `.viewer-footer`
+  rule in `mewbo.css` with its children floated and `pointer-events` handed
+  back per child. That is what lets `ImageViewer.COVERAGE = 1` mean the whole
+  screen. Viewer.js clamps to natural size itself (`Math.min(o*n, t)`), so
+  full size still never means upscaled-into-blur.
+  - Its gallery comes from a **detached `<ul>`** (`GallerySource`), not from
+    live carousel markup: pointing the library at `.swiper` would feed it
+    Swiper's clones and its DOM reordering. Dedupe by `src` stays essential.
+  - The predecessor was GLightbox, whose `INSET_X`/`RESERVE_Y`/`MAX_EDGE`
+    budget subtracted a flat 200px of height for chrome laid out *beside* the
+    image. Those tokens are gone; do not reintroduce them.
 - **Tables word-wrap by default.** `tailwind/table.css` deliberately does NOT
   put `whitespace-nowrap` on `th`/`td` (it uses `break-words`); the
   `.table-wrapper` keeps `overflow-x:auto` only as a fallback for un-wrappable

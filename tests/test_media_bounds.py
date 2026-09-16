@@ -95,11 +95,12 @@ def test_full_layout_still_widens_prose(page: Page, local_deployment: str):
 def test_expanded_image_is_capped_and_never_upscaled(
     page: Page, local_deployment: str
 ):
-    """The lightbox shows an image at its own size, never blown up past it.
+    """The viewer shows an image at its own size, never blown up past it.
 
-    Two separate bugs in one check: the fit scale had no `1` ceiling, so a
-    small screenshot was enlarged into blur on a big monitor; and the side
-    inset was a proportion, so an ultrawide still got a near-full-width slab.
+    The original bug: the fit scale had no `1` ceiling, so a small screenshot
+    was enlarged into blur on a big monitor. Viewer.js enforces that ceiling
+    itself, and the reader can zoom in deliberately from the toolbar if they
+    want a closer look.
     """
     page.set_viewport_size({"width": SUPERWIDE[0], "height": SUPERWIDE[1]})
     page.goto(
@@ -111,13 +112,13 @@ def test_expanded_image_is_capped_and_never_upscaled(
         if (!img) return null;
         img.click();
         await new Promise((r) => setTimeout(r, 900));
-        const shown = document.querySelector(
-            '.glightbox-container .gslide-image img'
-        );
-        if (!shown) return null;
+        const shown = document.querySelector('.viewer-canvas img');
+        if (!shown || !shown.naturalWidth) return null;
         return {
             width: shown.getBoundingClientRect().width,
+            height: shown.getBoundingClientRect().height,
             natural: shown.naturalWidth,
+            naturalHeight: shown.naturalHeight,
             viewport: document.documentElement.clientWidth,
         };
     }""")
@@ -127,5 +128,4 @@ def test_expanded_image_is_capped_and_never_upscaled(
 
     # Never larger than the image really is.
     assert opened["width"] <= opened["natural"] + 1, opened
-    # And never the full width of an ultrawide, even for a huge source image.
-    assert opened["width"] <= 1600, opened
+    assert opened["height"] <= opened["naturalHeight"] + 1, opened

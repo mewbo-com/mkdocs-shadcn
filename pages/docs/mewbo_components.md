@@ -59,7 +59,10 @@ A `.swiper.ms-shots` block. The theme loads Swiper (CDN) and mounts it when
 `theme.carousel` is true. Include a `figcaption` in each slide. Captions remain
 visible over the image in a frosted-glass pill. Every slide uses a fixed
 16:9 frame with a centered crop, so changing slides never changes the height.
-Click an image to see it uncropped and fitted to the fullscreen viewport.
+Click an image to open it full screen, uncropped, where the arrows walk the
+whole strip and the toolbar offers zoom, rotate and a one-to-one view. The
+viewer's chrome floats over the picture, so the image is limited only by the
+screen and its own resolution — it is never enlarged past its real pixels.
 
 <div class="swiper ms-shots">
   <div class="swiper-wrapper">
