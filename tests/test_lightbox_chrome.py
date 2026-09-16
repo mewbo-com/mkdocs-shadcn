@@ -35,13 +35,18 @@ def test_lightbox_controls_and_caption(
     )
     image = viewer.locator(".gslide.current .gslide-image img")
     expect(image).to_be_visible()
+    # Mirrors ImageViewer.budget() in js/lightbox.js, including the `1`: an
+    # image is never enlarged past its own pixels, so a small screenshot on a
+    # big monitor is shown sharp and small rather than upscaled into blur.
+    # MAX_EDGE is what stops an ultrawide handing over its whole width.
     page.wait_for_function("""() => {
       const image = document.querySelector('.gslide.current .gslide-image img');
       if (!image) return false;
       const r = image.getBoundingClientRect();
-      const maxW = innerWidth - (innerWidth <= 640 ? 24 : 144);
+      const maxW = Math.min(innerWidth - (innerWidth <= 640 ? 24 : 144), 1600);
       const maxH = innerHeight - 200;
-      const expected = Math.min(maxW / image.naturalWidth, maxH / image.naturalHeight);
+      const expected = Math.min(
+        maxW / image.naturalWidth, maxH / image.naturalHeight, 1);
       return Math.abs(r.width - image.naturalWidth * expected) < 3
         && Math.abs(r.height - image.naturalHeight * expected) < 3;
     }""")

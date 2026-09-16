@@ -84,6 +84,19 @@ article .doc.doc-object h4 {
 	@apply mt-0 flex flex-row items-center gap-2;
 }
 
+/* A signature heading is a flex container, so its `<code>` child is a flex
+   item and inherits `min-width: auto` — meaning it refuses to shrink below
+   its own content width. A fully-qualified Python signature is far wider than
+   a phone, so the heading pushed the PAGE sideways rather than wrapping:
+   measured 506px of content in a 262px column, dragging the document to
+   530px at a 390px viewport. `min-width: 0` lets it shrink; `anywhere` is what
+   it does with the room, breaking mid-token because a dotted path has no
+   spaces to break at. */
+article .doc.doc-object :is(h1, h2, h3, h4, h5, h6) > code {
+	@apply min-w-0;
+	overflow-wrap: anywhere;
+}
+
 article .doc .doc-object .doc-labels {
 	@apply grow flex flex-row gap-2 justify-end;
 }

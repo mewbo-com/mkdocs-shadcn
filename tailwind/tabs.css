@@ -1,5 +1,5 @@
 article .tabbed-set {
-	@apply flex flex-row flex-wrap first-of-type:mt-6;
+	@apply flex flex-row flex-wrap first-of-type:mt-6 min-w-0 max-w-full;
 }
 
 article .tabbed-set input[type="radio"] {
@@ -47,22 +47,28 @@ article .tabbed-set input[type="radio"]:checked + label + div.tabbed-content {
    `.tabbed-block` panels. The legacy rules never match it (there is no
    input+label adjacency), so without these the panels render permanently
    hidden. We key the active label/panel off the checked radio positionally. */
+/* `flex-wrap` on a COLUMN flex container makes the container size itself to
+   its widest child instead of to its own box — so one wide panel (a code
+   fence, a table) widened the tab set past the article and scrolled the page
+   sideways. The panels already scroll themselves via `overflow-auto` below;
+   they just needed permission to be narrower than their content, which is
+   `nowrap` here plus `min-w-0` on the children. */
 article .tabbed-set.tabbed-alternate {
-	@apply flex flex-col flex-wrap;
+	@apply flex flex-col flex-nowrap min-w-0 max-w-full;
 }
 
 article .tabbed-alternate .tabbed-labels {
-	@apply flex flex-row flex-wrap border-b border-b-border;
+	@apply flex flex-row flex-wrap border-b border-b-border min-w-0 max-w-full;
 }
 
 /* Matches the legacy markup's `pt-6`: the rule under the label strip is a
    boundary, and the panel has to clear it before its first line starts. */
 article .tabbed-set.tabbed-alternate > .tabbed-content {
-	@apply block basis-full pt-6 overflow-auto;
+	@apply block basis-full pt-6 overflow-auto min-w-0 max-w-full;
 }
 
 article .tabbed-alternate .tabbed-content > .tabbed-block {
-	@apply hidden;
+	@apply hidden min-w-0;
 }
 
 /* Active label / active panel.

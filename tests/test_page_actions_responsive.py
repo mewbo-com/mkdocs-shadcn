@@ -85,9 +85,19 @@ def test_touch_menu_stays_anchored_and_tappable(
 
 @pytest.mark.parametrize("width", [390, 768, 1440])
 @pytest.mark.parametrize("dark", [False, True])
-def test_split_control_has_one_outline_and_flat_seam(
+def test_split_control_reads_as_one_control_with_a_flat_seam(
     page: Page, local_deployment: str, width: int, dark: bool
 ):
+    """The two halves join seamlessly and share one surface.
+
+    This used to also assert a 1px outer border and a 1px seam, because the
+    control was outlined. It is now filled to match the prev/next arrows it
+    sits beside (see
+    `test_page_actions.py::test_split_button_matches_its_neighbouring_arrows`),
+    so the seam is an inset shadow rather than a border and there is no outer
+    border at all. What the test is actually for is unchanged: the halves must
+    not drift apart, round against each other, or paint different fills.
+    """
     page.set_viewport_size({"width": width, "height": 900})
     page.goto(local_deployment + "/get_started/", wait_until="networkidle")
     page.evaluate(
@@ -102,15 +112,17 @@ def test_split_control_has_one_outline_and_flat_seam(
         inner:[m.borderTopRightRadius,m.borderBottomRightRadius,
                t.borderTopLeftRadius,t.borderBottomLeftRadius].map(parseFloat),
         border:parseFloat(s.borderTopWidth),
-        seam:parseFloat(t.borderLeftWidth),
+        seam:t.boxShadow,
         mainBg:m.backgroundColor, toggleBg:t.backgroundColor};
     }""")
     assert metrics["inner"] == [0, 0, 0, 0], metrics
     assert abs(metrics["gap"]) < 0.5, metrics
     assert abs(metrics["top"]) < 0.5, metrics
     assert abs(metrics["height"]) < 0.5, metrics
-    assert metrics["border"] == 1, metrics
-    assert metrics["seam"] == 1, metrics
+    assert metrics["border"] == 0, metrics
+    # An inset shadow, not a border: the halves sit on one filled surface, so
+    # the divider has to be drawn inside rather than between them.
+    assert "inset" in metrics["seam"], metrics
     assert metrics["mainBg"] == metrics["toggleBg"], metrics
     backgrounds = []
     for selector in ("[data-copy-markdown]", TOGGLE):

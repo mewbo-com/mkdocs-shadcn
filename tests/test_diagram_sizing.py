@@ -32,13 +32,24 @@ def assert_viewer_fits(page: Page):
 
 
 def test_viewer_uses_large_display(page: Page, diagrams):
+    """The viewer takes the screen it is given — up to a readable limit.
+
+    `95vw`/`92dvh` alone meant a 2560px monitor got a 2432px dialog and a
+    diagram scaled to fill it, which is not more readable than one at 1800px,
+    only wider than a pair of eyes. The max bounds in mewbo.css cap it; below
+    them the proportional sizing is unchanged, which is what the 1280px leg
+    still checks.
+    """
     diagrams.nth(0).locator("button").click()
     box = page.locator("dialog.ms-diagram-viewer").bounding_box()
-    assert box["width"] > 2300, box
-    assert box["height"] > 1250, box
+    assert box["width"] == 1800, box
+    assert box["height"] == 1100, box
     assert_viewer_fits(page)
     page.set_viewport_size({"width": 1280, "height": 800})
     assert_viewer_fits(page)
+    # Under the cap the dialog is still proportional to the viewport.
+    small = page.locator("dialog.ms-diagram-viewer").bounding_box()
+    assert 1200 < small["width"] < 1280, small
 
 
 @pytest.mark.parametrize("index", [0, 1])

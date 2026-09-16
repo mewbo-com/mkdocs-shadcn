@@ -165,6 +165,35 @@
   class ImageViewer {
     static CHROME = ".swiper-button-prev, .swiper-button-next, .swiper-pagination";
 
+    /**
+     * How much room an expanded image may occupy, in px.
+     *
+     * The same numbers are also in mewbo.css as `max-width`/`max-height` on
+     * `.gslide-image img`; they have to be, because GLightbox paints a frame
+     * before this ever runs and the CSS is what keeps that first frame from
+     * flashing oversized. This is the authority for the final size.
+     *
+     * Three separate limits, because a viewport is not one shape:
+     *   - a side inset, so the picture never touches the edge of the screen;
+     *   - a vertical reserve for the close button and the caption;
+     *   - an absolute ceiling, which is the one that matters on an ultrawide.
+     *     Without it a 5120px monitor shows a 4976px-wide image and the reader
+     *     has to move their head to read it.
+     */
+    static INSET_X = 144;
+    static INSET_X_NARROW = 24;
+    static RESERVE_Y = 200;
+    static MAX_EDGE = 1600;
+
+    static budget() {
+      const narrow = window.innerWidth <= 640;
+      const inset = narrow ? ImageViewer.INSET_X_NARROW : ImageViewer.INSET_X;
+      return {
+        width: Math.max(1, Math.min(window.innerWidth - inset, ImageViewer.MAX_EDGE)),
+        height: Math.max(1, window.innerHeight - ImageViewer.RESERVE_Y),
+      };
+    }
+
     constructor(root, { factory, hint }) {
       this.root = root;
       this.factory = factory;
@@ -229,9 +258,15 @@
       const fitImages = () => {
         document.querySelectorAll('.glightbox-container .gslide-image img').forEach((image) => {
           if (!image.naturalWidth || !image.naturalHeight) return;
-          const width = window.innerWidth - (window.innerWidth <= 640 ? 24 : 144);
-          const height = Math.max(1, window.innerHeight - 200);
-          const scale = Math.min(width / image.naturalWidth, height / image.naturalHeight);
+          const budget = ImageViewer.budget();
+          // `1` is the ceiling, not just a scale floor: without it a 400px
+          // screenshot on a 2560px monitor is blown up to ~1700px and shown
+          // blurry. Full size means the image's own size, never larger.
+          const scale = Math.min(
+            budget.width / image.naturalWidth,
+            budget.height / image.naturalHeight,
+            1,
+          );
           image.style.width = `${image.naturalWidth * scale}px`;
           image.style.height = `${image.naturalHeight * scale}px`;
         });

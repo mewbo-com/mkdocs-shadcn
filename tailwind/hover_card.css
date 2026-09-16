@@ -43,6 +43,9 @@ span.hover-card:hover {
 	@apply mt-0;
 }
 
+/* The phone treatment for hover cards lives in shadcn/css/mewbo.css — it
+   needs a `translate` reset that this file's compiler folds away. */
+
 /* ── Glossary tooltips (`abbr`) ──────────────────────────────────────────
    `*[HTML]: HyperText Markup Language` emits `<abbr title="…">`, which the
    browser already gives a native tooltip — no CSS or JS needed to make it

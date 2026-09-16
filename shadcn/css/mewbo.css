@@ -207,6 +207,59 @@ article td code {
   word-break: break-word;
 }
 
+/* ── Hover cards on a phone ────────────────────────────────────────────────
+   The card is anchor-positioned against its trigger (see
+   shadcn/extensions/hover_card.py), which is right on a desktop and
+   impossible on a phone: a 350px card anchored to a word near the right edge
+   of a 320px screen has nowhere to go, and it pushed the page sideways —
+   measured 467px of document in a 414px viewport.
+
+   `position-try-fallbacks` is the purpose-built answer and is Chromium-only
+   today, so this does not use it. Instead the card stops being a tooltip
+   below 700px and becomes a sheet pinned to the bottom of the viewport, which
+   is where a phone expects secondary content anyway and which cannot overflow
+   in either axis by construction.
+
+   Every offset is reset, not just the ones a given variant sets: the four
+   positions each set a different pair, and `span.hover-card` additionally
+   centres itself with Tailwind's `translate` property, which `transform:
+   none` does NOT undo.
+
+   This rule lives HERE rather than in tailwind/hover_card.css because the
+   Tailwind build folds `translate` away as redundant next to `transform`,
+   and the declaration never reached base.css — source looked right, build was
+   broken, and only a test against the built site caught it. mewbo.css ships
+   verbatim. */
+@media (max-width: 700px) {
+  article .hover-card {
+    position: fixed;
+    inset: auto 1rem 1rem 1rem;
+    transform: none;
+    translate: none;
+    justify-self: initial;
+    align-self: initial;
+    width: auto;
+    min-width: 0;
+    max-width: none;
+  }
+}
+
+/* Display math is the one construct that genuinely cannot wrap — KaTeX ships
+   `white-space: nowrap` on `.katex-display > .katex` because an equation
+   broken at an arbitrary point is not the same equation. So it gets the same
+   deal a code block gets: scroll the equation, not the page. Without this
+   the theme had no rule for it at all and a wide equation moved the whole
+   document. */
+article .katex-display,
+.md-content .katex-display {
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  /* `overflow` on a block establishes a scroll container whose top/bottom
+     would otherwise clip the taller glyphs (integrals, big fractions). */
+  padding-block: 0.25rem;
+}
+
 /* Mermaid diagrams get the framed treatment images get, plus an expanded
    viewer — see "Mermaid diagrams" near the end of this file. An unrendered
    fence (mermaid failed to load, or superfences was never configured) still
@@ -239,6 +292,60 @@ article .ms-devices img,
   padding: 0;
   background: transparent;
   border: 0;
+}
+
+/* ── Media width ceiling in expanded (full-width) layout ─────────────────────
+   `html.layout-full main article` drops to `3xl:max-w-none` (tailwind/
+   article.css:5-7), which is right for prose — text at 1600px+ wants the room
+   — but it leaves every media block with NO upper bound at all. A screenshot
+   or a carousel then scales to whatever the monitor is, so the same image is
+   a comfortable 672px in fixed layout and an unreadable 1900px-wide slab on an
+   ultrawide, flush to both edges of the column with nothing beside it.
+
+   A ceiling, not a percentage: media stops growing at `--ms-media-max-width`
+   and centres, so the column keeps widening for text while images hold a size
+   a person can actually take in at one glance. `--ms-media-gutter` is the
+   breathing room on each side, which matters most here — at full width the
+   article's own `3xl:px-6` is the only inset, and an image pinned to it reads
+   as bleeding off the page rather than sitting on it.
+
+   Scoped to `.layout-full` and the 3xl breakpoint that actually releases the
+   `max-w-2xl`; below that the article cap already bounds these and this rule
+   must not shrink them. Consumers retune via the two custom properties. */
+html.layout-full {
+  --ms-media-max-width: 68rem;
+  --ms-media-gutter: 2rem;
+}
+
+@media (min-width: 1600px) {
+  html.layout-full main article :is(
+    p > img,
+    figure,
+    .ms-shot,
+    .ms-shots,
+    .ms-devices,
+    video,
+    .table-wrapper,
+    .mermaid,
+    div.mermaid
+  ) {
+    max-width: min(
+      100%,
+      calc(var(--ms-media-max-width) - 2 * var(--ms-media-gutter))
+    );
+    margin-inline: auto;
+  }
+
+  /* A bare <img> is a block in this theme (preflight sets `display:block`), so
+     it takes the same ceiling directly — `p > img` above only catches the
+     markdown-paragraph case. */
+  html.layout-full main article .typography img {
+    max-width: min(
+      100%,
+      calc(var(--ms-media-max-width) - 2 * var(--ms-media-gutter))
+    );
+    margin-inline: auto;
+  }
 }
 
 /* Sticky top nav: one hairline marks where the header ends and the page
@@ -515,23 +622,25 @@ article .admonition > *:last-child,
   opacity: 0.6;
   flex-shrink: 0;
 }
-.search-trigger > .search-shortcut {
+/* The search hint is a real shortcut, so it uses the site's keycaps — two
+   separate caps, as the keyboard has two keys. It shipped as one flat
+   monospace box reading "Ctrl K": no caps, and a different typeface from
+   every other shortcut on the site.
+
+   The caps are scaled DOWN here, though. This sits inside a search field, not
+   in a sentence, and keycaps at prose size overpower the placeholder beside
+   them. One `font-size` on the group does it, because the caps are sized in
+   `em` throughout. */
+.search-trigger > .search-shortcut,
+.search-trigger > .search-shortcut:has(kbd) {
   margin-left: auto;
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  min-width: 2.25rem;
-  height: 1.25rem;
-  padding: 0 0.35rem;
-  border: 1px solid var(--border, rgba(120, 120, 120, 0.25));
-  border-radius: 0.35rem;
-  background: var(--muted, transparent);
-  color: var(--muted-foreground, currentColor);
-  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  font-size: 0.7rem;
-  font-weight: 500;
-  letter-spacing: 0.02em;
-  opacity: 0.8;
+  gap: 0.15em;
+  flex-shrink: 0;
+  font-size: 0.78rem;
+  line-height: 1;
+  opacity: 0.85;
 }
 @media (max-width: 639px) {
   .search-trigger > .search-shortcut {
@@ -1471,10 +1580,25 @@ article a:hover,
 }
 
 /* Reserve room for controls and caption without wasting a third of the
-   viewport. The image stays uncropped and clear of the close control. */
+   viewport. The image stays uncropped and clear of the close control.
+
+   `--ms-lightbox-max-edge` is the ceiling that keeps an ultrawide honest: the
+   side inset alone is a proportion, so at 5120px it still leaves a ~5000px
+   image nobody can read without turning their head. These three values are
+   mirrored by the `ImageViewer.INSET_X` / `RESERVE_Y` / `MAX_EDGE` constants
+   in js/lightbox.js, which writes the final px size; this rule is what bounds
+   the frame GLightbox paints before that script runs. Change both together. */
+.glightbox-container {
+  --ms-lightbox-inset-x: 144px;
+  --ms-lightbox-reserve-y: 200px;
+  --ms-lightbox-max-edge: 1600px;
+}
 .glightbox-container .gslide-image img {
-  max-width: calc(100vw - 144px);
-  max-height: calc(100dvh - 200px);
+  max-width: min(
+    calc(100vw - var(--ms-lightbox-inset-x)),
+    var(--ms-lightbox-max-edge)
+  );
+  max-height: calc(100dvh - var(--ms-lightbox-reserve-y));
   min-width: 0;
   border-radius: 0.6rem;
   box-shadow: 0 24px 64px -24px rgb(0 0 0 / 0.6);
@@ -1564,10 +1688,7 @@ article a:hover,
   font: 500 0.8125rem / 1 var(--font-sans);
 }
 @media (max-width: 640px) {
-  .glightbox-container .gslide-image img {
-    max-width: calc(100vw - 24px);
-    max-height: calc(100dvh - 200px);
-  }
+  .glightbox-container { --ms-lightbox-inset-x: 24px; }
   .glightbox-container .gprev,
   .glightbox-container .gnext {
     top: auto;
@@ -1975,6 +2096,151 @@ body:not(.ms-has-header-tabs) .mewbo-header {
   font-variant-numeric: tabular-nums;
 }
 
+/* ── Header dropdowns (version / branch) ──────────────────────────────────
+   Two separate switchers can appear in the header: the mike one from
+   `version_select.html` (a bare `<select>`, previously unstyled) and the
+   Mewbo one built by js/version-switcher.js (Tailwind classes, `h-8`, plus a
+   "Version" text label). Two spellings of the same control, so they agreed on
+   nothing — different heights, different fonts, one labelled and one not, and
+   the unstyled one clipped its own text along the bottom because a native
+   select sizes its box from font metrics rather than the line box.
+
+   One class now owns the geometry and both use it. The rules:
+     · 2.25rem tall, matching `.mewbo-icon-btn` — every control in the row is
+       the same height, which is what makes the row read as a row;
+     · an icon marks what the dropdown switches, instead of a text label —
+       the value already says "latest", so a word beside it was redundant and
+       only one of the two had it;
+     · `appearance: none` so the box is ours, and the chevron is a background
+       image, because a `<select>` cannot hold a child element to draw one in.
+   `line-height` is stated equal to the height; that is what stops the
+   clipping.
+   ────────────────────────────────────────────────────────────────────────── */
+.ms-header-select {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  height: 2.25rem;
+  padding: 0 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  color: var(--muted-foreground);
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+.ms-header-select:hover {
+  background: var(--accent);
+  color: var(--accent-foreground);
+}
+.ms-header-select:focus-within {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--ring) 50%, transparent);
+}
+.ms-header-select__icon {
+  width: 0.875rem;
+  height: 0.875rem;
+  flex-shrink: 0;
+  opacity: 0.75;
+}
+/* The inner select is the whole control minus the icon: no chrome of its own,
+   because the wrapper draws the box. */
+.ms-header-select > select {
+  appearance: none;
+  -webkit-appearance: none;
+  height: 100%;
+  max-width: 9rem;
+  margin: 0;
+  padding: 0 1.1rem 0 0;
+  border: 0;
+  background-color: transparent;
+  color: var(--foreground);
+  font-family: inherit;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  line-height: 2.25rem;
+  text-overflow: ellipsis;
+  cursor: pointer;
+  outline: none;
+}
+
+/* The mike selector has no wrapper to put an icon in — it is a lone <select>
+   emitted by a template this theme does not control the innards of. It gets
+   the same box, with the icon as a second background image on the left. */
+#version-selector {
+  appearance: none;
+  -webkit-appearance: none;
+  display: flex;
+  align-items: center;
+  height: 2.25rem;
+  width: fit-content;
+  max-width: 11rem;
+  margin: 0;
+  padding: 0 1.75rem 0 1.85rem;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  background-color: transparent;
+  color: var(--foreground);
+  font-family: inherit;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  line-height: 2.25rem;
+  text-overflow: ellipsis;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+#version-selector:hover {
+  background-color: var(--accent);
+  color: var(--accent-foreground);
+}
+#version-selector:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--ring) 50%, transparent);
+}
+
+/* Chevron (right) and history icon (left), inlined so neither costs a
+   request. `currentColor` is not available inside a data URI, so the stroke
+   is a fixed mid-grey that reads acceptably against both themes — the same
+   compromise every `appearance: none` select makes. */
+.ms-header-select > select,
+#version-selector {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23888888' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.15rem center;
+  background-size: 0.85rem;
+}
+/* Chevron plus a leading mark, same as the branch switcher's — but this one
+   lists mike's published refs ("main (latest)"), so the mark is lucide's
+   git-branch rather than the history clock. Two dropdowns side by side need
+   to say which is which at a glance, and that is the whole job of the icon
+   now that neither carries a text label. */
+#version-selector {
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23888888' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23888888' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='6' y1='3' x2='6' y2='15'/%3E%3Ccircle cx='18' cy='6' r='3'/%3E%3Ccircle cx='6' cy='18' r='3'/%3E%3Cpath d='M18 9a9 9 0 0 1-9 9'/%3E%3C/svg%3E");
+  background-position: right 0.55rem center, left 0.6rem center;
+  background-size: 0.85rem, 0.875rem;
+}
+
+/* The dropdown list itself is painted by the OS, which does not inherit the
+   page theme — an unset option list is white-on-white in dark mode. */
+.ms-header-select > select option,
+#version-selector option {
+  background: var(--popover);
+  color: var(--popover-foreground);
+}
+
+/* On a phone the right-hand cluster only has room for the controls a reader
+   actually reaches for: search, the repo link, and the theme toggle. The
+   version and branch pickers are desktop affordances — nobody switches
+   documentation versions mid-scroll on a phone — so they return at `md`
+   rather than competing for a 320px row. */
+@media (max-width: 767px) {
+  #version-selector,
+  #version-switcher,
+  .ms-header-select,
+  .mewbo-nav-version {
+    display: none;
+  }
+}
+
 /* Sun/moon cross-dissolve: rotate-90 + scale-0 swap, ~200ms. The shadcn
    idiom for theme toggles. Light = sun visible / moon hidden; .dark flips. */
 .mewbo-theme-toggle { position: relative; }
@@ -2040,7 +2306,7 @@ body:not(.ms-has-header-tabs) .mewbo-header {
    type size surrounds them.
    ────────────────────────────────────────────────────────────────────── */
 
-kbd:not(:has(kbd)):not(.mewbo-kbd, .search-shortcut, .mewbo-nav-search-pill kbd) {
+kbd:not(:has(kbd)):not(.mewbo-kbd) {
   /* Face and walls derive from `--muted`, so the cap belongs to the palette
      and inverts with the theme on its own. `--kbd-face` is stated as an
      opaque mix rather than a translucent fill: these sit on table rows that
@@ -2098,7 +2364,7 @@ kbd:not(:has(kbd)):not(.mewbo-kbd, .search-shortcut, .mewbo-nav-search-pill kbd)
 /* Dark: the same lighting, recomputed. A cap on a near-black page cannot be
    built by lightening toward white — the face would glow — so the mixes are
    weaker and the front wall leans on the page colour beneath it. */
-.dark kbd:not(:has(kbd)):not(.mewbo-kbd, .search-shortcut, .mewbo-nav-search-pill kbd) {
+.dark kbd:not(:has(kbd)):not(.mewbo-kbd) {
   --kbd-face: color-mix(in oklab, var(--muted) 86%, var(--foreground) 3%);
   --kbd-edge-top: color-mix(in oklab, var(--kbd-face) 82%, white);
   --kbd-edge-side: color-mix(in oklab, var(--kbd-face) 74%, black);
@@ -2131,14 +2397,21 @@ kbd:not(:has(kbd)):not(.mewbo-kbd, .search-shortcut, .mewbo-nav-search-pill kbd)
   font-size: 0.85em;
 }
 
+/* The nav pill's hint, same treatment as the search field's: two real
+   keycaps rather than one bordered box holding two letters, scaled down to
+   sit quietly beside the "Search…" placeholder. The wrapper keeps no chrome
+   of its own — the caps inside it are the visible thing. */
 .mewbo-kbd {
   margin-left: auto;
-  display: inline-flex; align-items: center;
-  height: 1.25rem; padding: 0 0.35rem;
-  border: 1px solid var(--border); border-radius: 0.3rem;
-  background: var(--muted); color: var(--muted-foreground);
-  font-family: ui-monospace, Menlo, monospace;
-  font-size: 0.7rem; font-weight: 500; letter-spacing: 0.02em;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.15em;
+  flex-shrink: 0;
+  border: 0;
+  background: transparent;
+  font-size: 0.78rem;
+  line-height: 1;
+  opacity: 0.85;
   pointer-events: none;
 }
 @media (max-width: 639px) { .mewbo-kbd { display: none; } }
@@ -2851,16 +3124,31 @@ body.ms-has-header-tabs .mewbo-header__row { height: calc(var(--spacing) * 14); 
   .mewbo-greeting__text { font-size: 0.875rem; }
 }
 
-/* Page actions share one outer border; only the toggle draws an inner seam.
+/* Page actions sit in the same row as the prev/next arrows, which are plain
+   shadcn secondary buttons: `size-8 md:size-7 rounded-md bg-secondary`, i.e.
+   2rem square dropping to 1.75rem from `md`, radius `--radius-md`, filled
+   rather than outlined. This control is a split button rather than a single
+   icon, so it is wider — but every other axis has to agree with its
+   neighbours or the row reads as two unrelated components, which is exactly
+   what an outlined 2.25rem box next to a filled 2rem one did.
+   `--page-actions-size` is that shared height, and `--radius-md` the shared
+   radius; the seam between the halves is the one thing the arrows have no
+   equivalent for.
+
    Keep the menu outside any clipping so it can extend beyond the control. */
 .mewbo-page-actions {
+  --page-actions-size: 2rem;
   position: relative;
   display: inline-flex;
   align-items: stretch;
   flex-shrink: 0;
-  border: 1px solid var(--border);
-  border-radius: 0.625rem;
-  background: var(--background);
+  height: var(--page-actions-size);
+  border-radius: var(--radius-md);
+  background: var(--secondary);
+  color: var(--secondary-foreground);
+}
+@media (min-width: 768px) {
+  .mewbo-page-actions { --page-actions-size: 1.75rem; }
 }
 
 /* Override the article button's geometry and variants as one unit, including
@@ -2870,29 +3158,33 @@ article .mewbo-page-actions > button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  height: 2.25rem;
+  height: var(--page-actions-size);
   margin: 0;
-  padding: 0 0.65rem;
+  padding: 0 0.5rem;
   border: 0;
   border-radius: 0;
   background: transparent;
-  color: var(--muted-foreground);
+  color: inherit;
   box-shadow: none;
   transform: none;
   cursor: pointer;
   transition: background 0.12s ease, color 0.12s ease;
 }
 article .mewbo-page-actions > .mewbo-page-actions__main {
-  border-radius: 0.5625rem;
+  min-width: var(--page-actions-size);
+  border-radius: var(--radius-md);
 }
 article .mewbo-page-actions:has(.mewbo-page-actions__toggle) > .mewbo-page-actions__main {
-  border-radius: 0.5625rem 0 0 0.5625rem;
+  border-radius: var(--radius-md) 0 0 var(--radius-md);
 }
+/* The seam is a foreground tint rather than `--border`: the control is filled
+   now, and a border colour picked to read against `--background` disappears
+   against `--secondary`. */
 article .mewbo-page-actions > .mewbo-page-actions__toggle {
-  min-width: 2.25rem;
-  padding-inline: 0.5rem;
-  border-left: 1px solid var(--border);
-  border-radius: 0 0.5625rem 0.5625rem 0;
+  min-width: calc(var(--page-actions-size) - 0.25rem);
+  padding-inline: 0.25rem;
+  box-shadow: inset 1px 0 0 color-mix(in oklab, currentColor 18%, transparent);
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
 }
 /* Tailwind expands variant lists into :is(), inheriting the strongest
    selector in the list. Include the component class to beat that hover. */
@@ -3650,11 +3942,16 @@ figure.ms-mermaid foreignObject div,
    containment and the backdrop are the platform's job rather than ours.
    ───────────────────────────────────────────────────────────────────────── */
 
+/* `95vw` alone is a proportion, and a proportion of an ultrawide is still an
+   ultrawide: at 5120px the dialog is 4864px across and the diagram inside it
+   is scaled to match, so reading it means scanning a metre of glass. The two
+   `max-*` values are the real bound; `95vw` stays as the small- and
+   medium-screen behaviour, which is the one it was right for. */
 dialog.ms-diagram-viewer {
   width: 95vw;
   height: 92dvh;
-  max-width: none;
-  max-height: none;
+  max-width: 1800px;
+  max-height: 1100px;
   padding: 0;
   margin: auto;
   display: none;

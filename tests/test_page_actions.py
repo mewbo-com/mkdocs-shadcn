@@ -220,3 +220,62 @@ def test_copy_proxy_copies_and_closes(page: Page, local_deployment: str):
     assert page.get_attribute("[data-copy-markdown]", "data-copy-state") == (
         "ready"
     ), "the copied state never reset"
+
+
+@pytest.mark.parametrize("width", (390, 900, 1440))
+def test_split_button_matches_its_neighbouring_arrows(
+    page: Page, local_deployment: str, width: int
+):
+    """The page-actions control belongs to the same family as the arrows.
+
+    It sits in one row with the prev/next buttons, which are plain shadcn
+    secondary buttons. It is wider than they are, because it holds a label and
+    a chevron rather than one glyph — but it shipped 2.25rem tall, outlined
+    and unfilled beside their 2rem filled squares, which read as two unrelated
+    components pushed together rather than one toolbar.
+
+    Height, radius, fill and baseline are therefore asserted equal. Width
+    deliberately is not.
+    """
+    page.set_viewport_size({"width": width, "height": 900})
+    page.goto(f"{local_deployment}/get_started/", wait_until="networkidle")
+
+    measured = page.evaluate("""() => {
+        const read = (sel) => {
+            const el = document.querySelector(sel);
+            if (!el) return null;
+            const box = el.getBoundingClientRect();
+            const style = getComputedStyle(el);
+            return {
+                height: Math.round(box.height),
+                top: Math.round(box.top),
+                radius: style.borderRadius,
+                background: style.backgroundColor,
+            };
+        };
+        return {
+            actions: read('.mewbo-page-actions'),
+            previous: read('#previous-button'),
+            next: read('#next-button'),
+        };
+    }""")
+
+    actions = measured["actions"]
+    assert actions is not None, "page actions control is missing"
+
+    for name in ("previous", "next"):
+        sibling = measured[name]
+        if sibling is None:
+            continue
+        assert actions["height"] == sibling["height"], (
+            f"height differs from {name}: {measured}"
+        )
+        assert actions["top"] == sibling["top"], (
+            f"not on the same baseline as {name}: {measured}"
+        )
+        assert actions["radius"] == sibling["radius"], (
+            f"corner radius differs from {name}: {measured}"
+        )
+        assert actions["background"] == sibling["background"], (
+            f"fill differs from {name}: {measured}"
+        )

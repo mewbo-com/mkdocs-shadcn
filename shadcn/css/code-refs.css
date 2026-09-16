@@ -43,6 +43,12 @@
   overflow: hidden;
   text-decoration: none !important;
   white-space: nowrap;
+  /* `overflow: hidden` clips the CONTENTS; it does not cap the BOX. An
+     inline-flex with nowrap children sizes to max-content, so a long path
+     made the pill wider than the column and scrolled the whole page — 350px
+     of pill in a 238px list item. This is the cap; the label cell below is
+     what gives up the space. */
+  max-width: 100%;
   transition: border-color 0.12s ease;
   /* Second tone: one consistent step away from --muted, in both themes. */
   --cr-base: var(--muted);
@@ -61,9 +67,22 @@
   padding: 0.15rem 0.5rem;
 }
 
+/* The label is the cell that yields when the pill hits its cap: the line
+   range and the method are short and fixed, and truncating either would
+   destroy the reference. A path truncates legibly — the tail is still there
+   to read once there is room, and the title attribute carries the whole of
+   it. */
 .md-coderef__label {
   gap: 0.34rem;
   color: var(--foreground);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.md-coderef__lines,
+.md-coderef__method {
+  flex: 0 0 auto;
 }
 
 .md-coderef__icon {
