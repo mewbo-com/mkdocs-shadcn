@@ -69,11 +69,52 @@
     const menu = root.querySelector('[data-mewbo-page-actions-menu]');
     if (!toggle || !menu) return;
 
+    // Anchor to the control in every layout, then clamp to the visible
+    // viewport. Switching to fixed with top:100% put mobile menus below it.
+    const positionMenu = () => {
+      if (menu.hidden) return;
+      const viewport = window.visualViewport;
+      const left = viewport ? viewport.offsetLeft : 0;
+      const top = viewport ? viewport.offsetTop : 0;
+      const width = viewport ? viewport.width : document.documentElement.clientWidth;
+      const height = viewport ? viewport.height : window.innerHeight;
+      const margin = 12;
+      const gap = 6;
+      const anchor = root.getBoundingClientRect();
+      menu.style.width = `${Math.min(304, width - margin * 2)}px`;
+      const x = Math.max(left + margin,
+        Math.min(anchor.right - menu.offsetWidth, left + width - margin - menu.offsetWidth));
+      const below = Math.max(0, top + height - margin - anchor.bottom - gap);
+      const above = Math.max(0, anchor.top - gap - top - margin);
+      const upwards = menu.scrollHeight > below && above > below;
+      menu.style.setProperty('--page-menu-max-height', `${upwards ? above : below}px`);
+      const y = upwards ? anchor.top - gap - menu.offsetHeight : anchor.bottom + gap;
+      menu.style.left = `${x - anchor.left - root.clientLeft}px`;
+      menu.style.top = `${y - anchor.top - root.clientTop}px`;
+      menu.style.right = 'auto';
+    };
+
     const setOpen = (open) => {
       menu.hidden = !open;
       toggle.setAttribute('aria-expanded', String(open));
       root.toggleAttribute('data-open', open);
+      if (open) positionMenu();
     };
+    let positionFrame = 0;
+    const schedulePosition = (event) => {
+      // Scrolling the menu's own rows does not move its anchor.
+      if (menu.hidden || event.target === menu || positionFrame) return;
+      positionFrame = requestAnimationFrame(() => {
+        positionFrame = 0;
+        positionMenu();
+      });
+    };
+    window.addEventListener('resize', schedulePosition);
+    window.addEventListener('scroll', schedulePosition, { capture: true, passive: true });
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', schedulePosition);
+      window.visualViewport.addEventListener('scroll', schedulePosition);
+    }
 
     toggle.addEventListener('click', (event) => {
       event.preventDefault();
