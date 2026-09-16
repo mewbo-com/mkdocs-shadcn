@@ -10,15 +10,30 @@ article .tabbed-set input[type="radio"]:checked + label {
 	@apply text-foreground border-b-primary;
 }
 
+/* A tab label is a section heading for the panel under it, not a caption, so
+   it is set at body copy size rather than a step below it. `1em` and not a
+   fixed size: body copy is responsive — `text-[1.05rem] sm:text-[15px]` on the
+   docs wrapper in main.html — so a px value would be right at one breakpoint
+   and a step out of register at the other.
+
+   The asymmetric vertical padding is what makes the strip read as a tab bar:
+   the larger bottom value is the distance from the word to the underline that
+   marks it selected, and an underline set tight against the text reads as a
+   typo rather than as a tab. */
 article .tabbed-set label {
-	@apply order-1 border-b-2 border-b-transparent font-semibold text-sm py-1 px-4 text-muted-foreground cursor-pointer transition-colors hover:text-foreground;
+	@apply order-1 border-b-2 border-b-transparent font-semibold text-[1em] pt-2 pb-3 px-4 text-muted-foreground cursor-pointer transition-colors hover:text-foreground;
 }
 
 article .tabbed-set div.tabbed-content {
-	@apply hidden order-last basis-full border-t border-t-border pt-3 overflow-auto mt-0;
+	@apply hidden order-last basis-full border-t border-t-border pt-6 overflow-auto mt-0;
 }
 
-article .tabbed-content .codehilite {
+/* A panel that opens on a fence should start flush with the rule above it —
+   the panel's own `pt-6` is already the separation. `:first-child` is what
+   keeps that from applying to a fence FURTHER DOWN the panel, which is the
+   common shape (a sentence, then the command it describes) and which read as
+   the prose and the code being glued together. */
+article .tabbed-content .codehilite:first-child {
 	@apply mt-0;
 }
 
@@ -40,8 +55,10 @@ article .tabbed-alternate .tabbed-labels {
 	@apply flex flex-row flex-wrap border-b border-b-border;
 }
 
+/* Matches the legacy markup's `pt-6`: the rule under the label strip is a
+   boundary, and the panel has to clear it before its first line starts. */
 article .tabbed-set.tabbed-alternate > .tabbed-content {
-	@apply block basis-full pt-3 overflow-auto;
+	@apply block basis-full pt-6 overflow-auto;
 }
 
 article .tabbed-alternate .tabbed-content > .tabbed-block {

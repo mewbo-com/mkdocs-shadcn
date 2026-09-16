@@ -25,6 +25,34 @@ accessible markup). The theme styles both this and the legacy markup.
 
     Panel marker: **CHARLIE_PANEL**. A third panel to prove positional mapping.
 
+### Tab and code spacing
+
+The install-instructions shape: a sentence introducing a command, the command,
+and then the next sentence. It is the fixture for
+`test_tab_and_code_spacing`, which measures the label type size, the gap from a
+label to its selected underline, the gap under the label strip, and the space a
+fenced block keeps on both edges.
+
+=== "uv"
+
+    `uv` isolates the tool and links it onto your `$PATH`.
+
+    ```bash
+    uv tool install example
+    ```
+
+    Upgrades and removals go through the same tool.
+
+=== "pipx"
+
+    `pipx` gives each tool its own virtualenv.
+
+    ```bash
+    pipx install example
+    ```
+
+    Upgrades and removals go through the same tool.
+
 ## Image carousel
 
 A `.swiper.ms-shots` block. The theme loads Swiper (CDN) and mounts it when

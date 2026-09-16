@@ -657,6 +657,13 @@ article {
      the space above the heading: a heading has to read as belonging to the
      content under it, not floating between two passages. */
   --prose-heading-lead: 1rem;
+  /* Around a fenced code block. A step above the body flow because a code
+     block is a framed object with its own border, radius and background
+     padding, not another line of prose — at the flow step its frame very
+     nearly touches the sentence introducing it, and a wall of prose and code
+     runs together with nothing to breathe on. One rung up the same ladder, so
+     the page still reads as one rhythm rather than a special case. */
+  --prose-code-gap: 2rem;
 }
 
 /* Descendant, not child, to match base.css's `article .typography h2` exactly —
@@ -700,6 +707,43 @@ article .typography > :first-child {
 article .typography :is(h2, h3, h4, h5, h6):not(.ms-hero *, .doc *)
   + :is(p, ul, ol, dl, pre, blockquote, figure, table, details, section, div, video, h2, h3, h4, h5, h6) {
   margin-top: var(--prose-heading-lead) !important;
+}
+
+/* ── Fenced code blocks sit one rung up the ladder ────────────────────────
+   A code block is a framed object, and the frame is the problem: its border
+   and its internal padding both read as part of the gap, so the same
+   `--prose-flow` that separates two paragraphs comfortably leaves the frame
+   very nearly touching the sentence that introduces it. The pattern is the
+   most common one in these docs — a line of prose, then the command it
+   describes, then the next line of prose — so it repeats down the whole page
+   and the result reads as one undifferentiated block.
+
+   Both edges are set here, not just the top, because the rhythm is symmetric:
+   what follows a block needs the same clearance as what precedes it, and the
+   file's convention is that top margins own every seam.
+
+   Three exclusions, each for a composition that spaces itself on purpose:
+   an admonition is a small padded box that would look hollow at this step,
+   mkdocstrings holds a symbol's body tight under its signature, and the hero
+   uses a flex gap.
+
+   `div.codehilite` / `div.highlight` are the wrappers `pymdownx.highlight`
+   and `codehilite` emit. A bare `> pre` is the raw-HTML case; it is matched as
+   a direct child only, so the `<pre>` INSIDE a wrapper keeps the zero margins
+   codehilite.css gives it and the frame does not gain a band of dead space. */
+article .typography
+  :is(div.codehilite, div.highlight):not(:first-child, .admonition *, .doc *, .ms-hero *),
+article .typography > pre:not(.mermaid, :first-child) {
+  margin-top: var(--prose-code-gap);
+}
+
+/* Headings keep their own, larger section gaps — `:is(h2, …)` would otherwise
+   be pulled DOWN to this step, which is the opposite of the intent. */
+article .typography
+  :is(div.codehilite, div.highlight):not(.admonition *, .doc *, .ms-hero *)
+  + :not(h2, h3, h4, h5, h6),
+article .typography > pre:not(.mermaid) + :not(h2, h3, h4, h5, h6) {
+  margin-top: var(--prose-code-gap);
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
