@@ -576,7 +576,7 @@ dialog#search-dialog > div {
   margin: 0;
   font-size: 0.82rem;
   color: var(--muted-foreground, currentColor);
-  line-height: 1.4;
+  line-height: var(--leading-ui);
   display: -webkit-box;
   -webkit-line-clamp: 2;
   line-clamp: 2;
@@ -664,6 +664,87 @@ article {
      runs together with nothing to breathe on. One rung up the same ladder, so
      the page still reads as one rhythm rather than a special case. */
   --prose-code-gap: 2rem;
+}
+
+/* ── Leading ─────────────────────────────────────────────────────────────
+   Declared at :root rather than beside the gap tokens above, because the ToC
+   rail, the footer and the search dialog all sit outside `article` and need
+   the same ladder.
+
+   The gaps above are the space BETWEEN blocks; these are the space between
+   lines inside one. The page read as cramped because the two had drifted
+   apart: paragraphs were already generous at 1.625 while everything read
+   alongside them lagged — list items at 1.5, admonition and caption text at
+   1.4-1.43, the ToC at 1.4. A reader does not experience those as separate
+   components, so a page mixing them reads as unevenly tight rather than as
+   deliberately varied.
+
+   Four rungs, chosen by how the text is READ rather than by what element it
+   happens to be:
+
+     body     continuous prose you read line after line. The loosest,
+              because that is where leading does the most work.
+     ui       short runs in chrome — a ToC entry, a caption, a footer link.
+              These wrap to two or three lines at most, so they want air
+              without the paragraph's full openness, which would make a
+              two-line entry look like two separate entries.
+     compact  dense surfaces where a line is a unit rather than part of a
+              flow: a line of code, a keycap.
+     tight    display type. Headings are large enough that generous leading
+              pulls a two-line heading apart into two headings.
+
+   Unitless on purpose: these are inherited by elements at many different
+   font sizes, and a `rem` value would be a fixed gap that suffocates small
+   type and yawns on large. */
+:root {
+  --leading-body: 1.7;
+  --leading-ui: 1.55;
+  --leading-compact: 1.45;
+  --leading-tight: 1.25;
+}
+
+/* Continuous prose. `article` itself carries the body rung so anything that
+   does not opt out inherits it — including markup the theme has no rule for,
+   which is where the old drift came from. Reach matches base.css's own prose
+   rules, which are unlayered at (0,1,1)-(0,1,2); mewbo.css is linked after
+   base.css, so an equal-specificity selector wins on source order. */
+article,
+article .typography :is(p, li, dd, dt, blockquote, figcaption, details, summary, .admonition, .tabbed-block) {
+  line-height: var(--leading-body);
+}
+
+/* Chrome, and the smaller type inside prose. A caption or an admonition is
+   read in a glance, not line after line, and is set smaller — at the body
+   rung its lines drift apart instead of holding together as one note.
+
+   Table cells are deliberately NOT here. They were the subject of their own
+   fix (v1.22.1) precisely because a wrapped cell is a small paragraph, not a
+   label: `tailwind/table.css` puts them on `leading-relaxed`, and routing
+   them through this rung would quietly undo that. They inherit the body rung
+   from `article` instead, which is a touch looser again and is what the note
+   in table.css already argues for — a table here is prose set in columns,
+   not a data grid. */
+article .typography :is(figcaption, .admonition),
+.mewbo-toc__link,
+.mewbo-footer__col-links a,
+.mewbo-footer__tagline {
+  line-height: var(--leading-ui);
+}
+
+/* A line of code is addressed individually — you scan for one, you cite one
+   by number — so it is set as a unit rather than as part of a flow. Loosening
+   this to the body rung would also break the line-number gutter's alignment,
+   which pairs row for row with the code beside it. */
+article div.codehilite :is(pre, code),
+article table.codehilitetable :is(pre, code),
+article pre:not(.mermaid) {
+  line-height: var(--leading-compact);
+}
+
+/* Display type sets its own. A heading at 30px with body leading puts half a
+   line of air between its two lines and stops reading as one phrase. */
+article .typography :is(h1, h2, h3, h4, h5, h6) {
+  line-height: var(--leading-tight);
 }
 
 /* Descendant, not child, to match base.css's `article .typography h2` exactly —
@@ -1759,7 +1840,7 @@ article .ms-shots img,
   box-shadow: inset 1px 0 0 var(--border);
   color: var(--muted-foreground);
   font-size: 0.8rem;
-  line-height: 1.4;
+  line-height: var(--leading-ui);
   text-decoration: none;
   transition: color 0.15s ease, box-shadow 0.15s ease;
 }
@@ -2605,7 +2686,9 @@ body.ms-has-header-tabs .mewbo-header__row { height: calc(var(--spacing) * 14); 
 .mewbo-skeleton__line:nth-child(3) { width: 72%; }
 .mewbo-skeleton__line:nth-child(4) { width: 54%; }
 
-#mewbo-answer-text { font-size: 0.9rem; color: var(--foreground); line-height: 1.6; }
+/* A generated answer is read straight through like an article, so it takes
+   the body rung rather than the chrome one the rest of the panel uses. */
+#mewbo-answer-text { font-size: 0.9rem; color: var(--foreground); line-height: var(--leading-body); }
 #mewbo-answer-text > *:first-child { margin-top: 0; }
 #mewbo-answer-text > *:last-child  { margin-bottom: 0; }
 #mewbo-answer-text h1,
@@ -2961,7 +3044,7 @@ body.theme-default { --footer-height: 320px; }
 .mewbo-footer__tagline {
   color: var(--muted-foreground);
   font-size: 0.85rem;
-  line-height: 1.55;
+  line-height: var(--leading-ui);
   margin: 0;
   max-width: 36ch;
 }
@@ -3020,7 +3103,7 @@ body.theme-default { --footer-height: 320px; }
 .mewbo-footer__col-links a {
   color: var(--muted-foreground);
   font-size: 0.85rem;
-  line-height: 1.4;
+  line-height: var(--leading-ui);
   text-decoration: none;
   transition: color 0.12s ease;
   display: inline-block;

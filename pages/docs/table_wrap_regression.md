@@ -36,3 +36,13 @@ where tight leading shows first. Fixture for
 | Linux | `git` ≥ 2.30, `tmux` ≥ 3.0 |
 | macOS | `git` (Xcode CLT), `tmux` (`brew install tmux`) |
 | Windows | WSL2 with the above. Windows-native runs only the non-tmux subcommands (`grove version`, `grove config show`, `grove debug`). The TUI needs WSL. |
+
+A list sits here so this page carries all three prose surfaces — paragraph,
+list item and table cell — in one place. `test_prose_surfaces_share_the_body_rung`
+measures each of them, and a page missing one of the three would let that
+surface drift without failing anything.
+
+- A list item long enough to wrap at a narrow viewport, which is the only
+  width at which its leading is visible at all.
+- A second item, so the gap between items can be told apart from the gap
+  between the wrapped lines inside one.

@@ -54,15 +54,19 @@ article table:not(.codehilitetable) tbody tr td {
  * the wrapped lines of a long cell sat tighter than any body copy on the page,
  * and a cell carrying inline `code` was worse still — a code chip's own
  * vertical padding eats into the gap, so consecutive lines of chips very
- * nearly touched. `leading-relaxed` is what `article p` already uses, which is
- * the point: a table is prose set in columns, not a data grid.
+ * nearly touched. A table here is prose set in columns, not a data grid.
+ *
+ * `--leading-body` is the theme-wide body rung (mewbo.css); the literal
+ * fallback is what this shipped as before that ladder existed, and keeps the
+ * rule standing on its own if base.css is ever used without mewbo.css.
  *
  * Applied to the cell rather than the table so nested content that sets its
  * own leading (a code block, a list) is unaffected.
  */
 article table:not(.codehilitetable) thead tr th,
 article table:not(.codehilitetable) tbody tr td {
-	@apply break-words leading-relaxed;
+	@apply break-words;
+	line-height: var(--leading-body, 1.625);
 }
 
 article .table-wrapper {
