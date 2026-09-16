@@ -4230,14 +4230,71 @@ div:has(> #toc) {
 }
 
 /* The shortcut hint is machine text on a filled field: lift it off the fill
-   so it stays legible now that the field itself is no longer transparent. */
-/* The shortcut hint is machine text on a filled field: lift it off the fill
-   so it stays legible now that the field itself is no longer transparent. */
+   so it stays legible now that the field itself is no longer transparent.
+
+   It also has to stay QUIETER than the "Search…" placeholder beside it. The
+   hint is an affordance, not content: the eye should land on the word first
+   and find the caps once it is already there. It was doing the opposite —
+   the label measured 11.9:1 against the field in light while the placeholder
+   it sits next to measured 4.1:1, so the loudest thing in the header was the
+   part nobody needs to read.
+
+   That was a specificity accident, not a colour choice. The prose keycap rule
+   `kbd:not(:has(kbd)):not(.mewbo-kbd)` scores (0,1,2) — `:not()` takes the
+   specificity of its argument, and `.mewbo-kbd` contributes a whole class —
+   while this override scored only (0,1,1) and lost. It set
+   `--muted-foreground` and got `--foreground` anyway. Hence
+   `.mewbo-nav-search-pill .mewbo-kbd kbd` at (0,2,1): it wins on the merits
+   rather than with `!important`, which would then have to be beaten by the
+   next person.
+
+   The three colours are all stated as mixes toward the field itself, so they
+   track the palette instead of pinning greys that only work on today's two
+   themes. `test_search_keycaps_stay_quieter_than_the_placeholder` holds the
+   ordering, and holds it RELATIVE to the placeholder rather than to a fixed
+   ratio — "subtle" is a claim about the neighbour. */
 .mewbo-nav-search-pill .mewbo-kbd,
+.mewbo-nav-search-pill .mewbo-kbd kbd,
 .mewbo-nav-search-pill kbd {
-  background: color-mix(in srgb, var(--background) 88%, transparent);
-  border: 1px solid color-mix(in srgb, var(--border) 90%, transparent);
-  color: var(--muted-foreground);
+  /* Tone is set by the mixes below and by nothing else. `.mewbo-kbd` carries
+     a blanket `opacity: 0.85`, which is a second, blunter dimmer on the same
+     control: it fades the face and the label by one factor even though they
+     want to move in opposite directions, and it dragged the label under the
+     3:1 floor at every mix that made the face quiet enough. One mechanism,
+     stated in the palette, is both more legible and easier to retune. */
+  opacity: 1;
+  /* A whisper of a face — enough that the cap is an object sitting on the
+     field, not so much that it reads as a second button inside the first. */
+  background: color-mix(in oklab, var(--background) 55%, var(--input));
+  border: 1px solid color-mix(in oklab, var(--border) 55%, var(--input));
+  /* Pulled back toward the field, but only as far as legibility allows. Not
+     `--muted-foreground` itself: that IS the placeholder's colour, and
+     matching it exactly makes the hint a peer of the label rather than its
+     subordinate. Mixing much past this crosses the 3:1 floor for incidental
+     UI text — measured 2.2:1 at 72%, which is unreadable rather than
+     understated, so the gap to the placeholder is deliberately narrow. */
+  color: color-mix(in oklab, var(--muted-foreground) 88%, var(--input));
+  /* The lit top edge and the cast shadow underneath are what made these read
+     as raised keys competing with the Ask AI button. What remains is the
+     faintest inset lip: a cap that is pressed flat into the field rather than
+     sitting proud of it. The cap still has to LOOK like a cap, which
+     `test_search_hint_is_two_separate_keycaps` pins by requiring a shadow —
+     going to `none` here is what broke it. */
+  box-shadow: inset 0 0.06em 0 color-mix(in oklab, var(--background) 45%, transparent);
+  text-shadow: none;
+}
+
+/* Dark needs its own mix rather than the same numbers. On a near-black field
+   a cap built by lightening toward the page barely separates, so the face
+   leans slightly brighter while the label pulls back further — the same
+   apparent quietness, reached from the other side. */
+.dark .mewbo-nav-search-pill .mewbo-kbd,
+.dark .mewbo-nav-search-pill .mewbo-kbd kbd,
+.dark .mewbo-nav-search-pill kbd {
+  background: color-mix(in oklab, var(--foreground) 7%, var(--input));
+  border-color: color-mix(in oklab, var(--foreground) 12%, var(--input));
+  color: color-mix(in oklab, var(--muted-foreground) 92%, var(--input));
+  box-shadow: inset 0 0.06em 0 color-mix(in oklab, var(--foreground) 8%, transparent);
 }
 
 /* ── Ask AI button ───────────────────────────────────────────────────── */
