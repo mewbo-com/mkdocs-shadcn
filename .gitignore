@@ -13,3 +13,7 @@ tests/_site
 test.mkdocs.*
 .pytest
 tests/.pytest/
+
+# Agent browser-automation scratch output
+.playwright-mcp/
+.playwright-cli/

@@ -1391,6 +1391,29 @@ article a:hover,
   width: 100%;
   height: auto;
 }
+/* The caption rides in its own frosted-glass pill.
+
+   `--ms-caption-alpha` is the one number that decides whether the text is
+   readable, so it is not a taste setting. The pill composites over whatever
+   the image happens to be, and a white image is the worst case: the backdrop
+   the text lands on is `alpha` of the tint plus `1 - alpha` of white. At
+   0.58 that bottoms out near #6b6b6b, which is 4.9:1 against white text —
+   clear of WCAG AA with room to spare, and the blur can only pull the real
+   backdrop toward the average, never past that bound. Anything below ~0.54
+   fails AA over a bright photo, so retune it downward only alongside
+   `test_caption_text_stays_readable_over_any_image`.
+
+   The blur is what lets that alpha stay this low: detail behind the pill is
+   averaged into a wash, so the text sits on flat tone instead of on edges,
+   and the image still reads through as context rather than being painted
+   out. `saturate` keeps the wash from going grey and muddy, and `brightness`
+   leans on the backdrop itself, darkening what shows through without making
+   the pill itself any more opaque. */
+:root {
+  --ms-caption-tint: 0 0 0;
+  --ms-caption-alpha: 0.58;
+  --ms-caption-blur: 14px;
+}
 .ms-shot > figcaption,
 .ms-shots figcaption {
   position: absolute;
@@ -1399,23 +1422,42 @@ article a:hover,
   width: fit-content;
   max-width: calc(100% - 2rem);
   margin: 0 auto;
-  padding: 0.25rem 0.5rem;
-  border-radius: 0.25rem;
+  /* Wider than it is tall, so the end caps read as caps and not as a
+     rectangle whose corners happen to be rounded. */
+  padding: 0.3rem 0.75rem;
+  /* Any radius past half the height renders as a semicircular cap, so one
+     large value stays a pill at every line count instead of needing a height
+     the CSS cannot know. */
+  border-radius: 999px;
   color: #fff;
   font-size: 0.875rem;
   line-height: 1.4;
   text-align: center;
   text-wrap: pretty;
   overflow-wrap: anywhere;
-  /* Opaque black keeps the image from competing with the caption text. */
-  background: #000;
-  /* Tight shadows outline every edge; small blur radii soften only the halo,
-     not the glyphs or the image behind them. No composited backdrop filter. */
-  text-shadow:
-    -1px -1px 1px #000, 1px -1px 1px #000,
-    -1px 1px 1px #000, 1px 1px 1px #000,
-    0 2px 4px rgb(0 0 0 / 0.95), 0 0 8px rgb(0 0 0 / 0.85);
+  background: rgb(var(--ms-caption-tint) / var(--ms-caption-alpha));
+  backdrop-filter: blur(var(--ms-caption-blur)) saturate(135%) brightness(0.72);
+  -webkit-backdrop-filter:
+    blur(var(--ms-caption-blur)) saturate(135%) brightness(0.72);
+  /* A hairline of light along the rim is what makes the glass legible as an
+     object: it catches the edge on a dark image, where the tint alone would
+     dissolve into the photo and leave the text looking unhoused. */
+  border: 1px solid rgb(255 255 255 / 0.18);
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.25);
+  /* One soft shadow for depth. The old four-way 1px outline traced every
+     glyph to survive a hard-edged backdrop; the blur removes those edges, so
+     the outline is no longer holding anything up and only made the text
+     shout. */
+  text-shadow: 0 1px 3px rgb(0 0 0 / 0.55);
   pointer-events: none;
+}
+/* Without a composited backdrop there is no blur to average the image, so the
+   tint has to carry the contrast by itself and goes near-opaque. */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .ms-shot > figcaption,
+  .ms-shots figcaption {
+    --ms-caption-alpha: 0.88;
+  }
 }
 .ms-shot > figcaption a,
 .ms-shots figcaption a {
@@ -1437,7 +1479,9 @@ article a:hover,
   .ms-shots figcaption {
     inset: auto 0.75rem 0.6rem;
     max-width: calc(100% - 1.5rem);
-    padding: 0.2rem 0.4rem;
+    /* Tighter than the desktop pill but still wider than tall, so the caps
+       survive the smaller type. */
+    padding: 0.25rem 0.625rem;
     font-size: 0.8rem;
   }
 }

@@ -57,7 +57,7 @@ fenced block keeps on both edges.
 
 A `.swiper.ms-shots` block. The theme loads Swiper (CDN) and mounts it when
 `theme.carousel` is true. Include a `figcaption` in each slide. Captions remain
-visible over the image on a solid black highlight. Every slide uses a fixed
+visible over the image in a frosted-glass pill. Every slide uses a fixed
 16:9 frame with a centered crop, so changing slides never changes the height.
 Click an image to see it uncropped and fitted to the fullscreen viewport.
 
@@ -90,8 +90,11 @@ Click an image to see it uncropped and fitted to the fullscreen viewport.
 ## Screenshot figure
 
 A frameless screenshot (`.ms-shot`) with its caption centered over the bottom
-of the image. A solid black highlight keeps the white text readable. The existing
-`.ms-shot__frame` wrapper remains supported without adding a frame.
+of the image. The caption sits in a pill of frosted glass: it darkens and blurs
+the image behind it, so white text stays readable over any screenshot while the
+image still shows through. Retune it with `--ms-caption-tint`,
+`--ms-caption-alpha` and `--ms-caption-blur`. The existing `.ms-shot__frame`
+wrapper remains supported without adding a frame.
 
 <figure class="ms-shot">
   <div class="ms-shot__frame">
