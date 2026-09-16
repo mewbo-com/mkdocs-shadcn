@@ -1,4 +1,8 @@
-<nav class="items-center gap-0.5 hidden lg:flex">
+{# `mewbo-topnav` is a styling hook, not a layout class: the section links are
+   otherwise addressable only through the long Tailwind utility string on each
+   anchor, which is shared with every other ghost button in the header. The
+   display face is applied through this class in mewbo.css. #}
+<nav class="mewbo-topnav items-center gap-0.5 hidden lg:flex">
     {% for section in nav|selectattr("is_section") %}
     {% set first_page = section|first_page %}
     {% if first_page %}

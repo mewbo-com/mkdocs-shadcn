@@ -3,5 +3,20 @@
 		--font-inter: "Inter", sans-serif;
 		--font-sans: "Geist", sans-serif;
 		--font-mono: "Geist Mono", monospace;
+		/* Display face for headings and brand lettering.
+
+		   NOT --font-sans. Mermaid measures diagram label text on a Canvas 2D
+		   context using --font-sans (tokenFont() in mermaid-init-v2.js), so
+		   widening that token silently re-lays-out every diagram on the site.
+
+		   NOT --font-serif either, though that is the tempting name: Tailwind
+		   v4 defines --font-serif itself, in `@layer theme`, and its built-in
+		   `font-serif` utility resolves through it. An override here lands in
+		   `@layer base`, which BEATS `@layer theme`, so naming this token
+		   --font-serif would quietly repoint that utility to Plex for every
+		   consumer — `class="font-serif"` would stop meaning "a serif" and
+		   start meaning "the theme's display face". A distinct name leaves
+		   Tailwind's stack intact and collides with nothing. */
+		--font-display: "IBM Plex Serif", ui-serif, Georgia, Cambria, serif;
 	}
 }

@@ -4383,3 +4383,79 @@ article a,
 .md-content a {
   color: var(--primary-text);
 }
+
+/* ── Display face: IBM Plex Serif ─────────────────────────────────────────
+   Headings and brand lettering are set in a serif against a sans body. The
+   contrast is the point: a heading stops being "the same text, larger" and
+   announces a section on shape alone, before size or weight register.
+
+   WHAT WEARS IT — the things a reader parses as a LABEL rather than as prose:
+   the page title, H1-H3 in the content body, card titles, the brand name
+   beside the logo in both header and footer, and the top-level section names
+   in the header nav and header tabs.
+
+   WHAT DOES NOT, and why the list stops where it does:
+     H4-H6   These sit inside a passage rather than opening one. In practice
+             they run close to body size, where a serif stops reading as
+             deliberate and starts reading as a font bug. H3 is the floor.
+     .ms-hero and .doc  Both are excluded below. The hero is brand composition
+             with its own type treatment, and `.doc` is mkdocstrings, whose
+             headings are API symbols — a serif `get_config(**kwargs)` is a
+             symbol dressed as prose, and those headings legitimately contain
+             code spans.
+     Sidebar, ToC, body copy, UI chrome  Navigation furniture and continuous
+             prose both stay on the sans. The serif is for the few words that
+             name a thing.
+
+   TOKEN, NOT LITERAL: everything here goes through --font-display so a consumer
+   can repoint the display face in one place. The token is defined in
+   tailwind/fonts.css and carries its own fallback chain, so a build that never
+   loads plex-serif.css still resolves to a real serif.
+
+   The token is named --font-display rather than --font-serif, and is not a
+   repoint of --font-sans, for two separate reasons — both in tailwind/fonts.css
+   where it is defined: mermaid canvas-measures labels with --font-sans, and
+   Tailwind v4 already owns --font-serif for its `font-serif` utility.
+
+   SPECIFICITY: base.css's prose rules are unlayered and reach (0,1,2)
+   (`article .typography h2`), and mewbo.css is linked after base.css, so the
+   matched reach below wins on source order without `!important`.
+
+   Inline code inside a heading needs no rule here: `article code:not(pre
+   code)` in tailwind/article.css reaches (0,2,2) — the `:not(pre code)` buys
+   the extra class-level — so it already outranks this (0,1,2) selector and a
+   code span keeps the mono face on specificity alone. Raising this rule's
+   reach to (0,2,2) or adding `!important` would take the code span with it;
+   `test_code_in_a_heading_keeps_the_mono_face` is what catches that. */
+article #page-header h1,
+article .typography :is(h1, h2, h3):not(.ms-hero *, .doc *) {
+  font-family: var(--font-display);
+}
+
+/* Card titles. A card title names the thing the card is about, which is the
+   same job the headings above do — and in a grid of cards it is the only text
+   doing it. */
+.ms-card__title {
+  font-family: var(--font-display);
+}
+
+/* Brand lettering, header and footer. This is the site's name set as a
+   wordmark, so it takes the display face in both places for one identity.
+   `.mewbo-brand__docs` — the small bordered "Docs" badge beside it — stays on
+   the sans: at 0.525rem a serif is illegible, and it is a status chip rather
+   than part of the wordmark. */
+.mewbo-brand__name,
+.mewbo-footer__name {
+  font-family: var(--font-display);
+}
+
+/* Top navigation section names, both variants the header can render: the
+   inline nav (`theme.topbar_sections`) and the tab rail (`theme.header_tabs`).
+   These are top-level section names — the same nouns that head the pages they
+   lead to — so they read as of a piece with the headings once you arrive.
+   Scoped to the nav's own hook rather than to the anchors' shared Tailwind
+   utility string, which every ghost button in the header also carries. */
+.mewbo-topnav a,
+.ms-header-tabs__item {
+  font-family: var(--font-display);
+}
