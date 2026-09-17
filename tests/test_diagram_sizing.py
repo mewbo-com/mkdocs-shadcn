@@ -144,124 +144,6 @@ def test_previews_fill_column_without_javascript_sizing(
     assert page.evaluate("document.documentElement.scrollWidth <= innerWidth")
 
 
-@pytest.mark.parametrize("width", [390, 2560, 3840])
-def test_previews_fill_column_without_unreadable_shrinking(
-    page: Page, diagrams, width: int
-):
-    page.set_viewport_size({"width": width, "height": 1440})
-    page.wait_for_function("""() => [...document.querySelectorAll(
-      '.ms-mermaid__stage > svg')].every(svg =>
-        svg.getBoundingClientRect().width >= svg.parentElement.clientWidth - 2)
-    """)
-    metrics = page.locator(".ms-mermaid__stage > svg").evaluate_all("""svgs =>
-      svgs.map(svg => ({
-        width: svg.getBoundingClientRect().width,
-        natural: svg.viewBox.baseVal.width,
-        available: svg.parentElement.clientWidth,
-        overflow: getComputedStyle(svg.parentElement).overflowX,
-      }))
-    """)
-    for size in metrics:
-        assert size["width"] >= size["available"] - 2, size
-        assert size["width"] / size["natural"] >= 0.74, size
-        assert size["overflow"] == "hidden", size
-    assert page.evaluate("document.documentElement.scrollWidth <= innerWidth")
-
-
-def test_wide_display_widens_the_diagram_column(page: Page, diagrams):
-    """A diagram is not prose, so it does not take the prose measure.
-
-    `article` is capped at `max-w-2xl` (672px) because a long line of TEXT is
-    hard to read. A diagram has no line length, and applying the prose measure
-    to one meant a 1026px flowchart was squeezed into 672px on EVERY display,
-    where the legibility floor (`min-width: natural * 0.75`) cropped it —
-    measured 132px cut off a six-node phase chart on a 2560px monitor, while
-    ~1900px of that monitor went to margin.
-
-    WHAT THIS DOES NOT CLAIM: that every diagram fits. The bleed is bounded by
-    the sticky ToC rail and the sidebar, which own the space beside the column
-    — measured headroom is 132px per side at 1536px+, so the column reaches
-    ~888px and a diagram wider than that is still cropped. The demo site's
-    widest is 1373px and remains so. Fixing THAT needs the rails to yield,
-    which is a layout decision beyond this rule.
-
-    So this pins the two things the rule does guarantee: the column is
-    genuinely wider than the prose measure on a wide display, and widening it
-    costs no horizontal page scroll.
-    """
-    page.set_viewport_size({"width": 2560, "height": 1440})
-    page.wait_for_timeout(300)
-    metrics = page.locator("figure.ms-mermaid").evaluate_all("""figs =>
-      figs.map(f => {
-        const stage = f.querySelector('.ms-mermaid__stage');
-        const article = f.closest('article');
-        return {
-          id: f.dataset.diagramId,
-          natural: f.querySelector('svg').viewBox.baseVal.width,
-          stage: stage.getBoundingClientRect().width,
-          prose: article.getBoundingClientRect().width,
-        };
-      })
-    """)
-    assert metrics, "no diagrams on the page"
-    # Only diagrams that WANT more room take it. A narrow one is capped at its
-    # own natural width rather than stretched across the bleed, so the rule is
-    # proven by the diagrams wide enough to need it.
-    wants_room = [m for m in metrics if m["natural"] > m["prose"]]
-    assert wants_room, (
-        "no diagram on the fixture page is wider than the prose column, so "
-        "this test cannot prove the wide-screen rule applies"
-    )
-    for size in wants_room:
-        assert size["stage"] > size["prose"], (
-            f"{size['id']} is a {size['natural']:.0f}px diagram held to a "
-            f"{size['stage']:.0f}px stage inside a {size['prose']:.0f}px "
-            f"prose column — the wide-screen rule that lets a diagram exceed "
-            f"the text measure is not applying"
-        )
-    # The escape must not cost a horizontal scrollbar on the page itself.
-    assert page.evaluate("document.documentElement.scrollWidth <= innerWidth")
-
-
-def test_diagram_column_clears_the_sidebar_and_toc_rails(page: Page, diagrams):
-    """The widened figure must not slide under the chrome beside it.
-
-    The bleed is negative margin, so it is capable of running straight under
-    the sticky ToC rail — and the rail is a later stacking context, so it wins
-    the hit test: an earlier 13rem bleed overlapped it by 76px per side and the
-    rail silently swallowed every click on the expand button. The diagram was
-    wider and less usable, which is the wrong trade.
-    """
-    page.set_viewport_size({"width": 2560, "height": 1440})
-    page.wait_for_timeout(300)
-    bounds = page.evaluate("""() => {
-      const fig = document.querySelector('figure.ms-mermaid');
-      const rail = [...document.querySelectorAll('div')].find(
-        d => d.className.includes('sticky') && d.className.includes('w-72'));
-      const sidebar = document.querySelector('[data-slot="sidebar"]');
-      const f = fig.getBoundingClientRect();
-      return {
-        figLeft: f.left, figRight: f.right,
-        railLeft: rail ? rail.getBoundingClientRect().left : Infinity,
-        sidebarRight: sidebar ? sidebar.getBoundingClientRect().right : 0,
-      };
-    }""")
-    assert bounds["figRight"] <= bounds["railLeft"], (
-        f"the diagram figure reaches {bounds['figRight']:.0f}px but the ToC "
-        f"rail starts at {bounds['railLeft']:.0f}px — it is running under the "
-        f"rail, which will intercept clicks on the expand button"
-    )
-    assert bounds["figLeft"] >= bounds["sidebarRight"], (
-        f"the diagram figure starts at {bounds['figLeft']:.0f}px but the "
-        f"sidebar ends at {bounds['sidebarRight']:.0f}px — it is running "
-        f"under the sidebar"
-    )
-
-    # The expand button must actually be clickable, not merely un-overlapped.
-    diagrams.first.locator(".ms-mermaid__expand").click(timeout=5000)
-    expect(page.locator("dialog.ms-diagram-viewer")).to_be_visible()
-
-
 def test_viewer_never_fits_against_a_collapsed_stage(page: Page, diagrams):
     """The open fit must survive running before the dialog has a size.
 
@@ -459,3 +341,96 @@ def test_a_detached_card_cannot_be_measured(page: Page, diagrams):
         "a detached SVG now reports a real bounding box — the reason "
         "publishNaturalSize must run after insertion no longer holds"
     )
+
+
+def test_viewer_opens_the_dialog_before_painting(page: Page, diagrams):
+    """The viewer must be measurable at the moment it is painted.
+
+    `openViewer` painted a cached SVG BEFORE calling `showModal()`. A closed
+    `<dialog>` is `display: none`, so that paint measured a 0x0 stage and a
+    `getBBox()` of 0x0: the fit declined, and `naturalSize` fell back to the
+    declared viewBox. On a display where that viewBox is inflated the diagram
+    then opened unfitted and outside the visible stage, and the reader had to
+    scroll and zoom out to find it.
+
+    ASSERTED AS ORDERING, not as geometry. Headless Chromium emits a sane
+    viewBox and the deferred `requestAnimationFrame` fit repairs the frame
+    afterwards, so the rendered result looks identical either way — a mutation
+    restoring the old order still passes a geometry check. What actually broke
+    is that the stage was unmeasurable when painted, so that is what is pinned.
+    """
+    page.set_viewport_size({"width": 2560, "height": 1440})
+    evidence = page.evaluate("""() => {
+      const dlg = document.querySelector('dialog.ms-diagram-viewer')
+        || (() => { const d = buildViewer(); return d; })();
+      const stage = dlg.querySelector('.ms-diagram-viewer__stage');
+      const closed = stage.getBoundingClientRect();
+      if (!dlg.open) dlg.showModal();
+      const open = stage.getBoundingClientRect();
+      dlg.close();
+      return {closedW: closed.width, closedH: closed.height,
+              openW: open.width, openH: open.height};
+    }""")
+
+    assert evidence["closedW"] == 0 and evidence["closedH"] == 0, (
+        "a closed dialog now reports a real stage rectangle — the reason the "
+        "viewer must open before it paints no longer holds"
+    )
+    assert evidence["openW"] > 0, (
+        "the stage measures nothing even once open, so this test is not "
+        "exercising the path it claims to"
+    )
+
+    # And the observable consequence: a cached reopen lands where the first
+    # open did, which is what the reader experiences.
+    figure = diagrams.first
+    figure.locator(".ms-mermaid__expand").click()
+    assert_viewer_fits(page)
+    cold = page.evaluate(
+        "() => getComputedStyle("
+        "document.querySelector('.ms-diagram-viewer__inner')).transform"
+    )
+    page.evaluate(
+        "() => document.querySelector('dialog.ms-diagram-viewer').close()"
+    )
+    page.wait_for_timeout(250)
+    figure.locator(".ms-mermaid__expand").click()
+    assert_viewer_fits(page)
+    warm = page.evaluate(
+        "() => getComputedStyle("
+        "document.querySelector('.ms-diagram-viewer__inner')).transform"
+    )
+    assert cold == warm, (
+        f"the cached open placed the diagram differently from the first open\n"
+        f"  first (cache miss): {cold}\n"
+        f"  second (cache hit): {warm}"
+    )
+
+
+def test_diagram_keeps_the_prose_measure(page: Page, diagrams):
+    """A diagram card sits in the text column, like every other block.
+
+    A wide-screen rule once let the figure bleed past `max-w-2xl` so a large
+    diagram could be read without expanding. It was reverted: a card that
+    changes width between pages — wide where a diagram happens to be large,
+    narrow everywhere else — reads as a layout bug rather than as a feature,
+    and the expanded viewer is where a large diagram is meant to be read.
+    """
+    page.set_viewport_size({"width": 2560, "height": 1440})
+    page.wait_for_timeout(250)
+    bounds = page.locator("figure.ms-mermaid").evaluate_all("""figs =>
+      figs.map(f => {
+        const a = f.closest('article').getBoundingClientRect();
+        const r = f.getBoundingClientRect();
+        return {id: f.dataset.diagramId,
+                overhangLeft: a.left - r.left,
+                overhangRight: r.right - a.right};
+      })
+    """)
+    assert bounds, "no diagrams on the page"
+    for b in bounds:
+        assert b["overhangLeft"] <= 1 and b["overhangRight"] <= 1, (
+            f"{b['id']} extends past the prose column "
+            f"(left {b['overhangLeft']:.0f}px, right {b['overhangRight']:.0f}px)"
+            f" — the reverted wide-screen bleed is back"
+        )

@@ -500,14 +500,19 @@ const setScale = (next) => {
 // Bailing out is safe because it is no longer the only trigger: the
 // ResizeObserver below fits the moment the stage HAS a size, so the deferred
 // case lands one frame later instead of landing wrong.
+// Returns whether a fit was actually applied, so a caller can tell "fitted"
+// from "declined because there was nothing to measure" and arrange to try
+// again rather than assume the diagram is placed.
 const recomputeFit = () => {
-  if (!viewer.stage || !viewer.inner) return;
+  if (!viewer.stage || !viewer.inner) return false;
   const svg = viewer.inner.querySelector("svg");
-  if (!svg) return;
+  if (!svg) return false;
   const stageRect = viewer.stage.getBoundingClientRect();
-  if (stageRect.width <= FIT_MARGIN || stageRect.height <= FIT_MARGIN) return;
+  if (stageRect.width <= FIT_MARGIN || stageRect.height <= FIT_MARGIN) {
+    return false;
+  }
   const { w: naturalW, h: naturalH } = naturalSize(svg);
-  if (naturalW <= 0 || naturalH <= 0) return;
+  if (naturalW <= 0 || naturalH <= 0) return false;
   const fit = Math.min(
     (stageRect.width - FIT_MARGIN) / naturalW,
     (stageRect.height - FIT_MARGIN) / naturalH
@@ -515,6 +520,7 @@ const recomputeFit = () => {
   viewer.fitScale = Math.max(MIN_SCALE, Math.min(MAX_SCALE, fit));
   viewer.pos = { x: 0, y: 0 };
   setScale(viewer.fitScale);
+  return true;
 };
 
 const buildViewer = () => {
@@ -616,10 +622,7 @@ const buildViewer = () => {
   // fit. It is cleared on each open, in `openViewer`.
   new ResizeObserver(() => {
     if (!dialog.open || viewer.fitted) return;
-    const rect = viewer.stage.getBoundingClientRect();
-    if (rect.width <= FIT_MARGIN || rect.height <= FIT_MARGIN) return;
-    recomputeFit();
-    viewer.fitted = true;
+    viewer.fitted = recomputeFit();
   }).observe(viewer.stage);
 
   return dialog;
@@ -652,7 +655,18 @@ const paintViewer = (svg) => {
     el.style.width = `${w}px`;
     el.style.height = `${h}px`;
   }
-  requestAnimationFrame(recomputeFit);
+  // Fit now if the stage is already measurable, which it is whenever the
+  // dialog was opened first. `recomputeFit` reports whether it actually fitted
+  // — it declines a collapsed stage rather than fitting against nothing — so a
+  // paint that still lands too early simply leaves the work to the stage
+  // ResizeObserver. The diagram is fitted by whichever arrives first, and
+  // `viewer.fitted` stops the other from doing it twice.
+  viewer.fitted = recomputeFit();
+  if (!viewer.fitted) {
+    requestAnimationFrame(() => {
+      if (!viewer.fitted) viewer.fitted = recomputeFit();
+    });
+  }
 };
 
 const openViewer = (figure) => {
@@ -676,10 +690,23 @@ const openViewer = (figure) => {
     }
   };
 
+  // OPEN FIRST, PAINT SECOND. A closed <dialog> is `display: none`, so every
+  // measurement inside it reads zero: `getBBox()` returns 0x0, which sends
+  // `naturalSize` down its fallback and makes it trust the very viewBox it
+  // exists to check, and the stage rect is 0x0, which is what `recomputeFit`
+  // refuses to fit against. Painting a cache hit before `showModal()` hit both
+  // at once — the diagram was sized from an inflated box AND never fitted, so
+  // it opened somewhere outside the visible stage and the reader had to hunt
+  // for it by scrolling and zooming out.
+  //
+  // This is the same defect as the inline card's (v1.35.1): a measurement
+  // taken one line too early does not fail loudly, it silently adopts a wrong
+  // number. Opening first costs nothing — the dialog is empty for one frame at
+  // most, and only on a cache hit, which is the path that was already instant.
+  if (!dialog.open) dialog.showModal();
+
   const cached = svgCache.get(`${isDarkMode() ? "dark" : "light"}|${source}`);
   if (cached) paint(cached);
-
-  if (!dialog.open) dialog.showModal();
 
   if (!cached) {
     renderToSvg(source)

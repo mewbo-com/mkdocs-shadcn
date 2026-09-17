@@ -49,6 +49,23 @@
      of pill in a 238px list item. This is the cap; the label cell below is
      what gives up the space. */
   max-width: 100%;
+  /* Breathing room against the prose. A badge carries a border and a filled
+     second cell, so it reads as an OBJECT in the sentence rather than as a
+     run of words — and at zero margin its border sat directly against the
+     next character, which looked like a typesetting mistake. The only
+     separation was the space in the source markdown (~0.25em at this size),
+     so the sentence "see repo:action.yml for details" had its border almost
+     touching the "f".
+
+     0.25em per side doubles that to ~0.5em. In `em` rather than `rem` so it
+     tracks the badge's own 0.75rem type: the gap stays proportional wherever
+     a consumer resizes the pill. Inline margins collapse with neither each
+     other nor the surrounding text, so two adjacent badges get the full
+     0.5em between them, which is the intent.
+
+     Vertical margin stays 0 — this is an inline element inside a line of
+     prose, and adding block margin would perturb the line box. */
+  margin-inline: 0.25em;
   transition: border-color 0.12s ease;
   /* Second tone: one consistent step away from --muted, in both themes. */
   --cr-base: var(--muted);

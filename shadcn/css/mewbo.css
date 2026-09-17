@@ -3822,68 +3822,6 @@ figure.ms-mermaid:hover {
   border-color: color-mix(in srgb, var(--muted-foreground) 45%, transparent);
 }
 
-/* ── A diagram is not prose, so it does not take the prose measure ─────────
-   `article` is capped at `max-w-2xl` (672px) and that cap is correct for TEXT:
-   a line much longer than ~75 characters is measurably harder to read, which is
-   why the column does not grow with the window.
-
-   A diagram has no line length. Applying the prose measure to one meant a
-   1026px-wide flowchart was squeezed into 672px on every display, so the
-   legibility floor below (`min-width: natural * 0.75`) cropped it — measured
-   132px cut off a six-node phase chart on a 2560px monitor, with the reader's
-   remaining ~1900px of screen spent on margin. The wider the display, the more
-   pronounced the waste: the column never moves, so the crop never improves.
-
-   So the figure opts out of the measure — but only symmetrically, and only by a
-   BOUNDED amount. The overhang is expressed as negative margins in `rem`, which
-   is what keeps this honest: the column is not centred in the viewport (a
-   sidebar sits left of it and a sticky ToC rail right of it), so a width
-   derived from `100vw` cannot know where those rails actually are. An early
-   attempt used `calc(100vw - 32rem)` and slid the figure 62px UNDER the ToC
-   rail, where the rail swallowed the clicks on the expand button — the
-   diagram was wider and less usable.
-
-   `--ms-diagram-bleed` is the per-side overhang. 13rem each side widens the
-   672px column to ~1088px, which clears the 1026px diagrams these docs
-   actually contain while still stopping short of the rail at every breakpoint
-   below. `min()` against the diagram's own natural width means a SMALL diagram
-   keeps its size instead of being stretched to fill the new room.
-
-   Two breakpoints because the rail only appears at `xl`: below 1536px there is
-   no spare width worth taking, and the rule does not apply at all. */
-@media (min-width: 1536px) {
-  figure.ms-mermaid {
-    /* Per-side overhang: widen the prose measure for the figure only.
-
-       SYMMETRIC negative margins, and nothing else. `margin-inline: auto` and
-       an explicit `width` were both tried here and both are wrong: `auto`
-       resolves against the widened box and shoves the figure right, INTO the
-       rail (measured 255px of overlap), and a viewport-derived width cannot
-       know where the rail is, because the column is not centred in the
-       viewport — a sidebar sits left of it and the rail right of it. Equal
-       negative margins need no such knowledge: they grow the box evenly about
-       a column that is already positioned correctly.
-
-       6.5rem is the MEASURED headroom, not a guess: at 1536px and above the
-       gutter between the prose column and each rail is 132px, and 6.5rem
-       (104px) leaves ~28px of breathing room on each side. Taking more puts
-       the figure under the rail, where the rail swallows clicks on the expand
-       button — 13rem was tried and overlapped by 76px per side. */
-    --ms-diagram-bleed: 6.5rem;
-    margin-inline: calc(-1 * var(--ms-diagram-bleed));
-  }
-
-  /* Never wider than the diagram needs. Without this a narrow flowchart would
-     be stretched across the full bleed and sit marooned in empty card. The
-     stage is what carries the cap, so the figure's frame still spans the
-     bleed only when its contents do. */
-  .ms-mermaid__stage {
-    max-width: var(--ms-diagram-natural, none);
-    margin-inline: auto;
-    width: 100%;
-  }
-}
-
 .ms-mermaid__stage {
   display: flex;
   justify-content: center;
