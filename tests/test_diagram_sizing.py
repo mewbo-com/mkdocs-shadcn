@@ -301,3 +301,71 @@ def test_viewer_never_fits_against_a_collapsed_stage(page: Page, diagrams):
     # Reopening must land a correct fit, proving the bail-out is not a dead end.
     figure.locator(".ms-mermaid__expand").click()
     assert_viewer_fits(page)
+
+
+def test_an_inflated_viewbox_is_not_believed(page: Page, diagrams):
+    """The viewBox is checked against what was actually drawn, not trusted.
+
+    On some displays mermaid emits a viewBox far larger than its own content.
+    Measured on a reader's 32" monitor at `devicePixelRatio: 1.1875`: a diagram
+    whose drawn content is 1027x72 was handed a viewBox of 2703x2652 — 2.6x too
+    wide and 37x too tall, so 97% of the declared area was empty. Every
+    consumer of that number then did correct arithmetic on a fiction, and the
+    three results looked like three unrelated bugs:
+
+      - the CSS legibility floor demanded 2027px inside a 990px stage, clipping
+        519px off the diagram's left edge
+      - `height: auto` made the SVG 1989px tall in a 512px stage, which is the
+        tall empty card the reader sees
+      - the viewer's fit computed 0.112, clamped to MIN_SCALE, and opened the
+        diagram at minimum zoom
+
+    This drives the failing state directly, because it is environmental and
+    does not reproduce in a headless browser: inject the reader's exact
+    viewBox, re-run the publish path, and require the theme to recover.
+    """
+    page.set_viewport_size({"width": 2560, "height": 1440})
+    result = page.evaluate("""async () => {
+      const fig = document.querySelector('figure.ms-mermaid');
+      const stage = fig.querySelector('.ms-mermaid__stage');
+      fig.querySelector('svg').setAttribute(
+        'viewBox', '0 0 2703.5263671875 2652');
+      await new Promise(r => setTimeout(r, 120));
+      const svgBefore = fig.querySelector('svg').getBoundingClientRect();
+      // A theme flip re-renders every card and re-runs publishNaturalSize.
+      document.documentElement.classList.toggle('dark');
+      await new Promise(r => setTimeout(r, 1200));
+      const svg = fig.querySelector('svg');
+      const s = svg.getBoundingClientRect();
+      const r = stage.getBoundingClientRect();
+      return {
+        heightWhileInflated: svgBefore.height,
+        viewBox: svg.getAttribute('viewBox'),
+        overflowX: s.width - r.width,
+        emptyVertical: r.height - s.height,
+        svgHeight: s.height,
+      };
+    }""")
+
+    assert result["heightWhileInflated"] > 600, (
+        "the injected viewBox did not distort the diagram, so this test is no "
+        "longer reproducing the reader's failure"
+    )
+    # Horizontal overflow is NOT asserted here. A diagram genuinely wider than
+    # the column is still cropped by the legibility floor, which is the
+    # documented trade in `test_wide_display_widens_the_diagram_column` and is
+    # independent of the viewBox. What matters is that the floor is now derived
+    # from the DRAWN width rather than an inflated one, which the viewBox
+    # assertion below pins directly.
+    assert result["viewBox"] is not None
+    declared_w = float(result["viewBox"].split()[2])
+    assert declared_w < 2000, (
+        f"the viewBox is still {declared_w:.0f} units wide after a republish — "
+        f"the inflated box was believed rather than checked against the drawn "
+        f"content"
+    )
+    assert abs(result["emptyVertical"]) <= 2, (
+        f"the stage carries {result['emptyVertical']:.0f}px of empty space "
+        f"around a {result['svgHeight']:.0f}px diagram — the inflated viewBox "
+        f"is still sizing the element"
+    )

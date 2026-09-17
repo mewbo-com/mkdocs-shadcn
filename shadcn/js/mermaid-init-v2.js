@@ -208,14 +208,71 @@ const EXPAND_ICON =
 // below reuses this constant for its own minimum zoom.
 const LEGIBLE_SCALE = 0.75;
 
-// The viewBox is stable across paints and resizes. Inline max-width is not:
-// fitting clears that presentation hint, and it may differ from SVG units.
+// How far the declared viewBox may exceed the drawn content before it is
+// treated as wrong rather than as padding. Mermaid's own margin is a few
+// percent; the failures this guards against are multiples.
+const VIEWBOX_TRUST_RATIO = 1.5;
+
+/**
+ * The diagram's true size in SVG units.
+ *
+ * THE viewBox IS NOT ALWAYS TRUSTWORTHY, which this used to assume. On some
+ * displays mermaid emits a viewBox far larger than what it actually drew —
+ * measured on a reader's 32" monitor at `devicePixelRatio: 1.1875`, a diagram
+ * whose content is 1027x72 was handed a viewBox of 2703x2652: 2.6x too wide
+ * and 37x too tall, i.e. 97% of the declared area was empty. Every consumer of
+ * this number then did correct arithmetic on a fiction:
+ *
+ *   - the CSS legibility floor (`--ms-diagram-natural` * 0.75) demanded 2027px
+ *     inside a 990px stage, so the diagram was clipped 519px off its left edge
+ *   - `height: auto` against a 2652-tall box made the SVG 1989px tall in a
+ *     512px stage, which is the tall empty card a reader actually sees
+ *   - the viewer's fit computed 0.112 and clamped to MIN_SCALE, opening the
+ *     diagram at minimum zoom
+ *
+ * All three read as different bugs and are one bad number. So the viewBox is
+ * now CHECKED against the rendered content's own bounding box rather than
+ * believed: `getBBox()` reports what was drawn, in the same user-space units,
+ * and disagreement beyond a small margin means the viewBox is the wrong one.
+ *
+ * getBBox() is preferred only when it disagrees, not always: it is the more
+ * expensive call, it forces layout, and on a diagram with no drawn content it
+ * legitimately returns zero — in which case the viewBox is all there is.
+ */
 const naturalSize = (svg) => {
   const box = svg.viewBox && svg.viewBox.baseVal;
   const declared = parseFloat(svg.style.maxWidth || "");
+
+  let content = null;
+  try {
+    // The SVG ROOT, not `firstElementChild`: mermaid emits `<style>` first, and
+    // a `<style>` element has no getBBox at all. Measuring the root reports the
+    // union of everything drawn, which is the number wanted here anyway.
+    const bbox = svg.getBBox && svg.getBBox();
+    if (bbox && bbox.width > 0 && bbox.height > 0) {
+      // getBBox() measures the ink; the viewBox usually carries a small margin
+      // around it. Re-add the offset so a diagram is not cropped to its own
+      // outermost stroke.
+      content = {
+        w: bbox.width + Math.max(0, bbox.x) * 2,
+        h: bbox.height + Math.max(0, bbox.y) * 2,
+      };
+    }
+  } catch {
+    // getBBox() throws on a detached or display:none subtree. The viewBox
+    // below is the fallback, which is the old behaviour.
+  }
+
   if (box && box.width > 0 && box.height > 0) {
+    const inflated =
+      content &&
+      (box.width > content.w * VIEWBOX_TRUST_RATIO ||
+        box.height > content.h * VIEWBOX_TRUST_RATIO);
+    if (inflated) return content;
     return { w: box.width, h: box.height };
   }
+
+  if (content) return content;
   const rect = svg.getBoundingClientRect();
   return { w: declared || rect.width, h: rect.height };
 };
@@ -238,7 +295,25 @@ const publishNaturalSize = (figure) => {
   const stage = figure.querySelector(".ms-mermaid__stage");
   const svg = stage && stage.querySelector("svg");
   if (!stage || !svg) return;
-  const { w } = naturalSize(svg);
+  const { w, h } = naturalSize(svg);
+
+  // Correct the element itself when its own viewBox was the thing that was
+  // wrong. Publishing a true width is not enough: an SVG scales its contents
+  // to fit the viewBox, so a 37x-too-tall box renders the diagram as a small
+  // mark adrift in a tall transparent canvas, and `height: auto` sizes the
+  // element to that canvas. Rewriting the box makes the drawn content the
+  // whole picture again, which is what makes the CSS below describe reality.
+  const box = svg.viewBox && svg.viewBox.baseVal;
+  if (
+    box &&
+    w > 0 &&
+    h > 0 &&
+    (box.width > w * VIEWBOX_TRUST_RATIO || box.height > h * VIEWBOX_TRUST_RATIO)
+  ) {
+    svg.setAttribute("viewBox", `0 0 ${w} ${h}`);
+    svg.removeAttribute("height");
+  }
+
   if (w > 0) {
     stage.style.setProperty("--ms-diagram-natural", `${w}px`);
     // Also on the FIGURE, because the wide-screen rule that lets a diagram
@@ -530,6 +605,22 @@ const paintViewer = (svg) => {
   const el = viewer.inner.querySelector("svg");
   if (el) {
     const { w, h } = naturalSize(el);
+    // The viewer paints its own copy of the markup, so an inflated viewBox
+    // arrives here uncorrected. Pinning width/height to the TRUE size while
+    // leaving a 37x-too-tall viewBox in place would draw the diagram at a
+    // fraction of that box and leave the rest transparent — the fit would be
+    // arithmetically right and visibly wrong. Rewrite the box first, for the
+    // same reason `publishNaturalSize` does.
+    const box = el.viewBox && el.viewBox.baseVal;
+    if (
+      box &&
+      w > 0 &&
+      h > 0 &&
+      (box.width > w * VIEWBOX_TRUST_RATIO ||
+        box.height > h * VIEWBOX_TRUST_RATIO)
+    ) {
+      el.setAttribute("viewBox", `0 0 ${w} ${h}`);
+    }
     // Percentage SVG dimensions have no reference in a shrink-to-fit wrapper.
     // Pin both axes on EVERY paint, including a theme refresh.
     el.style.maxWidth = "none";
