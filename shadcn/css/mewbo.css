@@ -4460,14 +4460,18 @@ article a,
      H4-H6   These sit inside a passage rather than opening one. In practice
              they run close to body size, where a serif stops reading as
              deliberate and starts reading as a font bug. H3 is the floor.
-     .ms-hero and .doc  Both are excluded below. The hero is brand composition
-             with its own type treatment, and `.doc` is mkdocstrings, whose
-             headings are API symbols — a serif `get_config(**kwargs)` is a
-             symbol dressed as prose, and those headings legitimately contain
-             code spans.
-     Sidebar, ToC, body copy, UI chrome  Navigation furniture and continuous
-             prose both stay on the sans. The serif is for the few words that
-             name a thing.
+     .doc    mkdocstrings, whose headings are API symbols — a serif
+             `get_config(**kwargs)` is a symbol dressed as prose, and those
+             headings legitimately contain code spans.
+     Hero eyebrow and lede  The text around the hero title, not the title
+             itself. The hero HEADING does take the face (see the rule further
+             down): on a landing page it is the first and largest thing read,
+             and the `<h1>` the document actually has.
+     Sidebar, ToC, top nav, body copy, UI chrome  Navigation furniture and
+             continuous prose both stay on the sans. That includes the header
+             tab rail, which wore the face briefly and made the header read as
+             a masthead rather than a toolbar. The serif is for the few words
+             that NAME a thing, plus the wordmark.
 
    TOKEN, NOT LITERAL: everything here goes through --font-display so a consumer
    can repoint the display face in one place. The token is defined in
@@ -4496,8 +4500,31 @@ article .typography :is(h1, h2, h3):not(.ms-hero *, .doc *) {
 
 /* Card titles. A card title names the thing the card is about, which is the
    same job the headings above do — and in a grid of cards it is the only text
-   doing it. */
-.ms-card__title {
+   doing it.
+
+   `.ms-step__title` is the same idea in the numbered lifecycle component: it
+   names a step, and in that grid it is the only text naming anything. It is a
+   SEPARATE class from `.ms-card__title` despite looking like a sibling, which
+   is exactly how it was missed the first time — the `.ms-*` kit has two card
+   families, and styling one by name silently leaves the other behind. */
+.ms-card__title,
+.ms-step__title {
+  font-family: var(--font-display);
+}
+
+/* The hero title IS the page's main heading — on a landing page it is the
+   first and largest thing read, and the `<h1>` the document actually has. The
+   hero was originally excluded wholesale from the display face on the grounds
+   that it is brand composition with its own type treatment, but that reasoning
+   only holds for the text AROUND the title: the eyebrow and the lede stay on
+   the sans, and are not matched here.
+
+   Reach is (0,2,2) to match the hero's own sizing rule above, which is
+   unlayered and would otherwise be equal-specificity-and-later. The
+   `.ms-hero__title` arm covers heroes written as HTML rather than markdown,
+   mirroring that rule's own pair of selectors. */
+article .ms-hero :is(h1, h2, h3, h4, h5, h6),
+article .ms-hero .ms-hero__title {
   font-family: var(--font-display);
 }
 
@@ -4511,13 +4538,11 @@ article .typography :is(h1, h2, h3):not(.ms-hero *, .doc *) {
   font-family: var(--font-display);
 }
 
-/* Top navigation section names, both variants the header can render: the
-   inline nav (`theme.topbar_sections`) and the tab rail (`theme.header_tabs`).
-   These are top-level section names — the same nouns that head the pages they
-   lead to — so they read as of a piece with the headings once you arrive.
-   Scoped to the nav's own hook rather than to the anchors' shared Tailwind
-   utility string, which every ghost button in the header also carries. */
-.mewbo-topnav a,
-.ms-header-tabs__item {
-  font-family: var(--font-display);
-}
+/* NOT the top navigation. The inline nav (`theme.topbar_sections`) and the tab
+   rail (`theme.header_tabs`) both wore the display face briefly, on the theory
+   that a section name in the header is the same noun that heads the page it
+   leads to. In use it reads wrong: those tabs are navigation furniture, sat
+   directly under a serif wordmark, and setting both made the whole header
+   look like a masthead rather than a toolbar. Chrome you click stays on the
+   sans; the wordmark above it is the one piece of lettering that does not.
+   `test_top_navigation_stays_on_the_sans` pins this. */

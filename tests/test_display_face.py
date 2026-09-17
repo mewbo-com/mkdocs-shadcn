@@ -62,6 +62,9 @@ def fixture_page(page: Page, local_deployment: str) -> Page:
         ("prose H2", "article .typography h2"),
         ("prose H3", "article .typography h3"),
         ("card title", ".ms-card__title"),
+        # A second card family with its own class names. Styling
+        # `.ms-card__title` alone left this one behind on a real site.
+        ("lifecycle step title", ".ms-step__title"),
     ],
 )
 def test_headings_wear_the_display_face(
@@ -124,15 +127,47 @@ def test_code_in_a_heading_keeps_the_mono_face(fixture_page: Page):
     )
 
 
-def test_hero_headings_opt_out(fixture_page: Page):
-    """The hero is brand composition with its own type treatment, excluded by
-    name. Being an `:not()` exclusion, this breaks silently if the selector
-    is ever rewritten."""
+def test_hero_title_wears_the_display_face(fixture_page: Page):
+    """The hero TITLE takes the face; the text around it does not.
+
+    The hero was first excluded wholesale, on the grounds that it is brand
+    composition with its own type treatment. That was wrong for the heading
+    itself: on a landing page the hero title is the first and largest thing
+    read, and the `<h1>` the document actually has, so setting it in the body
+    sans while every H2 below it was serif made the page look like the face
+    had failed to load.
+
+    The reasoning does still hold for the eyebrow and the lede, which are
+    supporting copy rather than a name, and they stay on the sans below.
+    """
     family = first_family(fixture_page, ".ms-hero h1")
     assert family is not None, "no hero heading on the fixture page"
+    assert family == SERIF, (
+        f"the hero title resolves to {family!r}, not the display face — the "
+        f"page's own main heading is set in the body face while the headings "
+        f"under it are not"
+    )
+
+
+@pytest.mark.parametrize(
+    "label,selector",
+    [
+        ("hero eyebrow", ".ms-hero__eyebrow"),
+        ("hero lede", ".ms-hero__lede"),
+    ],
+)
+def test_hero_supporting_copy_stays_on_the_sans(
+    fixture_page: Page, label: str, selector: str
+):
+    """Only the hero's heading is a name. The eyebrow is a breadcrumb label and
+    the lede is a paragraph, so both read as prose and stay on the sans — the
+    boundary that keeps the hero from becoming entirely serif."""
+    family = first_family(fixture_page, selector)
+    if family is None:
+        pytest.skip(f"no {label} in the fixture hero")
     assert family == SANS, (
-        f"the hero heading resolves to {family!r} — the hero's exclusion from "
-        f"the display-face rule has been lost"
+        f"{label} resolves to {family!r} — the display face has spread from "
+        f"the hero title onto the copy around it"
     )
 
 
@@ -173,14 +208,29 @@ def test_brand_lettering_wears_the_display_face(fixture_page: Page):
     )
 
 
-def test_header_tab_labels_wear_the_display_face(fixture_page: Page):
-    """Header tabs name top-level sections — the same nouns that head the
-    pages they lead to."""
-    family = first_family(fixture_page, ".ms-header-tabs__item")
-    assert family is not None, "no header tabs on the fixture page"
-    assert family == SERIF, (
-        f"a header tab label resolves to {family!r}, not the display face"
-    )
+def test_top_navigation_stays_on_the_sans(fixture_page: Page):
+    """Navigation furniture keeps the body face, wordmark or not.
+
+    Both header navigations wore the display face briefly, on the theory that a
+    section name in the header is the same noun that heads the page it leads
+    to. In use it read wrong: the tabs sit directly under a serif wordmark, and
+    setting both made the header look like a masthead rather than a toolbar.
+
+    The wordmark above them is the ONE piece of header lettering that keeps the
+    face, which is what `test_brand_lettering_wears_the_display_face` pins —
+    the two together describe the whole boundary.
+    """
+    for label, selector in (
+        ("header tab label", ".ms-header-tabs__item"),
+        ("topbar section link", ".mewbo-topnav a"),
+    ):
+        family = first_family(fixture_page, selector)
+        if family is None:
+            continue
+        assert family == SANS, (
+            f"a {label} resolves to {family!r} — top navigation is chrome the "
+            f"reader clicks, and stays on the body face"
+        )
 
 
 def test_display_face_does_not_hijack_tailwinds_font_serif(fixture_page: Page):
