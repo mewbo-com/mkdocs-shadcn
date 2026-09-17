@@ -239,7 +239,17 @@ const publishNaturalSize = (figure) => {
   const svg = stage && stage.querySelector("svg");
   if (!stage || !svg) return;
   const { w } = naturalSize(svg);
-  if (w > 0) stage.style.setProperty("--ms-diagram-natural", `${w}px`);
+  if (w > 0) {
+    stage.style.setProperty("--ms-diagram-natural", `${w}px`);
+    // Also on the FIGURE, because the wide-screen rule that lets a diagram
+    // escape the prose measure sizes the figure itself, and a custom property
+    // set on the stage is not visible to its own parent. The padding is added
+    // back so the width is the diagram's, not the diagram minus its frame.
+    figure.style.setProperty(
+      "--ms-diagram-natural-figure",
+      `${Math.ceil(w) + 32}px`
+    );
+  }
   svg.style.removeProperty("max-width");
 };
 
@@ -357,6 +367,9 @@ const viewer = {
   label: null,
   scale: 1,
   fitScale: 1,
+  // Whether the open fit has already landed for the CURRENT diagram. Guards the
+  // stage ResizeObserver so a late delivery cannot overwrite a reader's zoom.
+  fitted: false,
   pos: { x: 0, y: 0 },
   drag: null,
 };
@@ -374,11 +387,25 @@ const setScale = (next) => {
 };
 
 // Derive the fit from SVG coordinates, never an animated screen rectangle.
+//
+// REFUSES TO FIT AGAINST A STAGE THAT HAS NO SIZE. A closed <dialog> is
+// `display: none`, so every rectangle inside it measures 0x0 — and this used to
+// run in that state on any paint that resolved before `showModal()`, which is
+// what a warm `svgCache` produces. The arithmetic then reads
+// `(0 - FIT_MARGIN) / naturalW`, i.e. NEGATIVE, and the clamp turns that into
+// MIN_SCALE: the diagram opened at 0.2 in the corner of an empty stage, looking
+// for all the world like it had failed to render. It is a race, so it reproduced
+// intermittently and never on a cold cache, which is why it survived v1.30.0.
+//
+// Bailing out is safe because it is no longer the only trigger: the
+// ResizeObserver below fits the moment the stage HAS a size, so the deferred
+// case lands one frame later instead of landing wrong.
 const recomputeFit = () => {
   if (!viewer.stage || !viewer.inner) return;
   const svg = viewer.inner.querySelector("svg");
   if (!svg) return;
   const stageRect = viewer.stage.getBoundingClientRect();
+  if (stageRect.width <= FIT_MARGIN || stageRect.height <= FIT_MARGIN) return;
   const { w: naturalW, h: naturalH } = naturalSize(svg);
   if (naturalW <= 0 || naturalH <= 0) return;
   const fit = Math.min(
@@ -477,6 +504,24 @@ const buildViewer = () => {
     if (dialog.open) recomputeFit();
   });
 
+  // The stage going from 0x0 (closed dialog) to its real size IS a resize, and
+  // it is the delivery `recomputeFit` above cannot schedule for itself: a paint
+  // that resolves before `showModal()` has nothing to measure. Observing the
+  // stage makes the fit self-correcting rather than ordering-dependent — it
+  // runs when there is something to fit, whether that is the open, a window
+  // resize, or a theme flip that repaints while the dialog is already up.
+  //
+  // `viewer.fitted` keeps this from stealing a reader's zoom: once they have
+  // scrolled or dragged, a later delivery must not yank the diagram back to
+  // fit. It is cleared on each open, in `openViewer`.
+  new ResizeObserver(() => {
+    if (!dialog.open || viewer.fitted) return;
+    const rect = viewer.stage.getBoundingClientRect();
+    if (rect.width <= FIT_MARGIN || rect.height <= FIT_MARGIN) return;
+    recomputeFit();
+    viewer.fitted = true;
+  }).observe(viewer.stage);
+
   return dialog;
 };
 
@@ -501,6 +546,10 @@ const openViewer = (figure) => {
   viewer.label.textContent = figure.dataset.diagramId || "Diagram";
   viewer.pos = { x: 0, y: 0 };
   viewer.scale = 1;
+  // Re-arm the observer's one-shot fit for this diagram. Without this, the
+  // second diagram opened in a session would inherit `fitted` from the first
+  // and keep that diagram's scale.
+  viewer.fitted = false;
   viewer.inner.innerHTML = "";
 
   dialog.dataset.source = source;
