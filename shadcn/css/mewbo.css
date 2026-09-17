@@ -1781,7 +1781,20 @@ article .typography video,
 .ms-shots {
   width: 100%;
   max-width: 100%;
-  margin: 0.75rem 0 0.25rem;
+  /* Top margin is the theme's own block step, not a smaller one. A carousel is
+     a framed object with a border and its own controls, so the 0.75rem it used
+     to carry left it crowding whatever introduced it — tighter than the
+     `--prose-flow` every paragraph, list and table around it gets, which is
+     the opposite of what a heavier object wants. It sits on the code-block
+     rung for that reason: a step above the body flow, the same allowance a
+     fenced block gets and for the same reason.
+
+     Stated as separate properties rather than the `margin` shorthand it
+     replaces: the shorthand also reset the inline margins to 0, which is
+     harmless here but meant this rule silently owned axes it had no opinion
+     about. */
+  margin-top: var(--prose-code-gap, 2rem);
+  margin-bottom: 0.5rem;
   padding: 0;
   overflow: hidden;
   --swiper-theme-color: var(--primary, #c15f3c);
@@ -2450,7 +2463,12 @@ kbd:not(:has(kbd)):not(.mewbo-kbd) {
   margin-left: auto;
   display: inline-flex;
   align-items: center;
-  gap: 0.15em;
+  /* Two keys, two caps, and a gap wide enough to read as air between them.
+     At 0.15em (under 2px at this size) the caps touched and the pair read as
+     ONE wider key with a hairline down the middle — which is what a reader
+     sees before they read the glyphs. A shortcut is two keystrokes, so the
+     hint has to look like two keys. */
+  gap: 0.3em;
   flex-shrink: 0;
   border: 0;
   background: transparent;
@@ -4277,9 +4295,30 @@ div:has(> #toc) {
    themes. `test_search_keycaps_stay_quieter_than_the_placeholder` holds the
    ordering, and holds it RELATIVE to the placeholder rather than to a fixed
    ratio — "subtle" is a claim about the neighbour. */
-.mewbo-nav-search-pill .mewbo-kbd,
+/* The WRAPPER is not a key. `.mewbo-kbd` is itself a `<kbd>` holding the two
+   real caps, and it used to sit in the selector list below alongside them —
+   so it painted the same face, border and inset lip AROUND the pair. The
+   result was one rectangle with a hairline through it: the caps had no
+   outside edge of their own, and the 0.15em between them read as a divider
+   rather than as a gap. Stated explicitly rather than merely dropped from
+   that list, because the generic `kbd` rules in base.css would otherwise
+   still give this element a face. */
+.mewbo-nav-search-pill .mewbo-kbd {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  padding: 0;
+  /* `.mewbo-kbd` carries a blanket `opacity: 0.85`, which is a second, blunter
+     dimmer on top of the palette below: it fades the cap face and its label by
+     one factor even though they want to move in opposite directions. Dropping
+     the wrapper from the rule below took this reset with it and the label fell
+     to 2.70:1, under the 3:1 floor for incidental UI text. Tone is set by the
+     mixes below and by nothing else. */
+  opacity: 1;
+}
+
 .mewbo-nav-search-pill .mewbo-kbd kbd,
-.mewbo-nav-search-pill kbd {
+.mewbo-nav-search-pill kbd:not(.mewbo-kbd) {
   /* Tone is set by the mixes below and by nothing else. `.mewbo-kbd` carries
      a blanket `opacity: 0.85`, which is a second, blunter dimmer on the same
      control: it fades the face and the label by one factor even though they
@@ -4312,9 +4351,8 @@ div:has(> #toc) {
    a cap built by lightening toward the page barely separates, so the face
    leans slightly brighter while the label pulls back further — the same
    apparent quietness, reached from the other side. */
-.dark .mewbo-nav-search-pill .mewbo-kbd,
 .dark .mewbo-nav-search-pill .mewbo-kbd kbd,
-.dark .mewbo-nav-search-pill kbd {
+.dark .mewbo-nav-search-pill kbd:not(.mewbo-kbd) {
   background: color-mix(in oklab, var(--foreground) 7%, var(--input));
   border-color: color-mix(in oklab, var(--foreground) 12%, var(--input));
   color: color-mix(in oklab, var(--muted-foreground) 92%, var(--input));

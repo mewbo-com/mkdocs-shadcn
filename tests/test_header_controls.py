@@ -59,13 +59,25 @@ def test_search_hint_is_two_separate_keycaps(
         const group = document.querySelector('.mewbo-kbd');
         if (!group) return null;
         const caps = [...group.querySelectorAll('kbd')];
+        const gs = getComputedStyle(group);
+        const rects = caps.map((c) => c.getBoundingClientRect());
         return {
             count: caps.length,
             labels: caps.map((c) => c.textContent.trim()),
             // A keycap is built from a border plus a drop shadow; a flat box
             // has neither. This is what separates the two designs.
             shadows: caps.map((c) => getComputedStyle(c).boxShadow),
-            fontSize: parseFloat(getComputedStyle(group).fontSize),
+            fontSize: parseFloat(gs.fontSize),
+            // The WRAPPER is not itself a key. It is a <kbd> holding the two
+            // real caps, and it used to share their selector — so it painted
+            // the same face, border and inset lip AROUND the pair.
+            wrapperBorder: parseFloat(gs.borderTopWidth) || 0,
+            wrapperShadow: gs.boxShadow,
+            wrapperBackground: gs.backgroundColor,
+            // Air between the caps, measured rather than read off `gap`, so a
+            // negative margin somewhere else cannot hide the problem.
+            gapPx: rects.length > 1 ? rects[1].left - rects[0].right : null,
+            visible: rects.length > 0 && rects[0].width > 0,
         };
     }""")
 
@@ -77,6 +89,29 @@ def test_search_hint_is_two_separate_keycaps(
         assert shadow not in ("none", ""), measured
     # Small enough not to compete with the placeholder beside it.
     assert measured["fontSize"] <= 14, measured
+
+    # TWO caps, not one box with a divider. The wrapper carries no face of its
+    # own, and there is real space between the keys — a shortcut is two
+    # keystrokes and has to look like two keys before the glyphs are read.
+    assert measured["wrapperBorder"] == 0, (
+        f"the keycap wrapper draws a {measured['wrapperBorder']}px border "
+        f"around both caps, so the pair reads as one wide key"
+    )
+    assert measured["wrapperShadow"] in ("none", ""), (
+        f"the keycap wrapper casts {measured['wrapperShadow']!r}, which "
+        f"outlines the pair as a single object"
+    )
+    assert "rgba(0, 0, 0, 0)" in measured["wrapperBackground"] or (
+        "transparent" in measured["wrapperBackground"]
+    ), (
+        f"the keycap wrapper fills {measured['wrapperBackground']!r} behind "
+        f"both caps, so the gap between them reads as a divider"
+    )
+    assert measured["visible"], "the shortcut hint is not rendered at 1440px"
+    assert measured["gapPx"] >= 3, (
+        f"the caps are {measured['gapPx']:.1f}px apart, which reads as one "
+        f"key split by a hairline rather than as two keys"
+    )
 
 
 # Resolves any CSS colour -- `oklab()`, `color-mix()`, alpha -- to the sRGB

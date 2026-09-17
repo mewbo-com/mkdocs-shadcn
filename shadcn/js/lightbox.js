@@ -212,20 +212,32 @@
     /**
      * How much of the available box an opened picture starts at.
      *
-     * 1, meaning all of it. Viewer.js already refuses to enlarge an image
-     * past its own pixels, so this is not a licence to upscale: a small
-     * screenshot still opens at its own size and stays sharp. It is only a
-     * refusal to hold any of the screen back.
+     * 0.8, which is a READABILITY decision rather than a layout budget. At 1
+     * a landscape screenshot met every edge of the display, and with the page
+     * hidden behind an opaque backdrop there was nothing left to say the
+     * viewer was open: no margin, no frame, no visible boundary between the
+     * picture and the browser. Readers could not tell whether they were
+     * looking at an expanded image or at a page that happened to be an image,
+     * and pressed Escape or Back to find out.
      *
-     * This replaces the old INSET_X / RESERVE_Y / MAX_EDGE budget, which
-     * subtracted a flat 200px of height and 144px of width for chrome that
-     * was laid out beside the image. On a 390x844 phone that left the picture
-     * with under a third of the screen. The chrome floats now (see the
-     * zero-height `.viewer-footer` rule in mewbo.css), so nothing has to be
-     * reserved for it and the image is bounded only by the viewport and its
-     * own resolution.
+     * A fifth of the smaller axis held back is enough for the backdrop to
+     * read as a frame all the way round, while still opening the picture far
+     * larger than it sits inline. The image is centred, so the reserve is
+     * split evenly and no edge is special.
+     *
+     * NOT a return to the INSET_X / RESERVE_Y / MAX_EDGE budget this once
+     * replaced. That subtracted a FLAT 200px of height and 144px of width for
+     * chrome laid out beside the image, which on a 390x844 phone left the
+     * picture under a third of the screen — the reserve did not scale, so the
+     * smaller the display the worse the trade. A proportion cannot do that:
+     * on that same phone 0.8 is a 78px inset, not 200px. The chrome still
+     * floats (see the zero-height `.viewer-footer` rule in mewbo.css), so
+     * nothing is reserved FOR it; this margin exists to be seen.
+     *
+     * Viewer.js still refuses to enlarge past an image's own pixels, so a
+     * small screenshot opens at its own size and stays sharp.
      */
-    static COVERAGE = 1;
+    static COVERAGE = 0.8;
 
     constructor(root, { factory, hint }) {
       this.root = root;
