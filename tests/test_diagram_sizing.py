@@ -369,3 +369,93 @@ def test_an_inflated_viewbox_is_not_believed(page: Page, diagrams):
         f"around a {result['svgHeight']:.0f}px diagram — the inflated viewBox "
         f"is still sizing the element"
     )
+
+
+def test_natural_size_is_measured_after_the_card_is_in_the_document(
+    page: Page, diagrams
+):
+    """The viewBox check is worthless if it runs before the card is attached.
+
+    `getBBox()` is only meaningful for an element that is in the document and
+    rendered. On a detached node it returns 0x0, and so does one inside a
+    `display: none` subtree — both measured in Chromium, neither throws. Since
+    `naturalSize` treats a zero box as "cannot measure" and falls back to the
+    declared viewBox, a measurement taken one line too early does not fail
+    loudly: it silently re-adopts the exact number the check exists to catch.
+
+    That is what shipped in v1.35.0. `buildCard` called `publishNaturalSize`
+    on a figure the caller had not yet inserted, so on a reader's machine a
+    diagram whose content is 1027x72 published 2703px as its natural width and
+    every symptom the viewBox guard was written to fix survived it.
+
+    A HEADLESS BROWSER CANNOT SHOW THIS BY OBSERVATION. Chromium here emits a
+    viewBox that already matches its content, so the fallback returns the right
+    answer by luck and a wrongly-ordered build looks identical. The ordering is
+    therefore asserted directly: build a card exactly as the theme does, and
+    require that measuring it before insertion yields nothing while measuring
+    it after insertion yields the diagram.
+    """
+    evidence = page.evaluate("""() => {
+      const source = 'flowchart LR; A[Alpha]-->B[Beta]';
+      const svg = document.querySelector('figure.ms-mermaid svg').outerHTML;
+      const card = buildCard(source, svg, 900);
+
+      // As the theme builds it: not yet in the document.
+      const detached = card.querySelector('svg').getBBox();
+
+      // As the theme now attaches it.
+      const host = document.createElement('div');
+      document.querySelector('article').append(host);
+      host.replaceWith(card);
+      const attached = card.querySelector('svg').getBBox();
+
+      const published = (() => {
+        publishNaturalSize(card);
+        return parseFloat(card.querySelector('.ms-mermaid__stage')
+          .style.getPropertyValue('--ms-diagram-natural')) || 0;
+      })();
+      card.remove();
+      return {
+        detached: {w: detached.width, h: detached.height},
+        attached: {w: attached.width, h: attached.height},
+        published,
+      };
+    }""")
+
+    assert evidence["detached"]["w"] == 0, (
+        f"a card measured before insertion reported "
+        f"{evidence['detached']['w']:.0f}px — if that is now real, the "
+        f"ordering constraint this test defends no longer applies"
+    )
+    assert evidence["attached"]["w"] > 0, (
+        "the card measured nothing even after insertion, so this test is not "
+        "exercising the path it claims to"
+    )
+    assert evidence["published"] > 0, (
+        "publishNaturalSize produced no width for an attached card"
+    )
+
+
+def test_a_detached_card_cannot_be_measured(page: Page, diagrams):
+    """Why the ordering above is structural rather than a style preference.
+
+    If this ever starts reporting a real size, `getBBox()` has gained meaning
+    off-document and the ordering constraint can be revisited. Until then, any
+    measurement before insertion is measuring nothing.
+    """
+    result = page.evaluate("""() => {
+      const live = document.querySelector('figure.ms-mermaid svg');
+      const clone = live.cloneNode(true);
+      let detached;
+      try {
+        const b = clone.getBBox();
+        detached = {w: b.width, h: b.height};
+      } catch (e) { detached = {threw: true}; }
+      const attached = live.getBBox();
+      return {detached, attached: {w: attached.width, h: attached.height}};
+    }""")
+    assert result["attached"]["w"] > 0, "the attached diagram measures nothing"
+    assert result["detached"].get("threw") or result["detached"]["w"] == 0, (
+        "a detached SVG now reports a real bounding box — the reason "
+        "publishNaturalSize must run after insertion no longer holds"
+    )

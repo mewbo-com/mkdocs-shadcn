@@ -372,7 +372,13 @@ const buildCard = (source, svg, index) => {
 
   figure.append(stage, expand);
 
-  publishNaturalSize(figure);
+  // NOT `publishNaturalSize(figure)` here. This figure is still DETACHED — the
+  // caller inserts the returned node — and `getBBox()` on an SVG outside the
+  // document throws, which sends naturalSize down its fallback and makes it
+  // believe the very viewBox it exists to check. That is how a diagram whose
+  // content is 1027x72 published 2703px as its natural width: the measurement
+  // was correct code running at a moment when nothing could be measured.
+  // `attachCard` below publishes once the node is live.
   cardResizeObserver.observe(stage);
 
   const open = () => openViewer(figure);
@@ -416,13 +422,32 @@ const renderMermaid = () => {
     pre.replaceWith(placeholder);
 
     renderToSvg(source)
-      .then((svg) => placeholder.replaceWith(buildCard(source, svg, idx)))
+      .then((svg) => attachCard(placeholder, buildCard(source, svg, idx)))
       .catch(() =>
         placeholder.replaceWith(
           buildError(source, "This diagram could not be rendered.")
         )
       );
   });
+};
+
+/**
+ * Put a card in the document, THEN measure it.
+ *
+ * The order is the whole point. `getBBox()` is only meaningful for an element
+ * that is in the document and rendered: on a detached node it throws, and
+ * inside a `display: none` subtree it reports zeros. `naturalSize` treats both
+ * as "cannot measure" and falls back to the declared viewBox — which is
+ * exactly the number it was written to double-check, so a measurement taken
+ * one line too early does not merely fail, it silently re-adopts the bug.
+ *
+ * Every caller that creates a card goes through here so the ordering is
+ * structural rather than something each site has to remember.
+ */
+const attachCard = (placeholder, figure) => {
+  placeholder.replaceWith(figure);
+  publishNaturalSize(figure);
+  return figure;
 };
 
 /* ── Expanded viewer ──────────────────────────────────────────────────────
