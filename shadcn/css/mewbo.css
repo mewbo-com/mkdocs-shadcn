@@ -99,7 +99,10 @@
      page, so framed images read as a raised surface. */
   --image-backing: hsl(0 0% 100%);
 
-  --sidebar: hsl(45 28.6% 97.3%);
+  /* The navigation band is one tonal step off the page (the source system's
+     alternate-section stock), so the rail and the reading column read as two
+     sheets rather than one surface with a hairline down it. */
+  --sidebar: hsl(46 24% 94.2%);
   --sidebar-foreground: hsl(0 0% 4%);
   --sidebar-primary: hsl(14.8 63.1% 59.6%);
   --sidebar-primary-foreground: hsl(0 0% 100%);
@@ -108,14 +111,21 @@
   --sidebar-border: var(--border);
   --sidebar-ring: hsl(14.8 63.1% 59.6%);
 
-  /* Paper grain. A 320px fractal-noise tile, darkened (-0.25 per channel) and
-     held to ~5% alpha, laid as a background-image OVER a surface's own colour
-     so the colour tokens stay authoritative and the grain only adds fibre.
-     Theme-neutral: grey specks at that alpha deepen cream and lift carbon by
-     the same imperceptible step. Applied to reading surfaces at the end of
-     this file; chrome (header, popovers) stays smooth so it reads as a
-     separate plane from the page. */
-  --paper-texture: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='320' height='320'%3E%3Cfilter id='n' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.35' numOctaves='5' seed='7' stitchTiles='stitch'/%3E%3CfeColorMatrix values='1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 0 0 0 0 1'/%3E%3CfeComponentTransfer%3E%3CfeFuncR type='linear' slope='1' intercept='-0.25'/%3E%3CfeFuncG type='linear' slope='1' intercept='-0.25'/%3E%3CfeFuncB type='linear' slope='1' intercept='-0.25'/%3E%3CfeFuncA type='linear' slope='0.052'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  /* Paper grain. A 200px fractal-noise tile, darkened (-0.25 per channel)
+     and held to ~3% alpha, laid as a background-image OVER a surface's own
+     colour so the colour tokens stay authoritative and the grain only adds
+     fibre. Fine and dense (baseFrequency 0.9) rather than the source system's
+     coarse 0.35: at body-text distance a fine grain reads as stock, a coarse
+     one as noise. Theme-neutral: grey specks at that alpha deepen cream and
+     lift carbon by the same imperceptible step. */
+  --paper-texture: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' seed='7' stitchTiles='stitch'/%3E%3CfeColorMatrix values='1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 0 0 0 0 1'/%3E%3CfeComponentTransfer%3E%3CfeFuncR type='linear' slope='1' intercept='-0.25'/%3E%3CfeFuncG type='linear' slope='1' intercept='-0.25'/%3E%3CfeFuncB type='linear' slope='1' intercept='-0.25'/%3E%3CfeFuncA type='linear' slope='0.03'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+
+  /* Paper depth. The source system's "press" shadow: a tight contact shade
+     (blurred, never a hard 1px line — under a 1px border that reads as a
+     second rule) plus a long soft drop, so a card reads as stock laid ON the page
+     rather than a box drawn around content. Raised is the hover state. */
+  --paper-shadow: 0 1px 2px -1px rgb(29 29 27 / 0.10), 0 10px 24px -16px rgb(29 29 27 / 0.35);
+  --paper-shadow-raised: 0 2px 4px -2px rgb(29 29 27 / 0.12), 0 16px 32px -14px rgb(29 29 27 / 0.42);
 }
 
 .dark {
@@ -166,7 +176,7 @@
      depth instead of dissolving into the surface. */
   --image-backing: hsl(40 7% 5%);
 
-  --sidebar: hsl(40 6% 8%);
+  --sidebar: hsl(40 5% 10.2%);
   --sidebar-foreground: hsl(60 14% 97%);
   --sidebar-primary: hsl(14.8 63.1% 59.6%);
   --sidebar-primary-foreground: hsl(0 0% 100%);
@@ -174,6 +184,9 @@
   --sidebar-accent-foreground: hsl(60 14% 97%);
   --sidebar-border: var(--border);
   --sidebar-ring: hsl(14.8 63.1% 59.6%);
+
+  --paper-shadow: 0 1px 2px -1px rgb(0 0 0 / 0.4), 0 10px 24px -14px rgb(0 0 0 / 0.6);
+  --paper-shadow-raised: 0 2px 4px -2px rgb(0 0 0 / 0.45), 0 16px 32px -14px rgb(0 0 0 / 0.7);
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
@@ -3387,10 +3400,24 @@ article .mewbo-page-action__hint,
   color: var(--muted-foreground);
 }
 
+/* Touch targets grow INVISIBLY. Raising the buttons themselves to 2.75rem
+   made each half 44px tall inside a 32px pill: the seam and both hit boxes
+   hung below the control, and the pill no longer matched the arrows beside
+   it. A transparent pad reaches the 44px target and leaves the drawn control
+   exactly the size of its neighbours. */
 @media (pointer: coarse) {
-  article .mewbo-page-actions > button {
-    min-width: 2.75rem;
+  article .mewbo-page-actions > button,
+  #page-header a[data-slot="button"] {
+    position: relative;
+  }
+  article .mewbo-page-actions > button::after,
+  #page-header a[data-slot="button"]::after {
+    content: "";
+    position: absolute;
+    inset: 50% auto auto 50%;
+    width: max(100%, 2.75rem);
     height: 2.75rem;
+    transform: translate(-50%, -50%);
   }
 }
 
@@ -4538,42 +4565,102 @@ article .ms-hero .ms-hero__title {
 /* ─────────────────────────────────────────────────────────────────────────
    Paper surfaces
 
-   The grain (`--paper-texture`, defined with the palette at the top) goes on
-   the surfaces a reader reads FROM: the page, the cards set on it, and the
-   footer. Each keeps its own colour token underneath, so a card stays one
-   step lighter than the page exactly as before and simply reads as a sheet
-   of the same stock. Card structure is untouched: one 1px rule, same radius.
+   Three planes, each told apart by stock, not by boxes:
 
-   Chrome is left smooth on purpose. The header's satin finish, popovers and
-   the search/Ask-AI modal float above the page, and it is the absence of
-   grain as much as the shadow that sets them on a separate plane.
+     page      `--background` + grain. The sheet being read.
+     rail      `--sidebar` + grain + a faint dot grid: a separate, slightly
+               deeper sheet the navigation is printed on, so the sidebar is
+               distinct from the reading column at a glance.
+     chrome    header + tab rail: their satin finish WITH the grain, then the
+               drop shadow that already lifts them off the page.
+
+   Cards and the page's own buttons are sheets of the same stock set on the
+   page: grain, one ink-alpha rule, and the press shadow (`--paper-shadow`),
+   so depth comes from how a sheet sits rather than from a second outline.
+
+   The grain is `background-attachment: fixed` wherever it covers a large
+   area so adjacent planes sample one viewport-anchored field and the speckle
+   never restarts at a seam.
    ───────────────────────────────────────────────────────────────────────── */
 #inner-body,
-.mewbo-footer,
+.mewbo-footer {
+  background-image: var(--paper-texture);
+  background-attachment: fixed;
+}
+
+.mewbo-header,
+.ms-header-tabs {
+  background-image: var(--paper-texture), var(--mewbo-chrome-finish);
+  background-attachment: fixed, scroll;
+}
+
+/* The rail band. Painted on the sidebar-wrapper's first column through a
+   pseudo-element so it runs the full height of the page rather than the
+   sticky sidebar's viewport-sized box, and sits behind the nav. */
+@media (min-width: 1024px) {
+  [data-slot="sidebar-wrapper"] {
+    position: relative;
+    isolation: isolate;
+  }
+  [data-slot="sidebar-wrapper"]::before {
+    content: "";
+    position: absolute;
+    inset: 0 auto 0 calc(-1 * var(--spacing) * 2);
+    width: calc(var(--sidebar-width) + var(--spacing) * 2 - var(--spacing) * 2);
+    z-index: -1;
+    pointer-events: none;
+    background-color: var(--sidebar);
+    background-image: var(--paper-texture),
+      radial-gradient(color-mix(in oklab, var(--foreground) 7%, transparent) 0.75px, transparent 1.25px);
+    background-size: auto, 14px 14px;
+    background-attachment: fixed, fixed;
+  }
+  /* The sidebar's scroll fades are painted strips (and blurred), which read
+     as a smear over the band's pattern. On the band they are retired and the
+     scroll area fades its OWN content with a mask, which is transparent to
+     whatever sits behind it. */
+  [data-slot="sidebar"] > .pointer-events-none,
+  [data-slot="sidebar-content"] > .sticky {
+    display: none;
+  }
+  [data-slot="sidebar-content"] {
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 1rem, #000 calc(100% - 2.5rem), transparent 100%);
+    mask-image: linear-gradient(to bottom, transparent 0, #000 1rem, #000 calc(100% - 2.5rem), transparent 100%);
+  }
+}
+
+.mewbo-toc__heading {
+  background-image: var(--paper-texture);
+  background-attachment: fixed;
+}
+
 .ms-card,
 .ms-step {
   background-image: var(--paper-texture);
+  box-shadow: var(--paper-shadow);
+}
+a.ms-card {
+  transition: border-color 0.2s ease, transform 0.25s ease, box-shadow 0.25s ease;
+}
+a.ms-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--paper-shadow-raised);
 }
 
-/* The page chrome has a few strips that repaint `--background` over the page
-   to fade or pin content: the sidebar's scroll fades and the sticky ToC
-   heading. Flat, they read as smooth patches cut out of the paper. They take
-   the grain too, and the grain here is `fixed` (as is the page's, below) so
-   both sample one viewport-anchored field and the speckle lines up across the
-   seam instead of restarting at each strip's own origin. The strips' own
-   gradients are Tailwind utilities that set `background-image`, so the grain
-   is layered on top of them rather than replacing them. */
-#inner-body,
-.mewbo-toc__heading {
-  background-attachment: fixed;
-}
-.mewbo-toc__heading {
+/* The page's own buttons — Copy page and the prev/next arrows — are small
+   sheets of the same stock: card fill, grain, a hairline ring and the press
+   shadow. They were flat `--secondary` fills, which on the grained page read
+   as flat grey chips cut out of the paper. The ring is an inset shadow so the
+   control keeps its border-free box model (the split-button seam test and
+   the arrow-matching test both measure that). */
+#page-header :is(.mewbo-page-actions, a[data-slot="button"]),
+#bottom-navigation a[data-slot="button"] {
+  background-color: var(--card);
   background-image: var(--paper-texture);
+  box-shadow: inset 0 0 0 1px var(--border), var(--paper-shadow);
 }
-[data-slot="sidebar"] > .pointer-events-none,
-[data-slot="sidebar-content"] > .sticky {
-  background-image: var(--paper-texture), linear-gradient(var(--tw-gradient-position), var(--tw-gradient-stops));
-  background-attachment: fixed, scroll;
+:is(#page-header, #bottom-navigation) a[data-slot="button"]:hover {
+  background-color: var(--muted);
 }
 
 /* Selection as ink on paper: the page's foreground laid over the text, and
