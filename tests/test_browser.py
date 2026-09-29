@@ -703,21 +703,11 @@ def test_keyboard_keys_and_header_chrome(page: Page, local_deployment: str):
     )
 
 
-def test_page_is_one_canvas_with_no_stranded_edges(page: Page, local_deployment: str):
-    """No region paints its own fill, and no hairline stops in open space.
+def test_paper_planes_have_no_stranded_edges(page: Page, local_deployment: str):
+    """The reading column and footer share stock; navigation sits apart.
 
-    Both defects this pins were invisible in the source and only showed up in
-    rendered pixels.
-
-    The shell, the article and the footer each used to carry a different fill.
-    Because the rails ran the page's full height while the article stopped
-    where its text stopped, the rail colour filled the gap between the last
-    paragraph and the footer as a stripe across the full width. Equal
-    backgrounds are what make that gap unpaintable.
-
-    The rail divider is absolutely positioned inside a sidebar box shorter than
-    the viewport, so `bottom: 0` ended it in mid-air at every scroll position.
-    It has to reach the fold.
+    The article stays transparent so its end cannot strand a differently
+    coloured stripe above the footer. The rail divider must reach the fold.
     """
     page.goto(BASE + "/", wait_until="networkidle")
     surfaces = page.evaluate(
@@ -740,9 +730,9 @@ def test_page_is_one_canvas_with_no_stranded_edges(page: Page, local_deployment:
         f"the article paints its own fill ({surfaces['article']}), which is "
         "what stranded a stripe of rail colour between it and the footer"
     )
-    fills = {k: surfaces[k] for k in ("shell", "footer", "header")}
-    assert len(set(fills.values())) == 1, (
-        f"the chrome is painted in more than one colour: {fills}"
+    assert surfaces["footer"] == surfaces["shell"], surfaces
+    assert surfaces["header"] != surfaces["shell"], (
+        f"navigation must use its own paper stock: {surfaces}"
     )
     # The divider starts below the header, so it can never equal the viewport.
     # Anything materially short of it is a hairline ending in open space.

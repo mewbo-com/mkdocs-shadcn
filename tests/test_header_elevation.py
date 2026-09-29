@@ -40,7 +40,7 @@ def test_header_shadow_overlays_content(
         onTop: header.contains(document.elementFromPoint(700, r.bottom - 8))};
     }""")
     assert geometry["shadow"] != "none"
-    assert "linear-gradient" in geometry["finish"]
+    assert "paper.svg" in geometry["finish"]
     if tabs:
         assert geometry["railFinish"] == geometry["finish"]
     assert geometry["top"] == 0

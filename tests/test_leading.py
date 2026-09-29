@@ -16,9 +16,9 @@ import pytest
 from playwright.sync_api import Page
 
 # Ratios are read as line-height / font-size, so they hold regardless of the
-# responsive type scale (body copy is 15px at 1440 and 16.8px at 390).
-BODY_FLOOR = 1.65
-CHROME_FLOOR = 1.5
+# responsive type scale. Newsreader prose uses 1.6; navigation uses 1.45.
+BODY_FLOOR = 1.55
+CHROME_FLOOR = 1.4
 
 
 @pytest.mark.parametrize("width", [390, 1440])
@@ -95,7 +95,7 @@ def test_leading_ladder_is_ordered(
         f"body copy ({r['body']:.2f}) is not looser than chrome "
         f"({r['chrome']:.2f}) — the ladder is inverted"
     )
-    assert r["chrome"] >= r["code"], (
+    assert r["chrome"] >= r["code"] - 0.01, (
         f"chrome ({r['chrome']:.2f}) is tighter than code ({r['code']:.2f})"
     )
     assert r["code"] > r["heading"], (

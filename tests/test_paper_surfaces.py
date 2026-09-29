@@ -27,7 +27,7 @@ def test_paper_planes_rail_band_and_single_rule_cards(
     )
     probe = page.evaluate("""() => {
       const grain = (el, pseudo) => !!el &&
-        getComputedStyle(el, pseudo).backgroundImage.includes('feTurbulence');
+        getComputedStyle(el, pseudo).backgroundImage.includes('paper.svg');
       const q = s => document.querySelector(s);
       const band = getComputedStyle(q('[data-slot=sidebar-wrapper]'), '::before');
       const card = document.createElement('div');
@@ -40,7 +40,7 @@ def test_paper_planes_rail_band_and_single_rule_cards(
         band: grain(q('[data-slot=sidebar-wrapper]'), '::before'),
         bandColor: band.backgroundColor,
         pageColor: getComputedStyle(q('#inner-body')).backgroundColor,
-        card: c.backgroundImage.includes('feTurbulence'),
+        card: c.backgroundImage.includes('paper.svg'),
         cardBorder: c.borderTopWidth, cardOutline: c.outlineStyle,
         cardShadow: c.boxShadow,
       };

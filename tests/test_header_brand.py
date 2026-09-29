@@ -38,7 +38,7 @@ def test_desktop_brand_keeps_logo_with_compact_label_and_badge(
     )
     assert name.evaluate(
         "element => parseFloat(getComputedStyle(element).fontSize)"
-    ) == pytest.approx(16.5)
+    ) == pytest.approx(22.4)
     assert badge.evaluate(
         "element => parseFloat(getComputedStyle(element).fontSize)"
     ) == pytest.approx(8.4)

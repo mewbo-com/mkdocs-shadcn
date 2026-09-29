@@ -34,159 +34,71 @@
   @view-transition { navigation: none; }
 }
 
-/* ─────────────────────────────────────────────────────────────────────────
-   Mewbo console color palette — ported here so the docs site shares the
-   same visual identity. Source: apps/mewbo_console/src/index.css.
-   Aesthetic: Anthropic cream (light) / warm carbon (dark) with clay primary.
-   ───────────────────────────────────────────────────────────────────────── */
-
+/* Editorial paper stock, reconciled with the Mewbo clay accent. Surfaces
+   stay opaque; texture is a background layer, never an overlay on images. */
 :root {
-  --background: hsl(45 28.6% 97.3%);
-  --foreground: hsl(0 0% 4%);
-
-  --card: hsl(0 0% 100%);
-  --card-foreground: hsl(0 0% 4%);
-
-  --popover: hsl(0 0% 100%);
-  --popover-foreground: hsl(0 0% 4%);
-
-  --primary: hsl(14.8 63.1% 59.6%);
-  --primary-foreground: hsl(0 0% 100%);
-
-  /* The clay accent as TEXT, not as a fill.
-     `--primary` is identical in both themes, and it was tuned against the
-     dark carbon surface. Inherited unchanged by light it lands at 2.6-3.0:1
-     on the cream page, so every link, active ToC entry, active sidebar row,
-     focus ring and tab underline failed contrast in light while passing in
-     dark. One token cannot serve both roles: a fill, and legible text on
-     that fill, pull lightness in opposite directions.
-     Measured at 42%: 5.24:1 on the page and 4.60:1 on the active sidebar
-     chip, which is a 12% clay tint and therefore the lightest surface this
-     token ever sits on. That chip is what sets the value: 44% cleared the
-     page but measured 4.30:1 there. */
-  --primary-text: hsl(14.8 63.1% 42%);
-
-  --secondary: hsl(48 25% 92.2%);
-  --secondary-foreground: hsl(60 3% 21%);
-
-  --muted: hsl(48 25% 92.2%);
-  /* 52% measured 3.45:1 on the cream page, under the 4.5:1 body bar — and
-     this token carries inactive ToC entries and footer text, which are read
-     rather than glanced at. 44% measures 4.56:1. */
-  --muted-foreground: hsl(45 3% 44%);
-
-  --accent: hsl(48 25% 92.2%);
-  --accent-foreground: hsl(60 3% 21%);
-
+  --background: #e6e2d9;
+  --foreground: #24231f;
+  --card: #f2eee6;
+  --card-foreground: var(--foreground);
+  --popover: #f2eee6;
+  --popover-foreground: var(--foreground);
+  --nav-background: #ddd9d0;
+  --primary: #ae4b31;
+  --primary-foreground: #fffaf3;
+  --primary-text: #82351f;
+  --secondary: #ddd8cc;
+  --secondary-foreground: #3b3932;
+  --muted: #ddd8cc;
+  --muted-foreground: #575349;
+  --accent: #ddd8cc;
+  --accent-foreground: #3b3932;
   --destructive: hsl(0 55% 47%);
-  --destructive-foreground: hsl(0 0% 100%);
-
-  /* Rules are INK AT ALPHA, not a flat colour: a hairline drawn in the page's
-     own foreground reads as a printed line on paper, takes on whatever surface
-     it crosses (page, card, footer), and lets the grain show through. 16% is
-     the "subtle rule" strength of the bearlike paper system this is ported
-     from — about #d6d5d1 on the cream page, a crisper 1px line than the old
-     flat #e9e6dd without going as heavy as that system's 28% default rule. */
-  --border: color-mix(in oklab, var(--foreground) 16%, transparent);
-  --input: hsl(48 25% 92.2%);
-  /* The focus indicator is a non-text UI component: WCAG 1.4.11 wants 3:1
-     against what surrounds it, and the shared clay measured 2.97:1 on the
-     cream page — under the bar by a hair, and a focus ring nobody can see is
-     the one indicator that has to be seen. Matches --primary-text. */
-  --ring: hsl(14.8 63.1% 42%);
-
-  /* Clean white panel behind transparent-PNG media: brighter than the cream
-     page, so framed images read as a raised surface. */
-  --image-backing: hsl(0 0% 100%);
-
-  /* The navigation band is one tonal step off the page (the source system's
-     alternate-section stock), so the rail and the reading column read as two
-     sheets rather than one surface with a hairline down it. */
-  --sidebar: hsl(46 24% 94.2%);
-  --sidebar-foreground: hsl(0 0% 4%);
-  --sidebar-primary: hsl(14.8 63.1% 59.6%);
-  --sidebar-primary-foreground: hsl(0 0% 100%);
-  --sidebar-accent: hsl(48 25% 92.2%);
-  --sidebar-accent-foreground: hsl(60 3% 21%);
+  --destructive-foreground: #fff;
+  --border: color-mix(in srgb, var(--foreground) 22%, transparent);
+  --input: #d7d2c7;
+  --ring: var(--primary-text);
+  --image-backing: #fff;
+  --sidebar: #d9d5cb;
+  --sidebar-foreground: var(--foreground);
+  --sidebar-primary: var(--primary);
+  --sidebar-primary-foreground: var(--primary-foreground);
+  --sidebar-accent: #ccc7ba;
+  --sidebar-accent-foreground: var(--foreground);
   --sidebar-border: var(--border);
-  --sidebar-ring: hsl(14.8 63.1% 59.6%);
+  --sidebar-ring: var(--ring);
 
-  /* Paper grain. A 200px fractal-noise tile, darkened (-0.25 per channel)
-     and held to ~3% alpha, laid as a background-image OVER a surface's own
-     colour so the colour tokens stay authoritative and the grain only adds
-     fibre. Fine and dense (baseFrequency 0.9) rather than the source system's
-     coarse 0.35: at body-text distance a fine grain reads as stock, a coarse
-     one as noise. Theme-neutral: grey specks at that alpha deepen cream and
-     lift carbon by the same imperceptible step. */
-  --paper-texture: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' seed='7' stitchTiles='stitch'/%3E%3CfeColorMatrix values='1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 0 0 0 0 1'/%3E%3CfeComponentTransfer%3E%3CfeFuncR type='linear' slope='1' intercept='-0.25'/%3E%3CfeFuncG type='linear' slope='1' intercept='-0.25'/%3E%3CfeFuncB type='linear' slope='1' intercept='-0.25'/%3E%3CfeFuncA type='linear' slope='0.03'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-
-  /* Paper depth. The source system's "press" shadow: a tight contact shade
-     (blurred, never a hard 1px line — under a 1px border that reads as a
-     second rule) plus a long soft drop, so a card reads as stock laid ON the page
-     rather than a box drawn around content. Raised is the hover state. */
-  --paper-shadow: 0 1px 2px -1px rgb(29 29 27 / 0.10), 0 10px 24px -16px rgb(29 29 27 / 0.35);
-  --paper-shadow-raised: 0 2px 4px -2px rgb(29 29 27 / 0.12), 0 16px 32px -14px rgb(29 29 27 / 0.42);
+  /* Preserve the reference's low-frequency fibres; a smaller tile increases
+     density without averaging the grain into an imperceptible flat tint. */
+  --paper-texture: url("../img/paper.svg");
+  --paper-size: 240px 240px;
+  --paper-shadow: 0 1px 2px -1px rgb(29 29 27 / 0.16), 0 8px 20px -12px rgb(29 29 27 / 0.28);
+  --paper-shadow-raised: 0 2px 4px -2px rgb(29 29 27 / 0.18), 0 12px 24px -12px rgb(29 29 27 / 0.34);
 }
 
 .dark {
-  /* Deep warm carbon. Tuned to sit at ~#161513 — matching Devin/Mintlify's
-     #141414 page surface, far deeper than the old washed #262624. One flat
-     surface for page/header/sidebar; borders (not shade steps) do the
-     separating, so contrast against the near-white foreground stays high. */
-  --background: hsl(40 6% 8%);
-  --foreground: hsl(60 14% 97%);
-
-  /* Dark's surfaces are what `--primary` was tuned against, so text and fill
-     are the same value here. The alias exists in both themes so a call site
-     never branches on which is active. */
-  --primary-text: var(--primary);
-
-  /* Cards & code blocks lift a hair above the page so framed content reads
-     as slightly raised — the only place we keep a shade step. */
-  --card: hsl(40 5% 12%);
-  --card-foreground: hsl(60 14% 97%);
-
-  /* Popovers / the search-&-Ask-AI modal float just above the page. */
-  --popover: hsl(40 5% 11%);
-  --popover-foreground: hsl(60 14% 97%);
-
-  --primary: hsl(14.8 63.1% 59.6%);
-  --primary-foreground: hsl(0 0% 100%);
-
-  --secondary: hsl(40 4% 14%);
-  --secondary-foreground: hsl(55 9% 74%);
-
-  --muted: hsl(40 4% 16%);
-  --muted-foreground: hsl(48 6% 62%);
-
-  --accent: hsl(40 4% 17%);
-  --accent-foreground: hsl(60 14% 97%);
-
+  --background: #151512;
+  --foreground: #e3dfd6;
+  --card: #22211c;
+  --popover: #25241f;
+  --nav-background: #1b1a16;
+  --primary: #d98566;
+  --primary-foreground: #181612;
+  --primary-text: #e6a085;
+  --secondary: #2b2922;
+  --secondary-foreground: #d2cdc1;
+  --muted: #302d25;
+  --muted-foreground: #aaa598;
+  --accent: #343128;
+  --accent-foreground: var(--foreground);
   --destructive: hsl(0 73% 59%);
-  --destructive-foreground: hsl(0 0% 100%);
-
-  /* Ink at alpha, as in light (see there). 14% of the near-white foreground
-     composites to ~#363532 on the carbon page — the source system's dark
-     subtle-rule strength. */
-  --border: color-mix(in oklab, var(--foreground) 14%, transparent);
-  --input: hsl(40 5% 15%);
-  --ring: hsl(14.8 63.1% 59.6%);
-
-  /* Deeper-than-page backing for transparent-PNG media so framed images gain
-     depth instead of dissolving into the surface. */
+  --border: color-mix(in srgb, var(--foreground) 18%, transparent);
+  --input: #373329;
   --image-backing: hsl(40 7% 5%);
-
-  --sidebar: hsl(40 5% 10.2%);
-  --sidebar-foreground: hsl(60 14% 97%);
-  --sidebar-primary: hsl(14.8 63.1% 59.6%);
-  --sidebar-primary-foreground: hsl(0 0% 100%);
-  --sidebar-accent: hsl(40 4% 17%);
-  --sidebar-accent-foreground: hsl(60 14% 97%);
-  --sidebar-border: var(--border);
-  --sidebar-ring: hsl(14.8 63.1% 59.6%);
-
-  --paper-shadow: 0 1px 2px -1px rgb(0 0 0 / 0.4), 0 10px 24px -14px rgb(0 0 0 / 0.6);
-  --paper-shadow-raised: 0 2px 4px -2px rgb(0 0 0 / 0.45), 0 16px 32px -14px rgb(0 0 0 / 0.7);
+  --sidebar: #1e1d18;
+  --sidebar-accent: #353128;
+  --paper-shadow: 0 1px 2px -1px rgb(0 0 0 / 0.4), 0 8px 20px -12px rgb(0 0 0 / 0.6);
+  --paper-shadow-raised: 0 2px 4px -2px rgb(0 0 0 / 0.45), 0 12px 24px -12px rgb(0 0 0 / 0.7);
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
@@ -831,10 +743,10 @@ article {
    font sizes, and a `rem` value would be a fixed gap that suffocates small
    type and yawns on large. */
 :root {
-  --leading-body: 1.7;
-  --leading-ui: 1.55;
+  --leading-body: 1.6;
+  --leading-ui: 1.45;
   --leading-compact: 1.45;
-  --leading-tight: 1.25;
+  --leading-tight: 1.15;
 }
 
 /* Continuous prose. `article` itself carries the body rung so anything that
@@ -2074,12 +1986,6 @@ article .ms-shots img,
      Declared here rather than at :root because it describes the header's own
      control scale, and both controls are descendants. */
   --mewbo-nav-control-h: 2rem;
-  /* A quiet satin sheen, derived entirely from the site's surface palette. */
-  --mewbo-chrome-finish: linear-gradient(180deg,
-    color-mix(in srgb, var(--card) 32.5%, var(--background)) 0%,
-    color-mix(in srgb, var(--muted) 9%, var(--background)) 48%,
-    color-mix(in srgb, var(--muted) 19%, var(--background)) 100%);
-  background-image: var(--mewbo-chrome-finish);
   z-index: 50;
   isolation: isolate;
   box-shadow: 0 3px 6px -3px rgb(0 0 0 / 0.16),
@@ -3400,25 +3306,19 @@ article .mewbo-page-action__hint,
   color: var(--muted-foreground);
 }
 
-/* Touch targets grow INVISIBLY. Raising the buttons themselves to 2.75rem
-   made each half 44px tall inside a 32px pill: the seam and both hit boxes
-   hung below the control, and the pill no longer matched the arrows beside
-   it. A transparent pad reaches the 44px target and leaves the drawn control
-   exactly the size of its neighbours. */
 @media (pointer: coarse) {
-  article .mewbo-page-actions > button,
-  #page-header a[data-slot="button"] {
-    position: relative;
+  .mewbo-header { --mewbo-nav-control-h: 2.75rem; }
+  .mewbo-page-actions { --page-actions-size: 2.75rem; }
+  article .mewbo-page-actions > button:is(.mewbo-page-actions__main, .mewbo-page-actions__toggle) {
+    min-width: 2.75rem;
   }
-  article .mewbo-page-actions > button::after,
-  #page-header a[data-slot="button"]::after {
-    content: "";
-    position: absolute;
-    inset: 50% auto auto 50%;
-    width: max(100%, 2.75rem);
-    height: 2.75rem;
-    transform: translate(-50%, -50%);
+  #page-header a[data-slot="button"] { width: 2.75rem; height: 2.75rem; }
+  .mewbo-menu-btn, header .mewbo-icon-btn, .ms-mobile-nav__close,
+  #bottom-navigation a[data-slot="button"] {
+    min-width: 2.75rem;
+    min-height: 2.75rem;
   }
+  .ms-mobile-nav__close { top: 0.375rem; }
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
@@ -4431,11 +4331,9 @@ div:has(> #toc) {
 
 /* ── Tab rail: its own plane between header and page ─────────────────── */
 
-/* Share the header's token-derived finish and retain the single hairlines
-   between navigation rows and at the lower edge of the stack. */
+/* One hairline at each join; the paper surface is shared with the header. */
 .ms-header-tabs {
   background: var(--background);
-  background-image: var(--mewbo-chrome-finish);
   border-top: 1px solid var(--border);
   border-bottom: 1px solid var(--border);
   position: relative;
@@ -4461,142 +4359,84 @@ article a,
   color: var(--primary-text);
 }
 
-/* ── Display face: IBM Plex Serif ─────────────────────────────────────────
-   Headings and brand lettering are set in a serif against a sans body. The
-   contrast is the point: a heading stops being "the same text, larger" and
-   announces a section on shape alone, before size or weight register.
-
-   WHAT WEARS IT — the things a reader parses as a LABEL rather than as prose:
-   the page title, H1-H3 in the content body, card titles, the brand name
-   beside the logo in both header and footer, and the top-level section names
-   in the header nav and header tabs.
-
-   WHAT DOES NOT, and why the list stops where it does:
-     H4-H6   These sit inside a passage rather than opening one. In practice
-             they run close to body size, where a serif stops reading as
-             deliberate and starts reading as a font bug. H3 is the floor.
-     .doc    mkdocstrings, whose headings are API symbols — a serif
-             `get_config(**kwargs)` is a symbol dressed as prose, and those
-             headings legitimately contain code spans.
-     Hero eyebrow and lede  The text around the hero title, not the title
-             itself. The hero HEADING does take the face (see the rule further
-             down): on a landing page it is the first and largest thing read,
-             and the `<h1>` the document actually has.
-     Sidebar, ToC, top nav, body copy, UI chrome  Navigation furniture and
-             continuous prose both stay on the sans. That includes the header
-             tab rail, which wore the face briefly and made the header read as
-             a masthead rather than a toolbar. The serif is for the few words
-             that NAME a thing, plus the wordmark.
-
-   TOKEN, NOT LITERAL: everything here goes through --font-display so a consumer
-   can repoint the display face in one place. The token is defined in
-   tailwind/fonts.css and carries its own fallback chain, so a build that never
-   loads plex-serif.css still resolves to a real serif.
-
-   The token is named --font-display rather than --font-serif, and is not a
-   repoint of --font-sans, for two separate reasons — both in tailwind/fonts.css
-   where it is defined: mermaid canvas-measures labels with --font-sans, and
-   Tailwind v4 already owns --font-serif for its `font-serif` utility.
-
-   SPECIFICITY: base.css's prose rules are unlayered and reach (0,1,2)
-   (`article .typography h2`), and mewbo.css is linked after base.css, so the
-   matched reach below wins on source order without `!important`.
-
-   Inline code inside a heading needs no rule here: `article code:not(pre
-   code)` in tailwind/article.css reaches (0,2,2) — the `:not(pre code)` buys
-   the extra class-level — so it already outranks this (0,1,2) selector and a
-   code span keeps the mono face on specificity alone. Raising this rule's
-   reach to (0,2,2) or adding `!important` would take the code span with it;
-   `test_code_in_a_heading_keeps_the_mono_face` is what catches that. */
+/* Reading and display faces are independent of the technical UI stack.
+   Instrument Serif only ships at 400: do not synthesize bold display glyphs. */
+article[view-transition-name="page"], .md-content {
+  font-family: var(--font-body);
+  font-size: 1.125rem;
+  font-optical-sizing: auto;
+  line-height: var(--leading-body);
+}
+article table:not(.codehilitetable) { font-size: 1rem; }
 article #page-header h1,
-article .typography :is(h1, h2, h3):not(.ms-hero *, .doc *) {
-  font-family: var(--font-display);
-}
-
-/* Card titles. A card title names the thing the card is about, which is the
-   same job the headings above do — and in a grid of cards it is the only text
-   doing it.
-
-   `.ms-step__title` is the same idea in the numbered lifecycle component: it
-   names a step, and in that grid it is the only text naming anything. It is a
-   SEPARATE class from `.ms-card__title` despite looking like a sibling, which
-   is exactly how it was missed the first time — the `.ms-*` kit has two card
-   families, and styling one by name silently leaves the other behind. */
-.ms-card__title,
-.ms-step__title {
-  font-family: var(--font-display);
-}
-
-/* The hero title IS the page's main heading — on a landing page it is the
-   first and largest thing read, and the `<h1>` the document actually has. The
-   hero was originally excluded wholesale from the display face on the grounds
-   that it is brand composition with its own type treatment, but that reasoning
-   only holds for the text AROUND the title: the eyebrow and the lede stay on
-   the sans, and are not matched here.
-
-   Reach is (0,2,2) to match the hero's own sizing rule above, which is
-   unlayered and would otherwise be equal-specificity-and-later. The
-   `.ms-hero__title` arm covers heroes written as HTML rather than markdown,
-   mirroring that rule's own pair of selectors. */
+article .typography :is(h1, h2, h3):not(.ms-hero *, .doc *),
 article .ms-hero :is(h1, h2, h3, h4, h5, h6),
+article .ms-hero .ms-hero__title,
+.ms-card__title, .ms-step__title,
+.mewbo-brand__name, .mewbo-footer__name {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-synthesis: none;
+  letter-spacing: -0.015em;
+}
+article .typography h2:not(.doc *, .ms-hero *) { font-size: 2rem; }
+article .typography h3:not(.doc *, .ms-hero *) { font-size: 1.6rem; }
+article .typography > h2:first-child,
+article .ms-hero :is(h1, h2, h3),
 article .ms-hero .ms-hero__title {
-  font-family: var(--font-display);
+  font-size: clamp(2.35rem, 4vw, 3rem);
 }
-
-/* Brand lettering, header and footer. This is the site's name set as a
-   wordmark, so it takes the display face in both places for one identity.
-   `.mewbo-brand__docs` — the small bordered "Docs" badge beside it — stays on
-   the sans: at 0.525rem a serif is illegible, and it is a status chip rather
-   than part of the wordmark. */
-.mewbo-brand__name,
-.mewbo-footer__name {
-  font-family: var(--font-display);
+article #page-header h1 { font-size: 1rem; }
+.ms-card__title { font-size: 1.6rem; }
+.ms-step__title { font-size: 1.25rem; }
+.mewbo-brand__name { font-size: 1.4rem; }
+.mewbo-footer__name { font-size: 1.7rem; }
+article .ms-hero__lede, article #summary, .ms-card__body,
+.mewbo-footer__tagline {
+  font-family: var(--font-body);
+  font-size: 1.0625rem;
+  line-height: 1.5;
 }
+article .ms-hero__lede { font-size: 1.1875rem; }
 
-/* NOT the top navigation. The inline nav (`theme.topbar_sections`) and the tab
-   rail (`theme.header_tabs`) both wore the display face briefly, on the theory
-   that a section name in the header is the same noun that heads the page it
-   leads to. In use it reads wrong: those tabs are navigation furniture, sat
-   directly under a serif wordmark, and setting both made the whole header
-   look like a masthead rather than a toolbar. Chrome you click stays on the
-   sans; the wordmark above it is the one piece of lettering that does not.
-   `test_top_navigation_stays_on_the_sans` pins this. */
+/* Navigation adopts the editorial voice at a readable size; small controls,
+   API symbols and keycaps remain technical rather than becoming mastheads. */
+[data-sidebar="menu-button"], .mewbo-toc__link,
+.mewbo-footer__col-links a {
+  font-family: var(--font-body);
+  font-size: 0.9375rem;
+  line-height: var(--leading-ui);
+}
+.ms-header-tabs__item, .mewbo-topnav a {
+  font-family: var(--font-display);
+  font-size: 1.125rem;
+  font-weight: 400;
+}
+article :is(button, input, select, textarea, .ms-btn, .ms-chip, .tabbed-labels),
+#page-header, #bottom-navigation, .doc, .ms-hero__eyebrow,
+.ms-mermaid, .ms-diagram-viewer, .mewbo-page-actions__menu,
+article .typography :is(h4, h5, h6) {
+  font-family: var(--font-sans);
+}
+article .typography .doc { font-size: 0.9375rem; }
+article .typography :is(code, pre, kbd) { font-optical-sizing: auto; }
 
-/* ─────────────────────────────────────────────────────────────────────────
-   Paper surfaces
-
-   Three planes, each told apart by stock, not by boxes:
-
-     page      `--background` + grain. The sheet being read.
-     rail      `--sidebar` + grain + a faint dot grid: a separate, slightly
-               deeper sheet the navigation is printed on, so the sidebar is
-               distinct from the reading column at a glance.
-     chrome    header + tab rail: their satin finish WITH the grain, then the
-               drop shadow that already lifts them off the page.
-
-   Cards and the page's own buttons are sheets of the same stock set on the
-   page: grain, one ink-alpha rule, and the press shadow (`--paper-shadow`),
-   so depth comes from how a sheet sits rather than from a second outline.
-
-   The grain is `background-attachment: fixed` wherever it covers a large
-   area so adjacent planes sample one viewport-anchored field and the speckle
-   never restarts at a seam.
-   ───────────────────────────────────────────────────────────────────────── */
-#inner-body,
-.mewbo-footer {
+/* Paper is applied to opaque surfaces, not to text or media overlays. Keep
+   one shared tile scale so it is equally perceptible on every sheet. */
+body, #inner-body, .mewbo-footer, .mewbo-toc__heading,
+.ms-card, .ms-step, .ms-flow__panel,
+.ms-mobile-nav__panel, .ms-mobile-nav__close,
+#mewbo-modal, .mewbo-page-actions__menu {
   background-image: var(--paper-texture);
-  background-attachment: fixed;
+  background-size: var(--paper-size);
 }
-
-.mewbo-header,
-.ms-header-tabs {
-  background-image: var(--paper-texture), var(--mewbo-chrome-finish);
-  background-attachment: fixed, scroll;
+.mewbo-header, .ms-header-tabs {
+  background-color: var(--nav-background);
+  background-image: var(--paper-texture);
+  background-size: var(--paper-size);
 }
+.ms-mobile-nav__panel { background-color: var(--sidebar); }
 
-/* The rail band. Painted on the sidebar-wrapper's first column through a
-   pseudo-element so it runs the full height of the page rather than the
-   sticky sidebar's viewport-sized box, and sits behind the nav. */
 @media (min-width: 1024px) {
   [data-slot="sidebar-wrapper"] {
     position: relative;
@@ -4605,58 +4445,35 @@ article .ms-hero .ms-hero__title {
   [data-slot="sidebar-wrapper"]::before {
     content: "";
     position: absolute;
-    inset: 0 auto 0 calc(-1 * var(--spacing) * 2);
-    width: calc(var(--sidebar-width) + var(--spacing) * 2 - var(--spacing) * 2);
+    inset: 0 auto 0 calc(-2 * var(--spacing));
+    width: var(--sidebar-width);
     z-index: -1;
     pointer-events: none;
     background-color: var(--sidebar);
-    background-image: var(--paper-texture),
-      radial-gradient(color-mix(in oklab, var(--foreground) 7%, transparent) 0.75px, transparent 1.25px);
-    background-size: auto, 14px 14px;
-    background-attachment: fixed, fixed;
+    background-image: var(--paper-texture);
+    background-size: var(--paper-size);
   }
-  /* The sidebar's scroll fades are painted strips (and blurred), which read
-     as a smear over the band's pattern. On the band they are retired and the
-     scroll area fades its OWN content with a mask, which is transparent to
-     whatever sits behind it. */
+  /* Fade only the navigation, not the paper underneath it. */
   [data-slot="sidebar"] > .pointer-events-none,
-  [data-slot="sidebar-content"] > .sticky {
-    display: none;
-  }
+  [data-slot="sidebar-content"] > .sticky { display: none; }
   [data-slot="sidebar-content"] {
-    -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 1rem, #000 calc(100% - 2.5rem), transparent 100%);
-    mask-image: linear-gradient(to bottom, transparent 0, #000 1rem, #000 calc(100% - 2.5rem), transparent 100%);
+    -webkit-mask-image: linear-gradient(to bottom, transparent, #000 1rem, #000 calc(100% - 2.5rem), transparent);
+    mask-image: linear-gradient(to bottom, transparent, #000 1rem, #000 calc(100% - 2.5rem), transparent);
   }
 }
+.ms-card, .ms-step, .ms-flow__panel { box-shadow: var(--paper-shadow); }
+a.ms-card:hover { box-shadow: var(--paper-shadow-raised); }
 
-.mewbo-toc__heading {
-  background-image: var(--paper-texture);
-  background-attachment: fixed;
-}
-
-.ms-card,
-.ms-step {
-  background-image: var(--paper-texture);
-  box-shadow: var(--paper-shadow);
-}
-a.ms-card {
-  transition: border-color 0.2s ease, transform 0.25s ease, box-shadow 0.25s ease;
-}
-a.ms-card:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--paper-shadow-raised);
-}
-
-/* The page's own buttons — Copy page and the prev/next arrows — are small
-   sheets of the same stock: card fill, grain, a hairline ring and the press
-   shadow. They were flat `--secondary` fills, which on the grained page read
-   as flat grey chips cut out of the paper. The ring is an inset shadow so the
-   control keeps its border-free box model (the split-button seam test and
-   the arrow-matching test both measure that). */
 #page-header :is(.mewbo-page-actions, a[data-slot="button"]),
-#bottom-navigation a[data-slot="button"] {
+#bottom-navigation a[data-slot="button"],
+.mewbo-nav-search-pill, .mewbo-nav-ask-ai-btn {
   background-color: var(--card);
   background-image: var(--paper-texture);
+  background-size: var(--paper-size);
+  box-shadow: var(--paper-shadow);
+}
+#page-header :is(.mewbo-page-actions, a[data-slot="button"]),
+#bottom-navigation a[data-slot="button"] {
   box-shadow: inset 0 0 0 1px var(--border), var(--paper-shadow);
 }
 :is(#page-header, #bottom-navigation) a[data-slot="button"]:hover {

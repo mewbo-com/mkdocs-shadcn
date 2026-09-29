@@ -3,23 +3,21 @@ title: Display face regression
 summary: Regression fixture — which text wears the serif display face, and which does not
 ---
 
-This page is a regression fixture for the IBM Plex Serif display face. It
-exists to pin the BOUNDARY: headings and card titles take the serif, while
-body copy, deep headings, code spans and API symbols stay on the sans.
+This page checks the theme's editorial type roles. Instrument Serif names
+sections and cards. Newsreader carries paragraphs and navigation links.
+Compact controls and API symbols keep Geist, and code keeps Geist Mono.
 
-The interesting cases are the ones that must NOT change, because a broadened
-selector is silent — nothing errors, the page simply starts reading wrong.
+Each role loads from the theme's own font files. No font service is needed
+when a reader opens the site.
 
 ## A section heading takes the serif
 
-Body copy under it stays on the sans face. That contrast is the whole point of
-the treatment: a heading should announce a section on shape alone, before its
-size or weight registers.
+Body copy uses Newsreader at a comfortable reading size and leading. The
+display face names the section without borrowing the paragraph's weight.
 
 ### A subsection heading takes it too
 
-H3 is the floor. Below it the type is close enough to body size that a serif
-reads as a font bug rather than as a deliberate choice.
+Deep headings keep the technical face so small labels remain easy to scan.
 
 #### A fourth-level heading must stay sans
 
@@ -28,13 +26,11 @@ reads as a font bug rather than as a deliberate choice.
 ## Code inside a heading keeps the mono face: `get_config(**kwargs)`
 
 A code span names a symbol, and a symbol set in a serif is a symbol dressed as
-prose. `article code:not(pre code)` and the heading rule reach the same
-specificity, so without an explicit rule the heading would win on source order
-and swallow the code span.
+prose. Inline code retains its own mono stack even inside a display heading.
 
 ## Cards
 
-<div class="ms-cards">
+<div class="ms-grid ms-grid--3">
   <div class="ms-card">
     <span class="ms-card__title">Android</span>
     <span class="ms-card__body">A card title names the thing the card is
@@ -73,9 +69,8 @@ behind on a real site — the two look like siblings and are not.
 
 ## The hero
 
-The hero title is the page's main heading and takes the face. The copy around
-it — the eyebrow above and the lede below — is supporting prose and does not,
-which is the boundary that keeps a hero from turning entirely serif.
+The hero title takes the display face. Its lede uses the reading face, while
+the eyebrow stays a compact interface label.
 
 <div class="ms-hero">
   <p class="ms-hero__eyebrow">Eyebrow · stays on the sans</p>

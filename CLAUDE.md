@@ -82,23 +82,24 @@ The wheel ships the `shadcn/` package only.
   - The predecessor was GLightbox, whose `INSET_X`/`RESERVE_Y`/`MAX_EDGE`
     budget subtracted a flat 200px of height for chrome laid out *beside* the
     image. Those tokens are gone; do not reintroduce them.
-- **Paper surfaces (`mewbo.css`, the "Paper surfaces" block).** A fine
-  feTurbulence grain (`--paper-texture`, ~3% alpha) sits as a
-  `background-image` OVER each surface's colour token on every plane: page,
-  footer, header + tab rail (under their satin finish), cards, and the page's
-  own buttons. Large planes use `background-attachment: fixed` so the speckle
-  never restarts at a seam. The left rail is a **separate band**: `--sidebar`
-  is a tonal step off `--background`, painted with a dot grid by
-  `[data-slot=sidebar-wrapper]::before`. Its scroll fades are content MASKS,
-  not painted strips, because painted strips smear over the pattern.
-  `--border` is **ink at alpha** (`--foreground` at 16%/14%). Cards keep ONE
-  1px rule; depth comes from `--paper-shadow`, whose contact shade is
-  blurred. A hard `0 1px 0` under a 1px border reads as a second rule.
-  Copy page + prev/next are paper chips (card fill, grain, inset ring, press
-  shadow) and must stay the same height. Touch targets grow through an
-  invisible `::after` pad, never by resizing the button, because a resized
-  half hangs out of the 32px pill. `tests/test_paper_surfaces.py` pins all of
-  this.
+- **Editorial paper is a rendered contract, not a declared URL.** The shared
+  `img/paper.svg` paints backgrounds only, never an overlay over images.
+  Page, navigation, sidebar and card stock have separate semantic colours.
+  `--paper-texture` / `--paper-size` also cover mobile navigation and overlays.
+  Preserve background-image when a consumer changes a surface colour: use
+  `background-color`, not the resetting `background` shorthand. Grain must
+  remain visibly fibrous at normal scale; `tests/test_editorial_paper.py`
+  checks rasterized pixels as well as contrast. Cards keep one border and a
+  blurred contact shadow, not an inset/dashed second rule.
+- **Typography roles stay separate.** `--font-body` is self-hosted Newsreader;
+  `--font-display` is Instrument Serif, which only has weight 400. Never fake
+  a bold display weight. `--font-sans` stays Geist for controls and Mermaid's
+  canvas measurements; `--font-mono` and Tailwind's `--font-serif` are not
+  repurposed. Fonts and OFL licences ship in `shadcn/fonts/`.
+- **Touch page-actions grow as one unit.** The wrapper, both halves and pager
+  arrows all become 44px on coarse pointers. Invisible overlapping hit pads
+  stole taps from the neighbouring half; independently taller children left
+  the seam hanging below the pill. Test hit ownership, not only dimensions.
 - **Upstream's `header button` / `div#toc a` / `#bottom-navigation` rules are
   deliberately dropped from `tailwind/`.** They're unlayered and style
   upstream's header/toc/pager partials, which this fork doesn't use. An ID in
