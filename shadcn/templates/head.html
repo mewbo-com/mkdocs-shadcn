@@ -104,7 +104,8 @@
     {%- endfor %}
     {% endif %}
 
-    <script integrity="sha384-FDYE0LZ2rjnYnGta7gXYP/eQrHyFKIFUU54YBXsPM0uOlGEddDH6ZRU2Mb5SwZxr" src="{{ 'js/callbacks.js' | url }}"></script>
+    <script integrity="sha384-Q1MrSG7ZnVSCNkPrtLHrwaFNMRKVd4TDOQgr3oKtpORHLRDoNcfgIb1bInwjA0J1" src="{{ 'js/callbacks.js' | url }}"></script>
+<script defer="" integrity="sha384-ljmRPFWw/c4kKFaKY5DIe8bgppHI9VBBrg7WZa8UPd23U9dEFesxZ1Ng8Hzjq2WB" src="{{ 'js/toc.js' | url }}"></script>
 
     {% if "pymdownx.arithmatex" in config.markdown_extensions %}
     {% include "templates/external/katex.html" %}

@@ -6,6 +6,11 @@ article a.button {
   @apply no-underline;
 }
 
+/* Upstream also lists `header button` / `header a.button` in these rules for
+   its header partials. This fork's header is its own markup styled in
+   mewbo.css, and these rules are unlayered, so those selectors are left out
+   rather than overridden control by control. */
+
 article input[type="button"],
 article a.button,
 article button {

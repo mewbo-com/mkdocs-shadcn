@@ -82,6 +82,25 @@ The wheel ships the `shadcn/` package only.
   - The predecessor was GLightbox, whose `INSET_X`/`RESERVE_Y`/`MAX_EDGE`
     budget subtracted a flat 200px of height for chrome laid out *beside* the
     image. Those tokens are gone; do not reintroduce them.
+- **Paper surfaces: grain on reading surfaces, never on chrome
+  (`mewbo.css`, `--paper-texture`).** The page (`#inner-body`), footer and
+  `.ms-card`/`.ms-step` carry an feTurbulence grain as a `background-image`
+  OVER their colour token, so the tokens stay authoritative. The header,
+  popovers and modal stay smooth: no grain is what keeps them on their own
+  plane. Strips that repaint `--background` over the page (sidebar fades,
+  sticky ToC heading) must take the grain too, or they read as flat patches;
+  the grain is `background-attachment: fixed` so the seams line up.
+  `--border` is **ink at alpha** (`--foreground` at 16%/14%), not a flat
+  colour, so a rule takes on whatever surface it crosses. Cards keep ONE 1px
+  rule and no inset/dashed second outline; `tests/test_paper_surfaces.py`
+  pins both.
+- **Upstream's `header button` / `div#toc a` / `#bottom-navigation` rules are
+  deliberately dropped from `tailwind/`.** They're unlayered and style
+  upstream's header/toc/pager partials, which this fork doesn't use. An ID in
+  a Tailwind variant list lifts its `hover:` to ID specificity and beats
+  `mewbo.css`. Upstream's `article .typography h1 { hidden }` is dropped too:
+  this fork strips the first markdown H1 in `SearchPlugin.on_page_markdown`
+  instead, and the CSS version would hide HTML hero H1s.
 - **Tables word-wrap by default.** `tailwind/table.css` deliberately does NOT
   put `whitespace-nowrap` on `th`/`td` (it uses `break-words`); the
   `.table-wrapper` keeps `overflow-x:auto` only as a fallback for un-wrappable

@@ -1,6 +1,6 @@
 {# "On This Page" right rail. Adds a continuous left border-rail
    (idle border, primary on the active heading) and proper two-level
-   hierarchy. callbacks.js (`setActiveTocLink`) toggles data-active on
+   hierarchy. toc.js (`setActiveTocLink`) toggles data-active on
    links by matching `href` — class names are free, but `href` and the
    `data-active` attribute must stay.
 
@@ -39,16 +39,14 @@
             {% for h2 in entries %}
             <a href="{{ h2.url }}"
                 class="mewbo-toc__link"
-                data-active="false" data-depth="2"
-                onClick="deferSetActiveTocLink('{{ h2.url }}');">
+                data-active="false" data-depth="2">
                 {{ h2.title }}
             </a>
             {% if h2.children %}
             {% for h3 in h2.children %}
             <a href="{{ h3.url }}"
                 class="mewbo-toc__link"
-                data-active="false" data-depth="3"
-                onClick="deferSetActiveTocLink('{{ h3.url }}');">
+                data-active="false" data-depth="3">
                 {{ h3.title }}
             </a>
             {% endfor %}

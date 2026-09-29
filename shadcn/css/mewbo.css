@@ -81,10 +81,13 @@
   --destructive: hsl(0 55% 47%);
   --destructive-foreground: hsl(0 0% 100%);
 
-  /* Faint warm hairline (~#e9e6dd): a quiet step off the cream page, replacing
-     the old translucent tan that composited to a loud ~#cecCC1. Mirrors how
-     Devin keeps light-mode borders near-invisible (#eff1f5). */
-  --border: hsl(48 16% 89%);
+  /* Rules are INK AT ALPHA, not a flat colour: a hairline drawn in the page's
+     own foreground reads as a printed line on paper, takes on whatever surface
+     it crosses (page, card, footer), and lets the grain show through. 16% is
+     the "subtle rule" strength of the bearlike paper system this is ported
+     from — about #d6d5d1 on the cream page, a crisper 1px line than the old
+     flat #e9e6dd without going as heavy as that system's 28% default rule. */
+  --border: color-mix(in oklab, var(--foreground) 16%, transparent);
   --input: hsl(48 25% 92.2%);
   /* The focus indicator is a non-text UI component: WCAG 1.4.11 wants 3:1
      against what surrounds it, and the shared clay measured 2.97:1 on the
@@ -102,8 +105,17 @@
   --sidebar-primary-foreground: hsl(0 0% 100%);
   --sidebar-accent: hsl(48 25% 92.2%);
   --sidebar-accent-foreground: hsl(60 3% 21%);
-  --sidebar-border: hsl(48 16% 90%);
+  --sidebar-border: var(--border);
   --sidebar-ring: hsl(14.8 63.1% 59.6%);
+
+  /* Paper grain. A 320px fractal-noise tile, darkened (-0.25 per channel) and
+     held to ~5% alpha, laid as a background-image OVER a surface's own colour
+     so the colour tokens stay authoritative and the grain only adds fibre.
+     Theme-neutral: grey specks at that alpha deepen cream and lift carbon by
+     the same imperceptible step. Applied to reading surfaces at the end of
+     this file; chrome (header, popovers) stays smooth so it reads as a
+     separate plane from the page. */
+  --paper-texture: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='320' height='320'%3E%3Cfilter id='n' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.35' numOctaves='5' seed='7' stitchTiles='stitch'/%3E%3CfeColorMatrix values='1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 0 0 0 0 1'/%3E%3CfeComponentTransfer%3E%3CfeFuncR type='linear' slope='1' intercept='-0.25'/%3E%3CfeFuncG type='linear' slope='1' intercept='-0.25'/%3E%3CfeFuncB type='linear' slope='1' intercept='-0.25'/%3E%3CfeFuncA type='linear' slope='0.052'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
 .dark {
@@ -143,10 +155,10 @@
   --destructive: hsl(0 73% 59%);
   --destructive-foreground: hsl(0 0% 100%);
 
-  /* Whisper-subtle hairline (~#2c2b29): only ~+18 rgb over the page, the same
-     low-contrast step Devin uses (#26292d over #141414). Solid, not the old
-     translucent light-gray that composited to a loud ~#5d5d54. */
-  --border: hsl(40 5% 17%);
+  /* Ink at alpha, as in light (see there). 14% of the near-white foreground
+     composites to ~#363532 on the carbon page — the source system's dark
+     subtle-rule strength. */
+  --border: color-mix(in oklab, var(--foreground) 14%, transparent);
   --input: hsl(40 5% 15%);
   --ring: hsl(14.8 63.1% 59.6%);
 
@@ -160,7 +172,7 @@
   --sidebar-primary-foreground: hsl(0 0% 100%);
   --sidebar-accent: hsl(40 4% 17%);
   --sidebar-accent-foreground: hsl(60 14% 97%);
-  --sidebar-border: hsl(40 5% 15%);
+  --sidebar-border: var(--border);
   --sidebar-ring: hsl(14.8 63.1% 59.6%);
 }
 
@@ -4522,3 +4534,52 @@ article .ms-hero .ms-hero__title {
    look like a masthead rather than a toolbar. Chrome you click stays on the
    sans; the wordmark above it is the one piece of lettering that does not.
    `test_top_navigation_stays_on_the_sans` pins this. */
+
+/* ─────────────────────────────────────────────────────────────────────────
+   Paper surfaces
+
+   The grain (`--paper-texture`, defined with the palette at the top) goes on
+   the surfaces a reader reads FROM: the page, the cards set on it, and the
+   footer. Each keeps its own colour token underneath, so a card stays one
+   step lighter than the page exactly as before and simply reads as a sheet
+   of the same stock. Card structure is untouched: one 1px rule, same radius.
+
+   Chrome is left smooth on purpose. The header's satin finish, popovers and
+   the search/Ask-AI modal float above the page, and it is the absence of
+   grain as much as the shadow that sets them on a separate plane.
+   ───────────────────────────────────────────────────────────────────────── */
+#inner-body,
+.mewbo-footer,
+.ms-card,
+.ms-step {
+  background-image: var(--paper-texture);
+}
+
+/* The page chrome has a few strips that repaint `--background` over the page
+   to fade or pin content: the sidebar's scroll fades and the sticky ToC
+   heading. Flat, they read as smooth patches cut out of the paper. They take
+   the grain too, and the grain here is `fixed` (as is the page's, below) so
+   both sample one viewport-anchored field and the speckle lines up across the
+   seam instead of restarting at each strip's own origin. The strips' own
+   gradients are Tailwind utilities that set `background-image`, so the grain
+   is layered on top of them rather than replacing them. */
+#inner-body,
+.mewbo-toc__heading {
+  background-attachment: fixed;
+}
+.mewbo-toc__heading {
+  background-image: var(--paper-texture);
+}
+[data-slot="sidebar"] > .pointer-events-none,
+[data-slot="sidebar-content"] > .sticky {
+  background-image: var(--paper-texture), linear-gradient(var(--tw-gradient-position), var(--tw-gradient-stops));
+  background-attachment: fixed, scroll;
+}
+
+/* Selection as ink on paper: the page's foreground laid over the text, and
+   the text knocked out to the page colour — rather than the browser's blue,
+   which is the one hue on the page that belongs to no token. */
+::selection {
+  background: color-mix(in oklab, var(--foreground) 85%, transparent);
+  color: var(--background);
+}

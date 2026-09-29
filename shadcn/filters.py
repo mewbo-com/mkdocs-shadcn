@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import subprocess
 import urllib.parse
 from collections.abc import Mapping
@@ -35,7 +37,7 @@ def iconify(key: str, height: str = "20px", **kwargs) -> str:
     return _icons.svg(key, height, **kwargs)
 
 
-def parse_author(site_author: str) -> Union[str, None]:
+def parse_author(site_author: str) -> str | None:
     """Returns the email address of the site author."""
     # parse thinks like "Alban Siffer <31479857+asiffer@users.noreply.github.com>"
     if "<" in site_author and ">" in site_author:
@@ -51,7 +53,7 @@ def parse_author(site_author: str) -> Union[str, None]:
     return f"<span>{name}</span>"
 
 
-def setattribute(value: Union[dict, object], k: str, v: Any):
+def setattribute(value: dict | object, k: str, v: Any):
     if hasattr(value, "__setattr__"):
         setattr(value, k, v)
     return value
@@ -285,12 +287,14 @@ def is_http_url(path: str) -> bool:
     """Check if a path is a valid URL (http, https and also data scheme)"""
     try:
         parsed = urllib.parse.urlparse(path)
-    except Exception:
+    except (ValueError, TypeError):
         return False
 
-    if parsed.scheme not in ("http", "https", "data"):
-        return False
-    return True
+    # if parsed.scheme not in ("http", "https", "data"):
+    #     return False
+    return parsed.scheme in ("http", "https", "data")
+    # return True
+
 
 
 def read_file(path: str, config: MkDocsConfig) -> str:

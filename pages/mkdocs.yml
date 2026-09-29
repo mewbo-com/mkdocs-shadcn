@@ -90,6 +90,7 @@ markdown_extensions:
   # it, so authors were writing shortcuts as prose or inline code.
   pymdownx.keys:
   pymdownx.snippets:
+    base_path: [".", ".."]
   pymdownx.arithmatex:
     generic: true
   shadcn.extensions.echarts.alpha:

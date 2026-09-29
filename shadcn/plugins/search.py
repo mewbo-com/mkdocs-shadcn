@@ -35,10 +35,12 @@ from shadcn.plugins.mixins.link_check import LinkCheckMixin
 from shadcn.plugins.mixins.markdown import MarkdownMixin
 from shadcn.plugins.mixins.mkdocstrings import MkdocstringsMixin
 from shadcn.plugins.mixins.order import OrderMixin
+from shadcn.plugins.mixins.prefix import PrefixMixin
 from shadcn.plugins.mixins.table import TableMixin
 
 
 class SearchPlugin(
+    PrefixMixin,
     I18nMixin,
     GitTimestampsMixin,
     DevServerMixin,
@@ -103,7 +105,9 @@ class SearchPlugin(
         config: MkDocsConfig,
         files: Files,
     ):
-        # remove first plain h1 if provided
+        # remove first plain h1 if provided. Upstream hides it with CSS
+        # instead; this fork strips it because the masthead and toc.html key
+        # off the rendered body opening with an H2.
         markdown = re.sub(r"^#\s+(.+)", r"", markdown, count=1)
         return super().on_page_markdown(
             markdown,
