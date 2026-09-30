@@ -51,13 +51,15 @@ def test_rails_sit_a_clear_step_below_the_body(fixture_page: Page):
     assert entries[0]["size"] == entries[1]["size"], entries
 
 
-def test_sidebar_rows_share_one_tight_pitch(fixture_page: Page):
-    """Rows are sized by their text, not by stacked padding and floors.
+def test_sidebar_rows_share_one_even_pitch(fixture_page: Page):
+    """Rows are separated by a real gap and hug their text sideways.
 
     A row was 35px around 20px of text (6.4px padding each side over a 32px
     minimum height, plus a 3.2px gap), and a collapsed section kept a 4px
-    band under it, so the list spaced unevenly. Half that padding, and every
-    row the same height whether it is a page or a section trigger.
+    band under it, so the list spaced unevenly. Halving the padding outright
+    then packed the rows into a block 1.6px apart. The space now sits BETWEEN
+    rows, each row's side padding is half the template's 8px, and every row is
+    the same height whether it is a page or a section trigger.
     """
     rows = fixture_page.evaluate(
         """() => [...document.querySelectorAll(
@@ -65,18 +67,78 @@ def test_sidebar_rows_share_one_tight_pitch(fixture_page: Page):
           .filter(li => li.offsetParent)
           .map(li => {
             const b = li.firstElementChild, s = getComputedStyle(b);
+            const root = parseFloat(
+              getComputedStyle(document.documentElement).fontSize);
             return {h: li.getBoundingClientRect().height,
                     text: parseFloat(s.lineHeight),
                     pad: parseFloat(s.paddingTop) + parseFloat(s.paddingBottom),
+                    side: parseFloat(s.paddingLeft) / root,
+                    gap: parseFloat(getComputedStyle(li.parentElement).rowGap)
+                         / root,
                     open: b.getAttribute('data-state') === 'open'};
           })"""
     )
     assert len(rows) >= 3, rows
     for row in rows:
-        assert row["pad"] <= row["text"] * 0.4, row
+        assert row["pad"] <= row["text"] * 0.5, row
+        # In rem, so the checks hold at any page scale.
+        assert row["side"] <= 0.3, row
+        assert row["gap"] >= 0.25, row
     # An OPEN section's item spans its children, so only single rows compare.
     heights = [r["h"] for r in rows if not r["open"]]
     assert max(heights) - min(heights) <= 1, rows
+
+
+def test_rail_rows_start_on_the_group_label_edge(fixture_page: Page):
+    """Trimming a row's side padding must not move it off the gutter.
+
+    The row's content — its icon, or its text when the nav has no icon for
+    it — has to start where the group label's text starts, in every group.
+    """
+    groups = fixture_page.evaluate(
+        """() => [...document.querySelectorAll(
+            '[data-slot="sidebar"] .mewbo-sidebar-group')].map(group => {
+          const edge = node => {
+            const range = document.createRange();
+            range.selectNodeContents(node);
+            return range.getBoundingClientRect().left;
+          };
+          const row = group.querySelector(
+            '[data-sidebar="menu"] > li > [data-sidebar="menu-button"]');
+          const start = [...row.childNodes].find(node =>
+            node.nodeType === 3 ? node.textContent.trim()
+              : node.getBoundingClientRect().width > 0);
+          return {
+            label: edge(group.querySelector('.mewbo-sidebar-group-label')),
+            row: start.nodeType === 3 ? edge(start)
+              : start.getBoundingClientRect().left,
+          };
+        })"""
+    )
+    assert groups, "the fixture page has no grouped sidebar sections"
+    for group in groups:
+        assert abs(group["label"] - group["row"]) <= 1, groups
+
+
+def test_page_is_set_at_nine_tenths_of_browser_zoom(fixture_page: Page):
+    """The root is 90% of the reader's default, never a fixed px value.
+
+    A px root would ignore the reader's font-size setting; CSS `zoom` would
+    distort the coordinates the menus and viewers position themselves by.
+    """
+    scale = fixture_page.evaluate(
+        """() => {
+          const probe = document.createElement('div');
+          probe.style.cssText = 'font-size:medium;position:absolute';
+          document.body.appendChild(probe);
+          const medium = parseFloat(getComputedStyle(probe).fontSize);
+          probe.remove();
+          const root = getComputedStyle(document.documentElement);
+          return {ratio: parseFloat(root.fontSize) / medium, zoom: root.zoom};
+        }"""
+    )
+    assert scale["ratio"] == pytest.approx(0.9, abs=0.005), scale
+    assert scale["zoom"] in ("1", "normal"), scale
 
 
 @pytest.mark.parametrize(

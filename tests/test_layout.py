@@ -18,7 +18,11 @@ def test_full_layout_expands_only_page_article_and_persists(
     fixed_width = article.evaluate(
         "element => element.getBoundingClientRect().width"
     )
-    assert 640 <= fixed_width <= 700, fixed_width
+    rem = page.evaluate(
+        "() => parseFloat(getComputedStyle(document.documentElement).fontSize)"
+    )
+    # The base article is a fixed 42rem measure; the bounds follow the root.
+    assert 40 * rem <= fixed_width <= 44 * rem, (fixed_width, rem)
 
     page.get_by_title("Toggle layout").click()
     expect(page.locator("html")).to_have_class("layout-full")
@@ -50,7 +54,7 @@ def test_full_layout_expands_only_page_article_and_persists(
     restored_width = article.evaluate(
         "element => element.getBoundingClientRect().width"
     )
-    assert 640 <= restored_width <= 700, restored_width
+    assert 40 * rem <= restored_width <= 44 * rem, restored_width
 
 
 def test_full_layout_leaves_mobile_article_width_unchanged(

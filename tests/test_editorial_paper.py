@@ -77,12 +77,17 @@ def test_reading_face_is_loaded_and_has_editorial_leading(
       await document.fonts.ready;
       const c = getComputedStyle(el);
       return {family:c.fontFamily, size:parseFloat(c.fontSize),
+        rem:parseFloat(getComputedStyle(document.documentElement).fontSize),
         leading:parseFloat(c.lineHeight)/parseFloat(c.fontSize),
         loaded:[...document.fonts].some(f=>f.family.includes('Newsreader') && f.status==='loaded')};
     }""")
     assert "Newsreader" in metrics["family"], metrics
     assert metrics["loaded"], metrics
-    assert metrics["size"] >= 17, metrics
+    # Body copy is 1.125rem: the largest reading size on the page at whatever
+    # root the theme sets (90% of the browser default), and never below 16px
+    # at the browser's 100%.
+    assert metrics["size"] == pytest.approx(1.125 * metrics["rem"]), metrics
+    assert metrics["size"] >= 16, metrics
     assert 1.45 <= metrics["leading"] <= 1.65, metrics
 
 

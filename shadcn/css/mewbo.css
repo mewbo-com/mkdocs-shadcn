@@ -34,6 +34,24 @@
   @view-transition { navigation: none; }
 }
 
+/* Page scale. At the browser's 100% the whole site read as zoomed in, so the
+   root is set to 90%: 100% now renders what 90% browser zoom used to, and
+   every browser zoom level lands at 0.9 of itself.
+
+   A PERCENTAGE of the root, not a px value and not CSS `zoom`:
+     · the theme sizes type, spacing, the header height and the sidebar and
+       ToC widths in rem (Tailwind's `--spacing` is 0.25rem), so all of them
+       scale together from this one declaration — measured at 0.90x across
+       the header, rails, prose, code, tabs, callouts and page actions;
+     · it multiplies with the reader's own browser zoom AND their default
+       font-size setting, so an enlarged-text reader keeps their enlargement;
+     · CSS `zoom` would also scale the coordinate space that the page-actions
+       menu, mermaid pan/zoom, the lightbox and hover cards measure with
+       getBoundingClientRect, and would leave their positioning off.
+   A handful of px values (hairlines, 1-2px rings, the footer's reserved
+   height) deliberately stay fixed. */
+html { font-size: 90%; }
+
 /* Editorial paper stock, reconciled with the Mewbo clay accent. Surfaces
    stay opaque; texture is a background layer, never an overlay on images. */
 :root {
@@ -1799,9 +1817,7 @@ article .ms-shots img,
    mewbo.css is unlayered, so these win over the layered Tailwind utilities
    without !important — except the icon-collapsed `size-8!`/`p-2!` rules, which
    keep !important and so still win in that mode (intended). */
-/* Every vertical value in this block was halved from the previous revision:
-   a row spent 16px of padding around 20px of text, so the rail read as a
-   loose list of buttons rather than an index. The ungrouped top-level pages
+/* Group spacing is half the template's. The ungrouped top-level pages
    ("Home") sit in a group the template pads `p-2 pt-6` — 24px above, 8px
    below — which is halved here by selecting it as the group WITHOUT our
    class, the only thing that distinguishes it. */
@@ -1825,21 +1841,33 @@ article .ms-shots img,
   letter-spacing: -0.005em;
   color: var(--foreground);
 }
-/* Comfortable, full-width rows: padding around the entry text plus a small gap
-   between entries; each row stretches to the group's bounds so the highlight
-   reads as a selected row, not a text run. */
+/* Full-width rows with air BETWEEN them rather than inside them. Halving the
+   old padding outright (3.2px rows, 1.6px apart, a 28.8px pitch) overshot:
+   the entries read as one packed block. The pitch now sits between the two at
+   ~33.6px, and most of the new space is the gap, so each row's highlight stays
+   compact while neighbouring rows visibly separate.
+
+   Inline padding is 4px, half the template's `p-2`, so the hover and active
+   fill hugs the icon and text instead of running 8px past them. The group
+   gains the same 4px (below) so every glyph and label stays on the nav
+   gutter the header's brand and tab rail align to. */
 [data-sidebar="menu"],
-[data-sidebar="menu-sub"] { gap: 0.1rem; }
+[data-sidebar="menu-sub"] { gap: 0.3rem; }
 [data-sidebar="menu-button"] {
   width: 100%;
   max-width: 100%;
   /* The template's `min-h-[30px]` / `min-h-8` floor would hold the row open
-     after the padding is halved, so the padding would change nothing. The row
-     is sized by its text and padding alone. */
+     regardless of the padding, so the row is sized by its text and padding
+     alone. */
   min-height: 0;
-  padding-top: 0.2rem;
-  padding-bottom: 0.2rem;
+  padding: 0.25rem;
 }
+[data-slot="sidebar"] [data-sidebar="group"] {
+  padding-inline: 0.75rem;
+}
+/* The label carries the template's `px-2`; it gives back the 4px the group
+   just took so "User Guide" stays on the same line as the icons below it. */
+.mewbo-sidebar-group-label { padding-inline: 0.25rem; }
 /* One pitch for every row. A section trigger lacked the leaf's 1px transparent
    border (2px shorter), and its collapsible panel carries `py-0.5` even while
    closed — 4px of dead band under every collapsed section, so the list read
@@ -1851,9 +1879,8 @@ button[data-sidebar="menu-button"] { border: 1px solid transparent; }
 /* The phone dialog is the whole screen and is operated by a thumb, so it keeps
    the roomier row. 44px is the touch-target floor the page actions use too. */
 .ms-mobile-nav [data-sidebar="menu-button"] {
-  min-height: 2.75rem;
-  padding-top: 0.4rem;
-  padding-bottom: 0.4rem;
+  min-height: 44px;
+  padding: 0.4rem 0.5rem;
 }
 
 /* Soft active leaf — overrides the theme's `data-[active=true]:bg-accent
@@ -3312,17 +3339,20 @@ article .mewbo-page-action__hint,
   color: var(--muted-foreground);
 }
 
+/* Touch targets are a physical floor, not part of the type scale, so they are
+   set in px: in rem they would shrink with the 90% page scale to 39.6px, under
+   the 44px a thumb needs. */
 @media (pointer: coarse) {
-  .mewbo-header { --mewbo-nav-control-h: 2.75rem; }
-  .mewbo-page-actions { --page-actions-size: 2.75rem; }
+  .mewbo-header { --mewbo-nav-control-h: 44px; }
+  .mewbo-page-actions { --page-actions-size: 44px; }
   article .mewbo-page-actions > button:is(.mewbo-page-actions__main, .mewbo-page-actions__toggle) {
-    min-width: 2.75rem;
+    min-width: 44px;
   }
-  #page-header a[data-slot="button"] { width: 2.75rem; height: 2.75rem; }
+  #page-header a[data-slot="button"] { width: 44px; height: 44px; }
   .mewbo-menu-btn, header .mewbo-icon-btn, .ms-mobile-nav__close,
   #bottom-navigation a[data-slot="button"] {
-    min-width: 2.75rem;
-    min-height: 2.75rem;
+    min-width: 44px;
+    min-height: 44px;
   }
   .ms-mobile-nav__close { top: 0.375rem; }
 }
@@ -4422,7 +4452,9 @@ article .ms-hero__lede { font-size: 1.1875rem; }
   line-height: var(--leading-ui);
 }
 .mewbo-footer__col-links a { font-size: 0.875rem; }
-.ms-mobile-nav [data-sidebar="menu-button"] { font-size: 0.9375rem; }
+/* px, not rem: the phone menu is the one surface that keeps its reading size
+   under the 90% page scale, because nothing sits beside it to defer to. */
+.ms-mobile-nav [data-sidebar="menu-button"] { font-size: 15px; }
 .mewbo-sidebar-group-label, .mewbo-toc__heading {
   font-family: var(--font-sans);
   font-size: 0.75rem;

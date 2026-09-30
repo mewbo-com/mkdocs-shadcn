@@ -104,16 +104,24 @@ The wheel ships the `shadcn/` package only.
 - **The prose column outranks the rails.** The sidebar and ToC share one
   scale in `mewbo.css` ("Rail scale"): entries 0.8125rem body face in muted
   ink, both rail labels 0.75rem Geist 600 (14/13px was checked live and did
-  not recede enough). Rows are 0.2rem-padded with no min-height and one pitch
-  for pages and section triggers. Hover lifts ink over a 4% wash; never
-  restore the solid `hover:bg-sidebar-accent` block. The mobile nav dialog
-  keeps 15px and 44px rows. Content
+  not recede enough). Rows are 0.25rem-padded all round with a 0.3rem gap and
+  no min-height, one pitch for pages and section triggers; the group gains
+  the 4px the rows gave up so icons stay on the header's nav gutter. Hover
+  lifts ink over a 4% wash; never restore the solid `hover:bg-sidebar-accent`
+  block. The mobile nav dialog keeps 15px and 44px rows, set in px. Content
   tab labels use `--font-display` at 400 like every other heading. Code in a
   callout is never transparent: inline chips get an opaque surface with an
   inset (not border) hairline so they add no height; fenced blocks keep the
   pygments surface. Dark stock is deep (page `#0e0e0e`, nav `#131313`,
   rail/card `#161616`); keep that order when retuning it.
   `tests/test_reading_focus.py` pins all of it.
+- **The page is set at 90% of browser zoom.** `html { font-size: 90% }` at
+  the top of `mewbo.css`; the theme is rem-based, so everything scales from it
+  and it still multiplies with browser zoom and the reader's default size. Do
+  not switch to CSS `zoom` (it distorts the coordinates the page-actions menu,
+  mermaid viewer, lightbox and hover cards position by) or to a px root.
+  Physical floors stay in px: 44px touch targets, the phone menu's 15px.
+  Tests measure sizes against the root, not an assumed 16px.
 - **Touch page-actions grow as one unit.** The wrapper, both halves and pager
   arrows all become 44px on coarse pointers. Invisible overlapping hit pads
   stole taps from the neighbouring half; independently taller children left

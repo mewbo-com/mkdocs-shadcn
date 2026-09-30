@@ -63,9 +63,14 @@ article table:not(.codehilitetable) tbody tr td {
  * Applied to the cell rather than the table so nested content that sets its
  * own leading (a code block, a list) is unaffected.
  */
+/* `anywhere`, not `break-word`: in auto table layout only `anywhere` lowers a
+   column's min-content width, so a table whose longest words add up to more
+   than the column can still fit. With `break-word` a five-column fixture ran
+   4px past a 605px column at the 90% page scale. Words only split when
+   nothing else fits, so an ordinary table lays out exactly as before. */
 article table:not(.codehilitetable) thead tr th,
 article table:not(.codehilitetable) tbody tr td {
-	@apply break-words;
+	overflow-wrap: anywhere;
 	line-height: var(--leading-body, 1.625);
 }
 

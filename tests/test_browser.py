@@ -288,12 +288,16 @@ def test_header_tabs_grow_header_height(page: Page, local_deployment: str):
                 sidebarTop: sidebar
                     ? parseFloat(getComputedStyle(sidebar).top)
                     : null,
+                rem: parseFloat(
+                    getComputedStyle(document.documentElement).fontSize),
             };
         }"""
     )
 
-    base = 14 * 4  # calc(var(--spacing) * 14) at the default 16px root
-    rail = 2.5 * 16
+    # calc(var(--spacing) * 14) and the rail's 2.5rem, in the root the theme
+    # actually sets (90% of the browser default), not an assumed 16px.
+    base = 14 * 0.25 * m["rem"]
+    rail = 2.5 * m["rem"]
     assert abs(m["row"] - base) < 1, (
         f"top row must stay pinned at {base}px, got {m['row']}"
     )

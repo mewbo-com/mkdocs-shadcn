@@ -32,19 +32,24 @@ def test_desktop_brand_keeps_logo_with_compact_label_and_badge(
         };
     }""")
 
+    # The brand is sized in rem, so its proportions are checked against the
+    # root the theme sets (90% of the browser default), not an assumed 16px.
+    rem = page.evaluate(
+        "() => parseFloat(getComputedStyle(document.documentElement).fontSize)"
+    )
     assert (
         glyph.evaluate("element => element.getBoundingClientRect().width")
-        >= 28
+        >= 1.75 * rem - 0.1  # subpixel layout rounding
     )
     assert name.evaluate(
         "element => parseFloat(getComputedStyle(element).fontSize)"
-    ) == pytest.approx(22.4)
+    ) == pytest.approx(1.4 * rem)
     assert badge.evaluate(
         "element => parseFloat(getComputedStyle(element).fontSize)"
-    ) == pytest.approx(8.4)
+    ) == pytest.approx(0.525 * rem)
     assert badge.evaluate(
         "element => parseFloat(getComputedStyle(element).paddingLeft)"
-    ) == pytest.approx(4)
+    ) == pytest.approx(0.25 * rem)
     alignment = brand.evaluate("""brand => {
       const baseline = selector => {
         const marker = document.createElement('span');
