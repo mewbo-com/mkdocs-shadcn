@@ -541,6 +541,29 @@ article .admonition > *:last-child,
   --adm-accent: #f85149;
 }
 
+/* Code inside callouts. A callout is a tinted sheet, and code on it has to
+   read as a separate object laid on top — the same chip it is in prose, not
+   a window onto the tint. The chip was transparent with a border tinted to
+   the callout, which measured the SAME colour as the fill around it and left
+   only a faint outline; the border also added 2px of height, so chips on
+   consecutive lines of the callout's tighter leading overlapped.
+
+   The surface is the card stock, opaque, with the page's ink mixed in so it
+   stays a step away from the paper on both themes, and the edge is an inset
+   hairline in the callout's own accent — it identifies the chip with its
+   callout without costing a pixel of line height. Titles keep their accent
+   ink; body chips take the foreground so a command reads as a command. */
+article .admonition code:not(pre code),
+.md-content .admonition code:not(pre code) {
+  background-color: color-mix(in srgb, var(--foreground) 6%, var(--card));
+  border: 0;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--adm-accent) 28%, transparent);
+}
+article .admonition > p:not(.admonition-title) code:not(pre code),
+.md-content .admonition > p:not(.admonition-title) code:not(pre code) {
+  color: var(--foreground);
+}
+
 
 /* ─────────────────────────────────────────────────────────────────────────
    Search trigger and dialog polish.
@@ -1784,12 +1807,8 @@ article .ms-shots img,
   margin-bottom: 0.2rem;
   padding-top: 0.2rem;
   padding-bottom: 0.2rem;
-  /* A group label names the entries under it, so it cannot be smaller than
-     they are. At 0.7rem it rendered 11.2px against a 12.8px menu entry, which
-     read as a caption on the rail rather than as the heading of a section.
-     It now sits one step above the entries and carries the weight. */
-  font-size: 0.85rem;
-  font-weight: 700;
+  /* Size and weight come from the rail scale at the end of this file, shared
+     with the ToC heading so the two rails label themselves identically. */
   letter-spacing: -0.005em;
   color: var(--foreground);
 }
@@ -1833,7 +1852,23 @@ article .ms-shots img,
 }
 [data-sidebar="menu-button"]:not([data-active="true"]):hover > svg:first-of-type {
   color: var(--foreground);
-  opacity: 1;
+  opacity: 0.85;
+}
+
+/* Idle rows are set in muted ink and hover only lifts them to full ink over a
+   faint wash. The theme's `hover:bg-sidebar-accent` painted a solid block that
+   was the loudest thing on the page whenever the pointer crossed the rail, and
+   the rail is where the pointer rests between reads. The wash is a mix of the
+   ink rather than a fixed colour so it stays equally faint on either stock.
+   Unlayered, so it beats the layered utility without `!important`; the active
+   row keeps its own `!important` tint above. */
+[data-sidebar="menu-button"]:not([data-active="true"]) {
+  color: var(--muted-foreground);
+  transition: color 0.15s ease, background-color 0.15s ease;
+}
+[data-sidebar="menu-button"]:not([data-active="true"]):hover {
+  background-color: color-mix(in srgb, var(--foreground) 4%, transparent);
+  color: var(--foreground);
 }
 
 /* Expandable section affordance: quiet chevron at the row's end that
@@ -1844,7 +1879,7 @@ article .ms-shots img,
   opacity: 0.55;
   transition: opacity 0.15s, transform 0.2s ease;
 }
-[data-sidebar="menu-button"]:hover .mewbo-sidebar-chevron { opacity: 0.9; }
+[data-sidebar="menu-button"]:hover .mewbo-sidebar-chevron { opacity: 0.75; }
 
 /* Level-2 indent rail: shadcn already wraps sub-items in
    `ul.ml-3.5.border-l.pl-2.5` — bump the rail's contrast slightly so it
@@ -1864,7 +1899,6 @@ article .ms-shots img,
   flex-direction: column;
   gap: 0.5rem;
   padding: 1rem 1rem 0;
-  font-size: 0.875rem;
 }
 .mewbo-toc__heading {
   position: sticky;
@@ -1873,8 +1907,6 @@ article .ms-shots img,
   height: 1.5rem;
   background: var(--background);
   color: var(--foreground);
-  font-size: 0.8rem;
-  font-weight: 500;
   z-index: 1;
   display: inline-flex;
   align-items: center;
@@ -1898,7 +1930,6 @@ article .ms-shots img,
      each runs the full height; no layout shift between idle/active. */
   box-shadow: inset 1px 0 0 var(--border);
   color: var(--muted-foreground);
-  font-size: 0.8rem;
   line-height: var(--leading-ui);
   text-decoration: none;
   transition: color 0.15s ease, box-shadow 0.15s ease;
@@ -4330,20 +4361,57 @@ article .ms-hero__lede, article #summary, .ms-card__body,
 }
 article .ms-hero__lede { font-size: 1.1875rem; }
 
-/* Navigation adopts the editorial voice at a readable size; small controls,
-   API symbols and keycaps remain technical rather than becoming mastheads. */
+/* ── Rail scale ──────────────────────────────────────────────────────────
+   The left sidebar and the right ToC are wayfinding, read in a glance while
+   the eye stays on the column between them. They share ONE scale, set a clear
+   step below the 18px body so the prose is the largest reading type on the
+   page:
+
+       entry    0.875rem  body face    a page / heading you can jump to
+       label    0.8125rem sans, 600    "User Guide", "On this page"
+
+   Before this the rails ran 15px entries in full ink (one step from the body,
+   not a clear drop), with the sidebar's group label at 13.6px/700 and the
+   ToC's own heading at 12.8px/500: two rails labelling themselves in two
+   different registers. The footer's link lists are the same kind of list and
+   take the entry step too.
+
+   The mobile navigation dialog renders this same sidebar as the ONLY thing
+   on screen, with no prose beside it to defer to, and a phone wants a larger
+   tap target — so it keeps the old reading size. */
 [data-sidebar="menu-button"], .mewbo-toc__link,
 .mewbo-footer__col-links a {
   font-family: var(--font-body);
-  font-size: 0.9375rem;
+  font-size: 0.875rem;
   line-height: var(--leading-ui);
+}
+.ms-mobile-nav [data-sidebar="menu-button"] { font-size: 0.9375rem; }
+.mewbo-sidebar-group-label, .mewbo-toc__heading {
+  font-family: var(--font-sans);
+  font-size: 0.8125rem;
+  font-weight: 600;
 }
 .ms-header-tabs__item, .mewbo-topnav a {
   font-family: var(--font-display);
   font-size: 1.125rem;
   font-weight: 400;
 }
-article :is(button, input, select, textarea, .ms-btn, .ms-chip, .tabbed-labels),
+
+/* Content-tab labels ("uv (recommended)" / "pipx" / "pip") name the section
+   under them, so they are set like every other heading on the page and like
+   the header's own tab rail: the display face at its only real weight. They
+   were Geist 600, which made the one sans-serif heading on a serif page read
+   as a stray control. Size stays at body (`1em`, from tabs.css) — the
+   tab-and-code spacing test pins that a label is not a caption. */
+article .tabbed-set label {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-synthesis: none;
+  letter-spacing: -0.01em;
+  font-size: 1.125em;
+}
+
+article :is(button, input, select, textarea, .ms-btn, .ms-chip),
 #page-header, #bottom-navigation, .doc, .ms-hero__eyebrow,
 .ms-mermaid, .ms-diagram-viewer, .mewbo-page-actions__menu,
 article .typography :is(h4, h5, h6) {

@@ -101,6 +101,15 @@ The wheel ships the `shadcn/` package only.
   a bold display weight. `--font-sans` stays Geist for controls and Mermaid's
   canvas measurements; `--font-mono` and Tailwind's `--font-serif` are not
   repurposed. Fonts and OFL licences ship in `shadcn/fonts/`.
+- **The prose column outranks the rails.** The sidebar and ToC share one
+  scale in `mewbo.css` ("Rail scale"): entries 0.875rem body face in muted
+  ink, both rail labels 0.8125rem Geist 600, a clear step under the 18px
+  body. Hover lifts ink over a 4% wash; never restore the solid
+  `hover:bg-sidebar-accent` block. The mobile nav dialog keeps 15px. Content
+  tab labels use `--font-display` at 400 like every other heading. Code in a
+  callout is never transparent: inline chips get an opaque surface with an
+  inset (not border) hairline so they add no height; fenced blocks keep the
+  pygments surface. `tests/test_reading_focus.py` pins all of it.
 - **Touch page-actions grow as one unit.** The wrapper, both halves and pager
   arrows all become 44px on coarse pointers. Invisible overlapping hit pads
   stole taps from the neighbouring half; independently taller children left

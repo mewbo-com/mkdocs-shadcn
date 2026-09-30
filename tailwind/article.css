@@ -78,8 +78,15 @@ article pre code > span {
 	@apply py-0.5;
 }
 
+/* Inline padding paints background without moving the line box, so the
+   vertical values decide only how far a chip's fill reaches toward the lines
+   above and below. The font's ascent box already sits ~3px above the capitals,
+   so an even `0.2rem` put ~6px of fill over the caps against ~3px under the
+   descenders: the chip looked top-heavy, and two chips on consecutive lines
+   met in the leading. A hair on top and 0.2em underneath centres the fill on
+   the ink. In `em` so a chip inside a heading scales with it. */
 article code:not(pre code) {
-	@apply bg-muted relative rounded-md px-[0.3rem] py-[0.2rem] font-mono text-[0.8rem] outline-none;
+	@apply bg-muted relative rounded-md px-[0.3rem] pt-[0.05em] pb-[0.2em] font-mono text-[0.8rem] outline-none;
 }
 
 article tr td.linenos pre {
