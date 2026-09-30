@@ -190,21 +190,16 @@ jobs:
           # draft, which anonymous clients cannot see: the find-links page
           # consumers resolve from lists no wheel and every consumer docs
           # build fails with "not found in the package registry" (v1.43.0).
-          # Publish explicitly, then refuse to finish until an anonymous
-          # client can actually see the wheel.
+          # Publish explicitly, then fail if the API still reports a draft.
+          # Check the draft flag, not the public asset page: that page is a
+          # lagging view that took over 2 minutes to list the wheel on a
+          # release that was already published, so polling it fails
+          # healthy runs.
           gh release edit latest-master --repo "$GITHUB_REPOSITORY" --draft=false --prerelease
-          for attempt in $(seq 1 12); do
-            if curl -fsL "${REPO_HTML}/releases/expanded_assets/latest-master?t=${attempt}" \
-                | grep -q "${WHEEL_NAME}"; then
-              echo "latest-master is public and lists ${WHEEL_NAME}"
-              break
-            fi
-            if [ "$attempt" = 12 ]; then
-              echo "::error::latest-master does not publicly list ${WHEEL_NAME}"
-              exit 1
-            fi
-            sleep 10
-          done
+          if [ "$(gh release view latest-master --repo "$GITHUB_REPOSITORY" --json isDraft --jq .isDraft)" != "false" ]; then
+            echo "::error::latest-master is still a draft; consumers cannot resolve it"
+            exit 1
+          fi
 
           {
             echo "## Moving release \`latest-master\`"
