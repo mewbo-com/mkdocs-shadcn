@@ -77,26 +77,29 @@
 }
 
 .dark {
-  --background: #141414;
+  /* Every surface sits ~30% below its previous channel value (e.g. page
+     #141414 -> #0e0e0e), keeping the stock order page < nav < rail/card <
+     popover so each sheet still separates from the one under it. */
+  --background: #0e0e0e;
   --foreground: #ffffff;
-  --card: #1f1f1f;
-  --popover: #232323;
-  --nav-background: #1b1b1b;
+  --card: #161616;
+  --popover: #181818;
+  --nav-background: #131313;
   --primary: #ff8057;
-  --primary-foreground: #141414;
+  --primary-foreground: #0e0e0e;
   --primary-text: #ff9a78;
-  --secondary: #2b2b2b;
+  --secondary: #1e1e1e;
   --secondary-foreground: #ededed;
-  --muted: #2e2e2e;
+  --muted: #202020;
   --muted-foreground: #c7c7c7;
-  --accent: #343434;
+  --accent: #242424;
   --accent-foreground: var(--foreground);
   --destructive: hsl(0 73% 59%);
   --border: color-mix(in srgb, var(--foreground) 18%, transparent);
-  --input: #3b3b3b;
+  --input: #292929;
   --image-backing: hsl(40 7% 5%);
-  --sidebar: #202020;
-  --sidebar-accent: #333333;
+  --sidebar: #161616;
+  --sidebar-accent: #242424;
   --paper-shadow: 0 1px 2px -1px rgb(0 0 0 / 0.4), 0 8px 20px -12px rgb(0 0 0 / 0.6);
   --paper-shadow-raised: 0 2px 4px -2px rgb(0 0 0 / 0.45), 0 12px 24px -12px rgb(0 0 0 / 0.7);
 }
@@ -1796,17 +1799,27 @@ article .ms-shots img,
    mewbo.css is unlayered, so these win over the layered Tailwind utilities
    without !important — except the icon-collapsed `size-8!`/`p-2!` rules, which
    keep !important and so still win in that mode (intended). */
+/* Every vertical value in this block was halved from the previous revision:
+   a row spent 16px of padding around 20px of text, so the rail read as a
+   loose list of buttons rather than an index. The ungrouped top-level pages
+   ("Home") sit in a group the template pads `p-2 pt-6` — 24px above, 8px
+   below — which is halved here by selecting it as the group WITHOUT our
+   class, the only thing that distinguishes it. */
 .mewbo-sidebar-group {
-  margin-top: 0.55rem;
-  padding-top: 0.25rem;
-  padding-bottom: 0.25rem;
+  margin-top: 0.275rem;
+  padding-top: 0.125rem;
+  padding-bottom: 0.125rem;
 }
 .mewbo-sidebar-group:first-of-type { margin-top: 0; }
+[data-slot="sidebar"] [data-sidebar="group"]:not(.mewbo-sidebar-group) {
+  padding-top: 0.75rem;
+  padding-bottom: 0.25rem;
+}
 .mewbo-sidebar-group-label {
   height: auto;
-  margin-bottom: 0.2rem;
-  padding-top: 0.2rem;
-  padding-bottom: 0.2rem;
+  margin-bottom: 0.1rem;
+  padding-top: 0.1rem;
+  padding-bottom: 0.1rem;
   /* Size and weight come from the rail scale at the end of this file, shared
      with the ToC heading so the two rails label themselves identically. */
   letter-spacing: -0.005em;
@@ -1816,11 +1829,29 @@ article .ms-shots img,
    between entries; each row stretches to the group's bounds so the highlight
    reads as a selected row, not a text run. */
 [data-sidebar="menu"],
-[data-sidebar="menu-sub"] { gap: 0.2rem; }
+[data-sidebar="menu-sub"] { gap: 0.1rem; }
 [data-sidebar="menu-button"] {
   width: 100%;
   max-width: 100%;
-  min-height: 2rem;
+  /* The template's `min-h-[30px]` / `min-h-8` floor would hold the row open
+     after the padding is halved, so the padding would change nothing. The row
+     is sized by its text and padding alone. */
+  min-height: 0;
+  padding-top: 0.2rem;
+  padding-bottom: 0.2rem;
+}
+/* One pitch for every row. A section trigger lacked the leaf's 1px transparent
+   border (2px shorter), and its collapsible panel carries `py-0.5` even while
+   closed — 4px of dead band under every collapsed section, so the list read
+   as unevenly spaced once the rows were tightened. */
+button[data-sidebar="menu-button"] { border: 1px solid transparent; }
+[data-sidebar="menu-button"][data-state="closed"] + [data-slot="collapsible-content"] {
+  padding-block: 0;
+}
+/* The phone dialog is the whole screen and is operated by a thumb, so it keeps
+   the roomier row. 44px is the touch-target floor the page actions use too. */
+.ms-mobile-nav [data-sidebar="menu-button"] {
+  min-height: 2.75rem;
   padding-top: 0.4rem;
   padding-bottom: 0.4rem;
 }
@@ -1925,7 +1956,8 @@ article .ms-shots img,
 }
 .mewbo-toc__link {
   display: block;
-  padding: 0.3rem 0 0.3rem 0.85rem;
+  /* Halved with the sidebar's rows, so both rails keep one rhythm. */
+  padding: 0.15rem 0 0.15rem 0.85rem;
   /* Inset shadow forms the rail. Two adjacent links' shadows touch since
      each runs the full height; no layout shift between idle/active. */
   box-shadow: inset 1px 0 0 var(--border);
@@ -3651,12 +3683,12 @@ body.theme-default { --footer-height: 320px; }
 }
 
 .dark {
-  --diagram-surface: #121110;
-  --diagram-node-bg: #26241f;
+  --diagram-surface: #0d0c0b;
+  --diagram-node-bg: #1b1916;
   --diagram-node-border: #767269;
   --diagram-line: #8d8a80;
   --diagram-label: #f8f8f6;
-  --diagram-cluster: #1c1b18;
+  --diagram-cluster: #141311;
 }
 
 article,
@@ -4367,14 +4399,18 @@ article .ms-hero__lede { font-size: 1.1875rem; }
    step below the 18px body so the prose is the largest reading type on the
    page:
 
-       entry    0.875rem  body face    a page / heading you can jump to
-       label    0.8125rem sans, 600    "User Guide", "On this page"
+       entry    0.8125rem body face    a page / heading you can jump to
+       label    0.75rem   sans, 600    "User Guide", "On this page"
 
-   Before this the rails ran 15px entries in full ink (one step from the body,
+   Originally the rails ran 15px entries in full ink (one step from the body,
    not a clear drop), with the sidebar's group label at 13.6px/700 and the
    ToC's own heading at 12.8px/500: two rails labelling themselves in two
-   different registers. The footer's link lists are the same kind of list and
-   take the entry step too.
+   different registers. A first pass at 14px / 13px was measured on the live
+   sites and still did not read as clearly subordinate beside 18px prose, so
+   the scale sits one step lower again: entries are 72% of the body. The
+   labels stay legible at 12px because they are the sans at 600, which has a
+   far larger x-height than the serif entries beside them. The footer's link
+   lists are the same kind of list and take the footer's own size (below).
 
    The mobile navigation dialog renders this same sidebar as the ONLY thing
    on screen, with no prose beside it to defer to, and a phone wants a larger
@@ -4382,13 +4418,14 @@ article .ms-hero__lede { font-size: 1.1875rem; }
 [data-sidebar="menu-button"], .mewbo-toc__link,
 .mewbo-footer__col-links a {
   font-family: var(--font-body);
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
   line-height: var(--leading-ui);
 }
+.mewbo-footer__col-links a { font-size: 0.875rem; }
 .ms-mobile-nav [data-sidebar="menu-button"] { font-size: 0.9375rem; }
 .mewbo-sidebar-group-label, .mewbo-toc__heading {
   font-family: var(--font-sans);
-  font-size: 0.8125rem;
+  font-size: 0.75rem;
   font-weight: 600;
 }
 .ms-header-tabs__item, .mewbo-topnav a {

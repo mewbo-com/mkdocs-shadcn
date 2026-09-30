@@ -102,14 +102,18 @@ The wheel ships the `shadcn/` package only.
   canvas measurements; `--font-mono` and Tailwind's `--font-serif` are not
   repurposed. Fonts and OFL licences ship in `shadcn/fonts/`.
 - **The prose column outranks the rails.** The sidebar and ToC share one
-  scale in `mewbo.css` ("Rail scale"): entries 0.875rem body face in muted
-  ink, both rail labels 0.8125rem Geist 600, a clear step under the 18px
-  body. Hover lifts ink over a 4% wash; never restore the solid
-  `hover:bg-sidebar-accent` block. The mobile nav dialog keeps 15px. Content
+  scale in `mewbo.css` ("Rail scale"): entries 0.8125rem body face in muted
+  ink, both rail labels 0.75rem Geist 600 (14/13px was checked live and did
+  not recede enough). Rows are 0.2rem-padded with no min-height and one pitch
+  for pages and section triggers. Hover lifts ink over a 4% wash; never
+  restore the solid `hover:bg-sidebar-accent` block. The mobile nav dialog
+  keeps 15px and 44px rows. Content
   tab labels use `--font-display` at 400 like every other heading. Code in a
   callout is never transparent: inline chips get an opaque surface with an
   inset (not border) hairline so they add no height; fenced blocks keep the
-  pygments surface. `tests/test_reading_focus.py` pins all of it.
+  pygments surface. Dark stock is deep (page `#0e0e0e`, nav `#131313`,
+  rail/card `#161616`); keep that order when retuning it.
+  `tests/test_reading_focus.py` pins all of it.
 - **Touch page-actions grow as one unit.** The wrapper, both halves and pager
   arrows all become 44px on coarse pointers. Invisible overlapping hit pads
   stole taps from the neighbouring half; independently taller children left

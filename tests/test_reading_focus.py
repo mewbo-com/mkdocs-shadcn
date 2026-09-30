@@ -44,10 +44,72 @@ def test_rails_sit_a_clear_step_below_the_body(fixture_page: Page):
         _style(fixture_page, ".mewbo-toc__link"),
     ]
     for entry in entries:
-        # A clear drop, not one step: at 15/18 the rails competed with prose.
-        assert entry["size"] <= body["size"] * 0.8, (entry, body)
+        # A clear drop, not one step: at 15/18 the rails competed with prose,
+        # and 14/18 was checked on the live sites and still did not recede.
+        assert entry["size"] <= body["size"] * 0.75, (entry, body)
     # Both rails use the same entry size.
     assert entries[0]["size"] == entries[1]["size"], entries
+
+
+def test_sidebar_rows_share_one_tight_pitch(fixture_page: Page):
+    """Rows are sized by their text, not by stacked padding and floors.
+
+    A row was 35px around 20px of text (6.4px padding each side over a 32px
+    minimum height, plus a 3.2px gap), and a collapsed section kept a 4px
+    band under it, so the list spaced unevenly. Half that padding, and every
+    row the same height whether it is a page or a section trigger.
+    """
+    rows = fixture_page.evaluate(
+        """() => [...document.querySelectorAll(
+            '[data-slot="sidebar"] [data-sidebar="menu"] > li')]
+          .filter(li => li.offsetParent)
+          .map(li => {
+            const b = li.firstElementChild, s = getComputedStyle(b);
+            return {h: li.getBoundingClientRect().height,
+                    text: parseFloat(s.lineHeight),
+                    pad: parseFloat(s.paddingTop) + parseFloat(s.paddingBottom),
+                    open: b.getAttribute('data-state') === 'open'};
+          })"""
+    )
+    assert len(rows) >= 3, rows
+    for row in rows:
+        assert row["pad"] <= row["text"] * 0.4, row
+    # An OPEN section's item spans its children, so only single rows compare.
+    heights = [r["h"] for r in rows if not r["open"]]
+    assert max(heights) - min(heights) <= 1, rows
+
+
+@pytest.mark.parametrize(
+    "selector,ceiling",
+    [
+        # Each was darkened ~30% from #141414 / #1b1b1b / #202020 / #1f1f1f.
+        ("body", 0x10),
+        (".mewbo-header", 0x15),
+        (".ms-header-tabs", 0x15),
+        ("--sidebar", 0x18),
+        ("--card", 0x18),
+        ("--popover", 0x1A),
+    ],
+)
+def test_dark_surfaces_are_deep(
+    fixture_page: Page, selector: str, ceiling: int
+):
+    fixture_page.evaluate("document.documentElement.classList.add('dark')")
+    level = fixture_page.evaluate(
+        """sel => {
+          const cv = document.createElement('canvas');
+          cv.width = cv.height = 1;
+          const ctx = cv.getContext('2d', {willReadFrequently: true});
+          const root = getComputedStyle(document.documentElement);
+          ctx.fillStyle = sel.startsWith('--')
+            ? root.getPropertyValue(sel).trim()
+            : getComputedStyle(document.querySelector(sel)).backgroundColor;
+          ctx.fillRect(0, 0, 1, 1);
+          return Math.max(...ctx.getImageData(0, 0, 1, 1).data.slice(0, 3));
+        }""",
+        selector,
+    )
+    assert level <= ceiling, f"{selector} is {level:#04x}, over {ceiling:#04x}"
 
 
 def test_both_rails_label_themselves_identically(fixture_page: Page):
