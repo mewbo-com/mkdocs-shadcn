@@ -125,6 +125,10 @@ jobs:
             --generate-notes \
             "${PRE_FLAG[@]}" \
             dist/*.whl dist/*.tar.gz
+          # Same draft trap as "latest-master" below: create can exit 0 and
+          # leave an invisible draft. Publishing an already-public release
+          # is a no-op, so this is safe on every run.
+          gh release edit "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --draft=false
 
       - name: Surface install snippet in the run summary
         env:
@@ -179,6 +183,28 @@ jobs:
             --prerelease \
             --notes "Auto-updated on every push to \`master\`. Currently at commit \`${GITHUB_SHA}\`. Pin: \`\"mkdocs-shadcn-mewbo @ ${WHEEL_URL}\"\` — URL is permanent; refresh with \`uv lock --upgrade-package mkdocs-shadcn-mewbo\`. For reproducibility, pin the matching \`commit-<sha>\` release instead." \
             dist/*.whl dist/*.tar.gz
+
+          # `gh release create` with assets makes a DRAFT, uploads, then
+          # publishes. If that last call loses a race with the tag just
+          # deleted above, the step still exits 0 and the release stays a
+          # draft, which anonymous clients cannot see: the find-links page
+          # consumers resolve from lists no wheel and every consumer docs
+          # build fails with "not found in the package registry" (v1.43.0).
+          # Publish explicitly, then refuse to finish until an anonymous
+          # client can actually see the wheel.
+          gh release edit latest-master --repo "$GITHUB_REPOSITORY" --draft=false --prerelease
+          for attempt in $(seq 1 12); do
+            if curl -fsL "${REPO_HTML}/releases/expanded_assets/latest-master?t=${attempt}" \
+                | grep -q "${WHEEL_NAME}"; then
+              echo "latest-master is public and lists ${WHEEL_NAME}"
+              break
+            fi
+            if [ "$attempt" = 12 ]; then
+              echo "::error::latest-master does not publicly list ${WHEEL_NAME}"
+              exit 1
+            fi
+            sleep 10
+          done
 
           {
             echo "## Moving release \`latest-master\`"
