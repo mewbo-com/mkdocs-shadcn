@@ -61,9 +61,9 @@ def test_paper_has_visible_fibres(
     }""",
         png,
     )
-    # Reference stock measures ~1.9 at this size; the rejected fine texture
-    # measured ~1.0 (or ~1.7 with the old header gradient).
-    assert 1.75 <= deviation <= 5.0, (selector, dark, deviation)
+    # The reference stock is attenuated by 25%. Keep measurable fibres,
+    # allowing a little rounding variance between rendering engines.
+    assert 1.25 <= deviation <= 3.75, (selector, dark, deviation)
 
 
 def test_reading_face_is_loaded_and_has_editorial_leading(

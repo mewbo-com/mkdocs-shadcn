@@ -37,33 +37,33 @@
 /* Editorial paper stock, reconciled with the Mewbo clay accent. Surfaces
    stay opaque; texture is a background layer, never an overlay on images. */
 :root {
-  --background: #e6e2d9;
-  --foreground: #24231f;
-  --card: #f2eee6;
+  --background: #faf9f6;
+  --foreground: #171717;
+  --card: #ffffff;
   --card-foreground: var(--foreground);
-  --popover: #f2eee6;
+  --popover: #ffffff;
   --popover-foreground: var(--foreground);
-  --nav-background: #ddd9d0;
-  --primary: #ae4b31;
-  --primary-foreground: #fffaf3;
-  --primary-text: #82351f;
-  --secondary: #ddd8cc;
-  --secondary-foreground: #3b3932;
-  --muted: #ddd8cc;
-  --muted-foreground: #575349;
-  --accent: #ddd8cc;
-  --accent-foreground: #3b3932;
+  --nav-background: #f2efea;
+  --primary: #c84b2a;
+  --primary-foreground: #ffffff;
+  --primary-text: #a83b1f;
+  --secondary: #efede8;
+  --secondary-foreground: #292929;
+  --muted: #efede8;
+  --muted-foreground: #55514b;
+  --accent: #e7e3db;
+  --accent-foreground: #292929;
   --destructive: hsl(0 55% 47%);
   --destructive-foreground: #fff;
   --border: color-mix(in srgb, var(--foreground) 22%, transparent);
-  --input: #d7d2c7;
+  --input: #dedbd4;
   --ring: var(--primary-text);
   --image-backing: #fff;
-  --sidebar: #d9d5cb;
+  --sidebar: #edeae4;
   --sidebar-foreground: var(--foreground);
   --sidebar-primary: var(--primary);
   --sidebar-primary-foreground: var(--primary-foreground);
-  --sidebar-accent: #ccc7ba;
+  --sidebar-accent: #dedad2;
   --sidebar-accent-foreground: var(--foreground);
   --sidebar-border: var(--border);
   --sidebar-ring: var(--ring);
@@ -77,26 +77,26 @@
 }
 
 .dark {
-  --background: #151512;
-  --foreground: #e3dfd6;
-  --card: #22211c;
-  --popover: #25241f;
-  --nav-background: #1b1a16;
-  --primary: #d98566;
-  --primary-foreground: #181612;
-  --primary-text: #e6a085;
-  --secondary: #2b2922;
-  --secondary-foreground: #d2cdc1;
-  --muted: #302d25;
-  --muted-foreground: #aaa598;
-  --accent: #343128;
+  --background: #141414;
+  --foreground: #ffffff;
+  --card: #1f1f1f;
+  --popover: #232323;
+  --nav-background: #1b1b1b;
+  --primary: #ff8057;
+  --primary-foreground: #141414;
+  --primary-text: #ff9a78;
+  --secondary: #2b2b2b;
+  --secondary-foreground: #ededed;
+  --muted: #2e2e2e;
+  --muted-foreground: #c7c7c7;
+  --accent: #343434;
   --accent-foreground: var(--foreground);
   --destructive: hsl(0 73% 59%);
   --border: color-mix(in srgb, var(--foreground) 18%, transparent);
-  --input: #373329;
+  --input: #3b3b3b;
   --image-backing: hsl(40 7% 5%);
-  --sidebar: #1e1d18;
-  --sidebar-accent: #353128;
+  --sidebar: #202020;
+  --sidebar-accent: #333333;
   --paper-shadow: 0 1px 2px -1px rgb(0 0 0 / 0.4), 0 8px 20px -12px rgb(0 0 0 / 0.6);
   --paper-shadow-raised: 0 2px 4px -2px rgb(0 0 0 / 0.45), 0 12px 24px -12px rgb(0 0 0 / 0.7);
 }
@@ -1446,63 +1446,6 @@ article a:hover,
   font-size: 0.85rem;
   color: var(--muted-foreground, currentColor);
 }
-
-/* ── One canvas, separated by hairlines ────────────────────────────────────
-   Every large surface is `--background`. The top bar, the tab rail, both side
-   rails, the article and the footer are one continuous sheet, and what marks
-   the joins is a 1px `--border` hairline. Nothing is tinted and nothing is
-   elevated.
-
-   This replaced a four-level fill scale that gave each region its own colour.
-   The scale was measurably off the palette in both modes rather than merely
-   strong: light painted the top bar `#ffffff`, the only cold neutral on a warm
-   cream page, and dark painted it `#2a2925`, LIGHTER than `--card` and so
-   above the top of the theme's own range. The palette already answers this —
-   `--sidebar` is declared identical to `--background` in both modes, which is
-   the theme stating that the rails are the canvas.
-
-   Two artefacts came from the fills rather than from any rule, which is why
-   neither is visible in the source:
-
-   The rails ran the full page height while the article stopped where its text
-   stopped, so the rail colour filled the ~130px between the last paragraph and
-   the footer as a stripe across the full width. A region can only terminate
-   mid-page if it is painted; unpainted, there is nothing to terminate.
-
-   Each rail met the article on a bare colour change with no line on it, which
-   reads as a smudge rather than an edge. A hairline is an edge or there is
-   nothing; a soft step between two large fills is neither.
-
-   The footer already worked this way and was the only chrome nobody
-   complained about: `background: var(--background)` and one `--border` rule.
-   The rest of the chrome now matches it.
-
-   Hierarchy is carried by the hairlines, by the content column's measure and
-   by the type scale. If a recessed rail is ever wanted back, it is one token
-   consumed in one place, not a scale of four. */
-
-/* The template already puts `bg-background` on the header, the shell and the
-   sidebar. There is deliberately no rule here painting them: overriding that
-   class is what put the chrome off-palette, and the correct value is the one
-   the template already asks for. */
-
-/* The rail divider spans the reading area, not the sidebar's own box.
-
-   It is absolutely positioned inside the sticky sidebar, which is
-   `100svh - 10rem` tall, so `bottom: 0` ended the line 160px above the fold at
-   EVERY scroll position — a hairline stopping in open space, which is the one
-   way to make a boundary read as a smudge rather than an edge. Measured at
-   x=287: `--border` from the header down to y=534, then nothing.
-
-   Height is taken from the viewport instead, less the header and the sidebar's
-   own 0.6rem offset, so the line reaches the bottom of the screen. It is
-   `bottom: auto` because a top and a bottom together resolve against the
-   parent again, which is the box being escaped. */
-.ms-rail-divider {
-  bottom: auto;
-  height: calc(100svh - var(--header-height) - 0.6rem);
-}
-
 
 /* The scrollbar gutter is reserved permanently.
 
@@ -3346,7 +3289,7 @@ body.theme-default { --footer-height: 320px; }
 }
 
 .mewbo-footer {
-  margin-top: 4rem;
+  margin-top: 0;
   border-top: 1px solid var(--border);
   background: var(--background);
   position: relative;
@@ -3629,23 +3572,11 @@ body.theme-default { --footer-height: 320px; }
   body.theme-default { --footer-height: 540px; }
 }
 
-/* ─────────────────────────────────────────────────────────────────────────
-   Prose colour: put body text on the token system
-
-   The upstream `article` rule paints prose with `text-neutral-800` /
-   `dark:text-neutral-300` — a COOL grey scale, while this brand's surfaces
-   are warm (cream in light, carbon in dark). The effect is subtle and
-   persistent: every paragraph sits a few degrees off the chrome around it.
-
-   The upstream INTENT is worth keeping — body text one step recessed from
-   headings gives the page a reading hierarchy. So rather than flattening
-   prose onto `--foreground`, mix the two tokens: the recession survives and
-   the hue now tracks the palette. Headings, in turn, are stated at full
-   strength so the contrast between them is deliberate rather than incidental.
-   ───────────────────────────────────────────────────────────────────────── */
+/* Reading text uses the foreground directly. Additional blending with muted
+   text dims white twice; type size and weight already provide hierarchy. */
 
 :root {
-  --prose-body: color-mix(in oklab, var(--foreground) 82%, var(--muted-foreground));
+  --prose-body: var(--foreground);
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
@@ -4437,16 +4368,21 @@ body, #inner-body, .mewbo-footer, .mewbo-toc__heading,
 }
 .ms-mobile-nav__panel { background-color: var(--sidebar); }
 
+/* Keep footer breathing room inside the reading column so the rail's grid
+   track reaches the footer. Its fill and border share that track, independent
+   of centred-container padding or the sticky navigation's viewport height. */
+.ms-docs-column { padding-bottom: 4rem; }
 @media (min-width: 1024px) {
-  [data-slot="sidebar-wrapper"] {
-    position: relative;
-    isolation: isolate;
-  }
+  [data-slot="sidebar-wrapper"] { isolation: isolate; }
+  [data-slot="sidebar"] { grid-area: 1 / 1; }
+  .ms-docs-column { grid-area: 1 / 2; }
   [data-slot="sidebar-wrapper"]::before {
     content: "";
-    position: absolute;
-    inset: 0 auto 0 calc(-2 * var(--spacing));
-    width: var(--sidebar-width);
+    grid-area: 1 / 1;
+    align-self: stretch;
+    margin-inline-start: -100vw;
+    margin-inline-end: calc(2 * var(--spacing));
+    border-inline-end: 1px solid var(--border);
     z-index: -1;
     pointer-events: none;
     background-color: var(--sidebar);

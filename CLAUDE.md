@@ -89,8 +89,13 @@ The wheel ships the `shadcn/` package only.
   Preserve background-image when a consumer changes a surface colour: use
   `background-color`, not the resetting `background` shorthand. Grain must
   remain visibly fibrous at normal scale; `tests/test_editorial_paper.py`
-  checks rasterized pixels as well as contrast. Cards keep one border and a
-  blurred contact shadow, not an inset/dashed second rule.
+  checks rasterized pixels as well as contrast. The rail fill and its edge
+  belong to the stretched first grid track, not the sticky sidebar box.
+  Footer spacing belongs inside `.ms-docs-column`, or it strands a gap below
+  the rail. Test centred and full layouts through 2560px and at the footer.
+  Table wrappers use native overflow without gradient scroll covers: flat
+  covers paint stripes over paper even when a table does not scroll.
+  Cards keep one border and a blurred contact shadow, not a second rule.
 - **Typography roles stay separate.** `--font-body` is self-hosted Newsreader;
   `--font-display` is Instrument Serif, which only has weight 400. Never fake
   a bold display weight. `--font-sans` stays Geist for controls and Mermaid's

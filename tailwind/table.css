@@ -71,17 +71,6 @@ article table:not(.codehilitetable) tbody tr td {
 
 article .table-wrapper {
 	@apply relative w-full overflow-x-auto;
-	/* The wrapper scrolls as a fallback for content that genuinely cannot
-	   wrap, but nothing said so — a clipped table looked finished. A mask
-	   fades the right edge only while there is more to scroll to: the
-	   `scroll-timeline`-free trick is that the gradient is painted on a
-	   background attached to the scroll container, so it disappears once the
-	   content ends. Same cue the sidebar and the ToC use. */
-	background:
-		linear-gradient(to right, var(--background) 30%, transparent) left / 2rem 100% no-repeat local,
-		linear-gradient(to left, var(--background) 30%, transparent) right / 2rem 100% no-repeat local,
-		radial-gradient(farthest-side at 0 50%, color-mix(in srgb, var(--foreground) 12%, transparent), transparent) left / 0.6rem 100% no-repeat scroll,
-		radial-gradient(farthest-side at 100% 50%, color-mix(in srgb, var(--foreground) 12%, transparent), transparent) right / 0.6rem 100% no-repeat scroll;
 }
 
 /*

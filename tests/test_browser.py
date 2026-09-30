@@ -714,13 +714,15 @@ def test_paper_planes_have_no_stranded_edges(page: Page, local_deployment: str):
         """() => {
              const bg = s => { const e = document.querySelector(s);
                                return e ? getComputedStyle(e).backgroundColor : null; };
-             const divider = document.querySelector('.ms-rail-divider');
+             const wrapper = document.querySelector('[data-slot=sidebar-wrapper]');
+             const band = getComputedStyle(wrapper, '::before');
              return {shell: bg('.bg-background.relative.z-10'),
                      article: bg('article'),
                      footer: bg('.mewbo-footer'),
                      header: bg('.mewbo-header'),
-                     dividerHeight: divider ? divider.getBoundingClientRect().height : 0,
-                     viewport: window.innerHeight};
+                     border: band.borderInlineEndWidth,
+                     footerGap: document.querySelector('.mewbo-footer').getBoundingClientRect().top
+                       - wrapper.getBoundingClientRect().bottom};
            }"""
     )
     # The article must not paint at all — the shell shows through it. That is
@@ -734,12 +736,8 @@ def test_paper_planes_have_no_stranded_edges(page: Page, local_deployment: str):
     assert surfaces["header"] != surfaces["shell"], (
         f"navigation must use its own paper stock: {surfaces}"
     )
-    # The divider starts below the header, so it can never equal the viewport.
-    # Anything materially short of it is a hairline ending in open space.
-    assert surfaces["dividerHeight"] >= surfaces["viewport"] - 120, (
-        f"the rail divider is {surfaces['dividerHeight']}px in a "
-        f"{surfaces['viewport']}px viewport, so it stops mid-page"
-    )
+    assert surfaces["border"] == "1px", surfaces
+    assert abs(surfaces["footerGap"]) <= 1, surfaces
 
 
 def test_sidebar_renders_once(page: Page, local_deployment: str):
